@@ -1,0 +1,49 @@
+#SYMBOL_NAME "Control4 - Shade"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+
+// Position/target level: 0 = closed, 100 = open.
+// Two parameters reserve two leading positions in each signal direction.
+DIGITAL_INPUT _skip_, _skip_, Query, Open_btn, Close_btn, Stop_btn, _skip_;
+ANALOG_INPUT Level_Set;
+DIGITAL_OUTPUT _skip_, _skip_, Initialized_FB, Valid_FB, Fully_Open_FB, Fully_Closed_FB, _skip_;
+ANALOG_OUTPUT Position_FB, _skip_;
+STRING_OUTPUT Diagnostic$;
+INTEGER_PARAMETER Gateway_ID, Proxy_ID;
+
+Control4_Shade shade;
+
+eventhandler OnFeedbackChanged(Control4_Shade sender, ShadeStatusEventArgs args)
+{
+    Position_FB = args.Position;
+    Fully_Open_FB = args.FullyOpen;
+    Fully_Closed_FB = args.FullyClosed;
+    Valid_FB = args.Valid;
+}
+
+eventhandler OnDiagnosticReceived(Control4_Shade sender, GatewayMessageEventArgs args)
+{
+    Diagnostic$ = args.Message;
+}
+
+PUSH Query
+{
+    MakeString(Diagnostic$, "Shade Query received; gateway=%u proxy=%u", Gateway_ID, Proxy_ID);
+    shade.Query();
+}
+PUSH Open_btn { shade.Open(); }
+PUSH Close_btn { shade.Close(); }
+PUSH Stop_btn { shade.Stop(); }
+CHANGE Level_Set { if (Level_Set <= 100) shade.SetLevel(Level_Set); }
+
+FUNCTION Main()
+{
+    RegisterEvent(shade, FeedbackChanged, OnFeedbackChanged);
+    RegisterEvent(shade, DiagnosticReceived, OnDiagnosticReceived);
+    WaitForInitializationComplete();
+    shade.Initialize(Gateway_ID, Proxy_ID);
+    Initialized_FB = 1;
+    MakeString(Diagnostic$, "ShadeControl initialized; gateway=%u proxy=%u", Gateway_ID, Proxy_ID);
+}

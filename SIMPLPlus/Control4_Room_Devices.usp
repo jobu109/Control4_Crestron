@@ -1,0 +1,19 @@
+#SYMBOL_NAME "Control4 - Room Devices"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+
+// Four parameters plus a signal type separator for the diagnostic.
+DIGITAL_INPUT _skip_, _skip_, _skip_, _skip_;
+DIGITAL_OUTPUT _skip_, _skip_, _skip_, _skip_, _skip_;
+STRING_OUTPUT Diagnostic$;
+INTEGER_PARAMETER Gateway_ID, Room_ID;
+STRING_PARAMETER Lights$[255], Shades$[255];
+
+Control4_Room_Devices devices;
+
+FUNCTION Main()
+{
+    Diagnostic$ = devices.Configure(Gateway_ID, Room_ID, Lights$, Shades$);
+}

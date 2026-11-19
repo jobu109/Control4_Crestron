@@ -1,0 +1,785 @@
+{
+  "room_id": 13,
+  "generated_utc": "2026-11-17T00:33:47.415675Z",
+  "command_parameter_inspection": {
+    "definitions": [
+      {
+        "command": "SELECT_AUDIO_MEDIA:PLAYLIST",
+        "parameter": "mediaid",
+        "shape": {
+          "type": "Object",
+          "count": 6,
+          "children": [
+            {
+              "key": "name",
+              "shape": {
+                "type": "String"
+              }
+            },
+            {
+              "key": "type",
+              "shape": {
+                "type": "String"
+              }
+            }
+          ],
+          "unreported_key_count": 4
+        },
+        "command_contract": {
+          "type": "Object",
+          "fields": {
+            "display": {
+              "type": "String"
+            },
+            "command": {
+              "type": "String",
+              "schema_value": "SELECT_AUDIO_MEDIA:PLAYLIST"
+            },
+            "params": {
+              "type": "Array",
+              "entries": [
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "mediaid"
+                    },
+                    "type": {
+                      "type": "String",
+                      "schema_value": "LIST"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "valueSrc": {
+                      "type": "Object",
+                      "fields": {
+                        "method": {
+                          "type": "String"
+                        },
+                        "path": {
+                          "type": "String",
+                          "local_path": "/api/v1/locations/rooms/13/media/albums/playlists"
+                        }
+                      },
+                      "omitted": 0
+                    },
+                    "valueField": {
+                      "type": "String"
+                    },
+                    "valueDisplay": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                },
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "deselect"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "value": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                }
+              ],
+              "omitted": 0
+            },
+            "deviceId": {
+              "type": "Integer",
+              "schema_value": 13
+            }
+          },
+          "omitted": 1
+        }
+      },
+      {
+        "command": "SELECT_VIDEO_MEDIA:MOVIE",
+        "parameter": "mediaid",
+        "shape": {
+          "type": "Object",
+          "count": 6,
+          "children": [
+            {
+              "key": "name",
+              "shape": {
+                "type": "String"
+              }
+            },
+            {
+              "key": "type",
+              "shape": {
+                "type": "String"
+              }
+            }
+          ],
+          "unreported_key_count": 4
+        },
+        "command_contract": {
+          "type": "Object",
+          "fields": {
+            "display": {
+              "type": "String"
+            },
+            "command": {
+              "type": "String",
+              "schema_value": "SELECT_VIDEO_MEDIA:MOVIE"
+            },
+            "params": {
+              "type": "Array",
+              "entries": [
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "mediaid"
+                    },
+                    "type": {
+                      "type": "String",
+                      "schema_value": "LIST"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "valueSrc": {
+                      "type": "Object",
+                      "fields": {
+                        "method": {
+                          "type": "String"
+                        },
+                        "path": {
+                          "type": "String",
+                          "local_path": "/api/v1/locations/rooms/13/media/movies"
+                        }
+                      },
+                      "omitted": 0
+                    },
+                    "valueField": {
+                      "type": "String"
+                    },
+                    "valueDisplay": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                },
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "deselect"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "value": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                }
+              ],
+              "omitted": 0
+            },
+            "deviceId": {
+              "type": "Integer",
+              "schema_value": 13
+            }
+          },
+          "omitted": 1
+        }
+      },
+      {
+        "command": "SELECT_AUDIO_MEDIA:MOVIE",
+        "parameter": "mediaid",
+        "shape": {
+          "type": "Object",
+          "count": 6,
+          "children": [
+            {
+              "key": "name",
+              "shape": {
+                "type": "String"
+              }
+            },
+            {
+              "key": "type",
+              "shape": {
+                "type": "String"
+              }
+            }
+          ],
+          "unreported_key_count": 4
+        },
+        "command_contract": {
+          "type": "Object",
+          "fields": {
+            "display": {
+              "type": "String"
+            },
+            "command": {
+              "type": "String",
+              "schema_value": "SELECT_AUDIO_MEDIA:MOVIE"
+            },
+            "params": {
+              "type": "Array",
+              "entries": [
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "mediaid"
+                    },
+                    "type": {
+                      "type": "String",
+                      "schema_value": "LIST"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "valueSrc": {
+                      "type": "Object",
+                      "fields": {
+                        "method": {
+                          "type": "String"
+                        },
+                        "path": {
+                          "type": "String",
+                          "local_path": "/api/v1/locations/rooms/13/media/movies"
+                        }
+                      },
+                      "omitted": 0
+                    },
+                    "valueField": {
+                      "type": "String"
+                    },
+                    "valueDisplay": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                },
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "deselect"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "value": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                }
+              ],
+              "omitted": 0
+            },
+            "deviceId": {
+              "type": "Integer",
+              "schema_value": 13
+            }
+          },
+          "omitted": 1
+        }
+      },
+      {
+        "command": "SELECT_AUDIO_MEDIA:BROADCAST_AUDIO",
+        "parameter": "mediaid",
+        "shape": {
+          "type": "Object",
+          "count": 6,
+          "children": [
+            {
+              "key": "name",
+              "shape": {
+                "type": "String"
+              }
+            },
+            {
+              "key": "type",
+              "shape": {
+                "type": "String"
+              }
+            }
+          ],
+          "unreported_key_count": 4
+        },
+        "command_contract": {
+          "type": "Object",
+          "fields": {
+            "display": {
+              "type": "String"
+            },
+            "command": {
+              "type": "String",
+              "schema_value": "SELECT_AUDIO_MEDIA:BROADCAST_AUDIO"
+            },
+            "params": {
+              "type": "Array",
+              "entries": [
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "mediaid"
+                    },
+                    "type": {
+                      "type": "String",
+                      "schema_value": "LIST"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "valueSrc": {
+                      "type": "Object",
+                      "fields": {
+                        "method": {
+                          "type": "String"
+                        },
+                        "path": {
+                          "type": "String",
+                          "local_path": "/api/v1/locations/rooms/13/media/broadcast_audio"
+                        }
+                      },
+                      "omitted": 0
+                    },
+                    "valueField": {
+                      "type": "String"
+                    },
+                    "valueDisplay": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                },
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "deselect"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "value": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                }
+              ],
+              "omitted": 0
+            },
+            "deviceId": {
+              "type": "Integer",
+              "schema_value": 13
+            }
+          },
+          "omitted": 1
+        }
+      },
+      {
+        "command": "SELECT_VIDEO_MEDIA:BROADCAST_VIDEO",
+        "parameter": "mediaid",
+        "shape": {
+          "type": "Object",
+          "count": 6,
+          "children": [
+            {
+              "key": "name",
+              "shape": {
+                "type": "String"
+              }
+            },
+            {
+              "key": "type",
+              "shape": {
+                "type": "String"
+              }
+            }
+          ],
+          "unreported_key_count": 4
+        },
+        "command_contract": {
+          "type": "Object",
+          "fields": {
+            "display": {
+              "type": "String"
+            },
+            "command": {
+              "type": "String",
+              "schema_value": "SELECT_VIDEO_MEDIA:BROADCAST_VIDEO"
+            },
+            "params": {
+              "type": "Array",
+              "entries": [
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "mediaid"
+                    },
+                    "type": {
+                      "type": "String",
+                      "schema_value": "LIST"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "valueSrc": {
+                      "type": "Object",
+                      "fields": {
+                        "method": {
+                          "type": "String"
+                        },
+                        "path": {
+                          "type": "String",
+                          "local_path": "/api/v1/locations/rooms/13/media/broadcast_video"
+                        }
+                      },
+                      "omitted": 0
+                    },
+                    "valueField": {
+                      "type": "String"
+                    },
+                    "valueDisplay": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                },
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "deselect"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "value": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                }
+              ],
+              "omitted": 0
+            },
+            "deviceId": {
+              "type": "Integer",
+              "schema_value": 13
+            }
+          },
+          "omitted": 1
+        }
+      },
+      {
+        "command": "SELECT_AUDIO_MEDIA:ALBUM",
+        "parameter": "mediaid",
+        "shape": {
+          "type": "Object",
+          "count": 6,
+          "children": [
+            {
+              "key": "name",
+              "shape": {
+                "type": "String"
+              }
+            },
+            {
+              "key": "type",
+              "shape": {
+                "type": "String"
+              }
+            }
+          ],
+          "unreported_key_count": 4
+        },
+        "command_contract": {
+          "type": "Object",
+          "fields": {
+            "display": {
+              "type": "String"
+            },
+            "command": {
+              "type": "String",
+              "schema_value": "SELECT_AUDIO_MEDIA:ALBUM"
+            },
+            "params": {
+              "type": "Array",
+              "entries": [
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "mediaid"
+                    },
+                    "type": {
+                      "type": "String",
+                      "schema_value": "LIST"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "valueSrc": {
+                      "type": "Object",
+                      "fields": {
+                        "method": {
+                          "type": "String"
+                        },
+                        "path": {
+                          "type": "String",
+                          "local_path": "/api/v1/locations/rooms/13/media/albums"
+                        }
+                      },
+                      "omitted": 0
+                    },
+                    "valueField": {
+                      "type": "String"
+                    },
+                    "valueDisplay": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                },
+                {
+                  "type": "Object",
+                  "fields": {
+                    "name": {
+                      "type": "String",
+                      "schema_value": "deselect"
+                    },
+                    "valueType": {
+                      "type": "String"
+                    },
+                    "value": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                }
+              ],
+              "omitted": 0
+            },
+            "deviceId": {
+              "type": "Integer",
+              "schema_value": 13
+            }
+          },
+          "omitted": 1
+        }
+      }
+    ],
+    "advertised_get_paths": [
+      "/api/v1/locations/rooms/13/media/albums",
+      "/api/v1/locations/rooms/13/media/albums/playlists",
+      "/api/v1/locations/rooms/13/media/broadcast_audio",
+      "/api/v1/locations/rooms/13/media/broadcast_video",
+      "/api/v1/locations/rooms/13/media/movies"
+    ],
+    "advertised_paths_method_unknown": [],
+    "inspection_truncated": false,
+    "follow_policy": "Only explicit GET links in this room's /media subtree are eligible. Unknown-method links are not followed; queries/fragments omitted."
+  },
+  "catalog_responses": [
+    {
+      "response_type": "Array",
+      "list_recognized": true,
+      "item_count": 0,
+      "sample_numeric_ids": [],
+      "shape": {
+        "type": "Array",
+        "count": 0,
+        "children": [],
+        "unreported_key_count": 0
+      },
+      "inspection_truncated": false,
+      "content_note": "Names, artwork, arbitrary strings and payloads suppressed; numeric IDs are observations, not verified playable service content.",
+      "request_path": "/api/v1/locations/rooms/13/media/movies",
+      "http_status": 200
+    },
+    {
+      "response_type": "Array",
+      "list_recognized": true,
+      "item_count": 1,
+      "sample_numeric_ids": [
+        "1"
+      ],
+      "shape": {
+        "type": "Array",
+        "count": 1,
+        "children": [
+          {
+            "type": "Object",
+            "count": 10,
+            "children": [
+              {
+                "key": "id",
+                "shape": {
+                  "type": "Integer"
+                }
+              }
+            ],
+            "unreported_key_count": 9
+          }
+        ],
+        "unreported_key_count": 0
+      },
+      "inspection_truncated": false,
+      "content_note": "Names, artwork, arbitrary strings and payloads suppressed; numeric IDs are observations, not verified playable service content.",
+      "request_path": "/api/v1/locations/rooms/13/media/albums",
+      "http_status": 200
+    },
+    {
+      "response_type": "Array",
+      "list_recognized": true,
+      "item_count": 2,
+      "sample_numeric_ids": [
+        "1",
+        "2"
+      ],
+      "shape": {
+        "type": "Array",
+        "count": 2,
+        "children": [
+          {
+            "type": "Object",
+            "count": 2,
+            "children": [
+              {
+                "key": "id",
+                "shape": {
+                  "type": "Integer"
+                }
+              }
+            ],
+            "unreported_key_count": 1
+          },
+          {
+            "type": "Object",
+            "count": 2,
+            "children": [
+              {
+                "key": "id",
+                "shape": {
+                  "type": "Integer"
+                }
+              }
+            ],
+            "unreported_key_count": 1
+          }
+        ],
+        "unreported_key_count": 0
+      },
+      "inspection_truncated": false,
+      "content_note": "Names, artwork, arbitrary strings and payloads suppressed; numeric IDs are observations, not verified playable service content.",
+      "request_path": "/api/v1/locations/rooms/13/media/albums/playlists",
+      "http_status": 200
+    },
+    {
+      "response_type": "Array",
+      "list_recognized": true,
+      "item_count": 181,
+      "sample_numeric_ids": [
+        "231",
+        "217",
+        "224",
+        "232",
+        "230",
+        "213",
+        "212",
+        "215"
+      ],
+      "shape": {
+        "type": "Array",
+        "count": 181,
+        "children": [
+          {
+            "type": "Object",
+            "count": 8,
+            "children": [
+              {
+                "key": "id",
+                "shape": {
+                  "type": "Integer"
+                }
+              },
+              {
+                "key": "name",
+                "shape": {
+                  "type": "String"
+                }
+              }
+            ],
+            "unreported_key_count": 6
+          },
+          {
+            "type": "Object",
+            "count": 8,
+            "children": [
+              {
+                "key": "id",
+                "shape": {
+                  "type": "Integer"
+                }
+              },
+              {
+                "key": "name",
+                "shape": {
+                  "type": "String"
+                }
+              }
+            ],
+            "unreported_key_count": 6
+          }
+        ],
+        "unreported_key_count": 0
+      },
+      "inspection_truncated": false,
+      "content_note": "Names, artwork, arbitrary strings and payloads suppressed; numeric IDs are observations, not verified playable service content.",
+      "request_path": "/api/v1/locations/rooms/13/media/broadcast_audio",
+      "http_status": 200
+    },
+    {
+      "response_type": "Array",
+      "list_recognized": true,
+      "item_count": 0,
+      "sample_numeric_ids": [],
+      "shape": {
+        "type": "Array",
+        "count": 0,
+        "children": [],
+        "unreported_key_count": 0
+      },
+      "inspection_truncated": false,
+      "content_note": "Names, artwork, arbitrary strings and payloads suppressed; numeric IDs are observations, not verified playable service content.",
+      "request_path": "/api/v1/locations/rooms/13/media/broadcast_video",
+      "http_status": 200
+    }
+  ],
+  "errors": [],
+  "browse_endpoint_status": "inspection_only_not_established",
+  "note": "GET only. No source/content selected. Media selection commands and catalog IDs are separate; no streaming-service library access is claimed."
+}

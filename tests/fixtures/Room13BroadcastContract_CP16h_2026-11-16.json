@@ -1,0 +1,80 @@
+{
+  "type": "Object",
+  "fields": {
+    "display": {
+      "type": "String"
+    },
+    "command": {
+      "type": "String",
+      "schema_value": "SELECT_AUDIO_MEDIA:BROADCAST_AUDIO"
+    },
+    "params": {
+      "type": "Array",
+      "entries": [
+        {
+          "type": "Object",
+          "fields": {
+            "name": {
+              "type": "String",
+              "schema_value": "mediaid"
+            },
+            "type": {
+              "type": "String",
+              "schema_value": "LIST"
+            },
+            "valueType": {
+              "type": "String",
+              "schema_value": "INTEGER"
+            },
+            "valueSrc": {
+              "type": "Object",
+              "fields": {
+                "method": {
+                  "type": "String",
+                  "schema_value": "GET"
+                },
+                "path": {
+                  "type": "String",
+                  "local_path": "/api/v1/locations/rooms/13/media/broadcast_audio"
+                }
+              },
+              "omitted": 0
+            },
+            "valueField": {
+              "type": "String",
+              "schema_value": "id"
+            },
+            "valueDisplay": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "fields": {
+            "name": {
+              "type": "String",
+              "schema_value": "deselect"
+            },
+            "valueType": {
+              "type": "String",
+              "schema_value": "BOOL"
+            },
+            "value": {
+              "type": "String",
+              "schema_value": "1"
+            }
+          },
+          "omitted": 0
+        }
+      ],
+      "omitted": 0
+    },
+    "deviceId": {
+      "type": "Integer",
+      "schema_value": 13
+    }
+  },
+  "omitted": 1
+}

@@ -1,0 +1,95 @@
+#SYMBOL_NAME "Control4 - Room Module - Transport"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+
+// Two parameters reserve two leading skips in each direction.
+DIGITAL_INPUT _skip_, _skip_, Discover_Commands, Room_Off_btn, Watch_btn, Control4_btn, Listen_btn, List_btn, Custom_1_btn, Custom_2_btn, Custom_3_btn, Guide_btn, Page_Up_btn, Page_Down_btn, Previous_btn, Volume_Up_btn, Volume_Down_btn, Channel_Up_btn, Channel_Down_btn, Up_btn, Down_btn, Left_btn, Right_btn, Select_btn, Mute_btn, Info_btn, Menu_btn, Back_btn, DVR_btn, Rewind_btn, Fast_Forward_btn, Skip_Back_btn, Play_btn, Skip_Forward_btn, Record_btn, Pause_btn, Stop_btn, Red_btn, Green_btn, Yellow_btn, Blue_btn, Digit_1_btn, Digit_2_btn, Digit_3_btn, Digit_4_btn, Digit_5_btn, Digit_6_btn, Digit_7_btn, Digit_8_btn, Digit_9_btn, Star_btn, Digit_0_btn, Pound_btn;
+DIGITAL_OUTPUT _skip_, _skip_, Initialized_FB, Discovery_Valid_FB, Play_Available_FB, Pause_Available_FB, Stop_Available_FB, Watch_UI_Request, Listen_UI_Request, List_UI_Request, _skip_;
+ANALOG_OUTPUT Advertised_Command_Count_FB, Mapped_Key_Count_FB, _skip_;
+STRING_OUTPUT Key_Capabilities_JSON$, Local_Action$, Diagnostic$;
+INTEGER_PARAMETER Gateway_ID, Room_ID;
+Control4_Room_Transport transport;
+
+eventhandler OnDiagnosticReceived(Control4_Room_Transport sender, GatewayMessageEventArgs args)
+{
+    Diagnostic$ = args.Message;
+}
+eventhandler OnLocalActionRequested(Control4_Room_Transport sender, GatewayMessageEventArgs args)
+{
+    Local_Action$ = args.Message;
+    if (args.Message = "Watch") Pulse(10, Watch_UI_Request);
+    if (args.Message = "Listen") Pulse(10, Listen_UI_Request);
+    if (args.Message = "List") Pulse(10, List_UI_Request);
+}
+eventhandler OnCapabilitiesChanged(Control4_Room_Transport sender, RoomTransportEventArgs args)
+{
+    Discovery_Valid_FB = args.DiscoveryValid;
+    Advertised_Command_Count_FB = args.CommandCount;
+    Mapped_Key_Count_FB = args.MappedCount;
+    Play_Available_FB = args.PlayAvailable;
+    Pause_Available_FB = args.PauseAvailable;
+    Stop_Available_FB = args.StopAvailable;
+    Key_Capabilities_JSON$ = args.Json;
+}
+PUSH Discover_Commands { transport.DiscoverCommands(); }
+PUSH Room_Off_btn { transport.Press("Room_Off"); }
+PUSH Watch_btn { transport.Press("Watch"); }
+PUSH Control4_btn { transport.Press("Control4"); }
+PUSH Listen_btn { transport.Press("Listen"); }
+PUSH List_btn { transport.Press("List"); }
+PUSH Custom_1_btn { transport.Press("Custom_1"); }
+PUSH Custom_2_btn { transport.Press("Custom_2"); }
+PUSH Custom_3_btn { transport.Press("Custom_3"); }
+PUSH Guide_btn { transport.Press("Guide"); }
+PUSH Page_Up_btn { transport.Press("Page_Up"); }
+PUSH Page_Down_btn { transport.Press("Page_Down"); }
+PUSH Previous_btn { transport.Press("Previous"); }
+PUSH Volume_Up_btn { transport.Press("Volume_Up"); }
+PUSH Volume_Down_btn { transport.Press("Volume_Down"); }
+PUSH Channel_Up_btn { transport.Press("Channel_Up"); }
+PUSH Channel_Down_btn { transport.Press("Channel_Down"); }
+PUSH Up_btn { transport.Press("Up"); }
+PUSH Down_btn { transport.Press("Down"); }
+PUSH Left_btn { transport.Press("Left"); }
+PUSH Right_btn { transport.Press("Right"); }
+PUSH Select_btn { transport.Press("Select"); }
+PUSH Mute_btn { transport.Press("Mute"); }
+PUSH Info_btn { transport.Press("Info"); }
+PUSH Menu_btn { transport.Press("Menu"); }
+PUSH Back_btn { transport.Press("Back"); }
+PUSH DVR_btn { transport.Press("DVR"); }
+PUSH Rewind_btn { transport.Press("Rewind"); }
+PUSH Fast_Forward_btn { transport.Press("Fast_Forward"); }
+PUSH Skip_Back_btn { transport.Press("Skip_Back"); }
+PUSH Play_btn { transport.Press("Play"); }
+PUSH Skip_Forward_btn { transport.Press("Skip_Forward"); }
+PUSH Record_btn { transport.Press("Record"); }
+PUSH Pause_btn { transport.Press("Pause"); }
+PUSH Stop_btn { transport.Press("Stop"); }
+PUSH Red_btn { transport.Press("Red"); }
+PUSH Green_btn { transport.Press("Green"); }
+PUSH Yellow_btn { transport.Press("Yellow"); }
+PUSH Blue_btn { transport.Press("Blue"); }
+PUSH Digit_1_btn { transport.Press("Digit_1"); }
+PUSH Digit_2_btn { transport.Press("Digit_2"); }
+PUSH Digit_3_btn { transport.Press("Digit_3"); }
+PUSH Digit_4_btn { transport.Press("Digit_4"); }
+PUSH Digit_5_btn { transport.Press("Digit_5"); }
+PUSH Digit_6_btn { transport.Press("Digit_6"); }
+PUSH Digit_7_btn { transport.Press("Digit_7"); }
+PUSH Digit_8_btn { transport.Press("Digit_8"); }
+PUSH Digit_9_btn { transport.Press("Digit_9"); }
+PUSH Star_btn { transport.Press("Star"); }
+PUSH Digit_0_btn { transport.Press("Digit_0"); }
+PUSH Pound_btn { transport.Press("Pound"); }
+FUNCTION Main()
+{
+    RegisterEvent(transport, DiagnosticReceived, OnDiagnosticReceived);
+    RegisterEvent(transport, LocalActionRequested, OnLocalActionRequested);
+    RegisterEvent(transport, CapabilitiesChanged, OnCapabilitiesChanged);
+    WaitForInitializationComplete();
+    Initialized_FB = transport.Initialize(Gateway_ID, Room_ID);
+}
+

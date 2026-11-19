@@ -1,0 +1,765 @@
+{
+  "http_status": 200,
+  "request_method": "GET",
+  "request_path": "/api/v1/items/13/commands",
+  "response_type": "Array",
+  "command_list_recognized": true,
+  "command_count": 95,
+  "exported_command_count": 95,
+  "unreported_command_count": 0,
+  "inspection_truncated": false,
+  "commands": [
+    {
+      "command_name": "ROOM_OFF",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SELECT_AUDIO_MEDIA:PLAYLIST",
+      "parameter_container_type": "Array",
+      "parameter_definitions": [
+        {
+          "name": "mediaid",
+          "type": "list"
+        },
+        {
+          "name": "deselect"
+        }
+      ],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SELECT_VIDEO_MEDIA:MOVIE",
+      "parameter_container_type": "Array",
+      "parameter_definitions": [
+        {
+          "name": "mediaid",
+          "type": "list"
+        },
+        {
+          "name": "deselect"
+        }
+      ],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SELECT_AUDIO_MEDIA:MOVIE",
+      "parameter_container_type": "Array",
+      "parameter_definitions": [
+        {
+          "name": "mediaid",
+          "type": "list"
+        },
+        {
+          "name": "deselect"
+        }
+      ],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SELECT_AUDIO_MEDIA:BROADCAST_AUDIO",
+      "parameter_container_type": "Array",
+      "parameter_definitions": [
+        {
+          "name": "mediaid",
+          "type": "list"
+        },
+        {
+          "name": "deselect"
+        }
+      ],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SELECT_VIDEO_MEDIA:BROADCAST_VIDEO",
+      "parameter_container_type": "Array",
+      "parameter_definitions": [
+        {
+          "name": "mediaid",
+          "type": "list"
+        },
+        {
+          "name": "deselect"
+        }
+      ],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SELECT_AUDIO_MEDIA:ALBUM",
+      "parameter_container_type": "Array",
+      "parameter_definitions": [
+        {
+          "name": "mediaid",
+          "type": "list"
+        },
+        {
+          "name": "deselect"
+        }
+      ],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SELECT_AUDIO_DEVICE",
+      "parameter_container_type": "Array",
+      "parameter_definitions": [
+        {
+          "name": "deviceid",
+          "type": "list"
+        },
+        {
+          "name": "deselect"
+        }
+      ],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SELECT_VIDEO_DEVICE",
+      "parameter_container_type": "Array",
+      "parameter_definitions": [
+        {
+          "name": "deviceid",
+          "type": "list"
+        },
+        {
+          "name": "deselect"
+        }
+      ],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SET_VOLUME_LEVEL",
+      "parameter_container_type": "Array",
+      "parameter_definitions": [
+        {
+          "name": "LEVEL"
+        }
+      ],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "NUMBER_0",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "NUMBER_1",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "NUMBER_2",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "NUMBER_3",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "NUMBER_4",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "NUMBER_5",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "NUMBER_6",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "NUMBER_7",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "NUMBER_8",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "NUMBER_9",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PIP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "MENU",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "MUTE_TOGGLE",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "MUTE_ON",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "MUTE_OFF",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PULSE_VOL_UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_VOL_UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_VOL_UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PULSE_VOL_DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_VOL_DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_VOL_DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PAGE_UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_PAGE_UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_PAGE_UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PAGE_DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_PAGE_DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_PAGE_DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PULSE_CH_UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_CH_UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_CH_UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PULSE_CH_DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_CH_DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_CH_DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "GUIDE",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "ENTER",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_UP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_DOWN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "RIGHT",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_RIGHT",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_RIGHT",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "LEFT",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_LEFT",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_LEFT",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "RECALL",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "INFO",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "CANCEL",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "BACK",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PVR",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SKIP_REV",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SKIP_FWD",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SCAN_REV",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_SCAN_REV",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_SCAN_REV",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "SCAN_FWD",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "START_SCAN_FWD",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP_SCAN_FWD",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PAUSE",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STOP",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "RECORD",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PLAY",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "OPEN_CLOSE",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "EJECT",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "DASH",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "STAR",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "POUND",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "CONTROL4",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PROGRAM_A",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PROGRAM_B",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PROGRAM_C",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PROGRAM_D",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "TV_OFF",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "ORDER",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "CLOSED_CAPTIONED",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "EXIT",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "FUNCTION",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "POWER",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PROGRAM_LISTEN",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "PROGRAM_WATCH",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "CUSTOM_1",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "CUSTOM_2",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    },
+    {
+      "command_name": "CUSTOM_3",
+      "parameter_container_type": "missing",
+      "parameter_definitions": [],
+      "unreported_parameter_count": 0,
+      "parameters_truncated": false
+    }
+  ],
+  "browse_name_matches": [
+    "MENU",
+    "PROGRAM_LISTEN",
+    "SELECT_AUDIO_MEDIA:ALBUM",
+    "SELECT_AUDIO_MEDIA:PLAYLIST"
+  ],
+  "match_note": "Name matches are heuristic metadata candidates, not verified browse operations. No command was executed.",
+  "unrecognized_response_shape": null,
+  "first_entry_shape": {
+    "type": "Object",
+    "known_keys": [
+      "command"
+    ],
+    "unreported_key_count": 3
+  },
+  "browse_endpoint_status": "not_established",
+  "room_id": 13,
+  "generated_utc": "2026-11-16T02:13:10.543868Z",
+  "execution_note": "Metadata only; advertised commands are not runtime verification. Missing entries do not prove lack of support."
+}

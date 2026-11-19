@@ -1,0 +1,25 @@
+const {chromium}=require('playwright'),path=require('node:path'),assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{
+ const page=await browser.newPage({viewport:{width:1280,height:800}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('https://i.scdn.co/**',route=>route.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j1ioAAAAASUVORK5CYII=','base64')}));
+ await page.setContent('<div id="room"></div>');await page.addStyleTag({path:path.resolve('styles.css')});await page.addScriptTag({path:path.resolve('app.js')});
+ await page.evaluate(()=>{window.commands=[];const bridge={subscribe(fn){window.feed=fn},transport(key){commands.push(key)},destroy(){}};RoomMediaApp.mount(document.querySelector('#room'),{bridge,data:{},roomId:13});});
+ await page.evaluate(()=>feed({connected:true,capabilities:{Volume_Up:true,Volume_Down:true,Play:true,Pause:true}}));
+ await page.getByRole('button',{name:'Volume down',exact:true}).click();assert.match(await page.getByRole('button',{name:'Volume down',exact:true}).getAttribute('class'),/rm-pressed/);await page.getByRole('button',{name:'Volume up',exact:true}).click();assert.match(await page.getByRole('button',{name:'Volume up',exact:true}).getAttribute('class'),/rm-pressed/);assert.deepEqual(await page.evaluate(()=>commands),['Volume_Down','Volume_Up']);
+ await page.evaluate(()=>feed({nowPlaying:{title:'Circle The Drain',artist:'Machine Head',album:'Circle The Drain',source_id:65,track_revision:'1111111111111111',artwork:'https://i.scdn.co/image/example'}}));
+ assert.equal(await page.locator('.rm-track').textContent(),'Circle The Drain');await page.locator('.rm-art-loaded').waitFor();assert.equal(await page.locator('.rm-art-image').getAttribute('referrerpolicy'),'no-referrer');
+ await page.evaluate(()=>{window.listNode=document.querySelector('.rm-list');feed({progress:{room_id:13,source_id:65,track_revision:'1111111111111111',valid:true,position_seconds:11,duration_seconds:235}});});
+ assert.equal(await page.locator('.rm-progress').isVisible(),true);assert.equal(await page.locator('.rm-elapsed').textContent(),'0:11');assert.equal(await page.locator('.rm-duration').textContent(),'3:55');assert.equal(await page.evaluate(()=>listNode===document.querySelector('.rm-list')),true);
+ await page.evaluate(()=>feed({progress:{room_id:13,source_id:65,track_revision:'2222222222222222',valid:true,position_seconds:11,duration_seconds:235}}));assert.equal(await page.locator('.rm-progress').isVisible(),false);
+ await page.evaluate(()=>feed({nowPlaying:{title:'Circle The Drain',artist:'Machine Head',playback_action:'pause'}}));
+ assert.equal(await page.locator('.rm-transport .play').getAttribute('aria-label'),'Pause');assert.equal(await page.locator('.rm-transport button[aria-label="Pause"]:not(.play)').isVisible(),false);
+ await page.locator('.rm-transport .play').click();assert.equal(await page.evaluate(()=>commands.at(-1)),'Pause');
+ await page.evaluate(()=>feed({nowPlaying:{title:'Circle The Drain',artist:'Machine Head',playback_action:'play'}}));
+ assert.equal(await page.locator('.rm-transport .play').getAttribute('aria-label'),'Play');await page.locator('.rm-transport .play').click();assert.equal(await page.evaluate(()=>commands.at(-1)),'Play');
+ await page.evaluate(()=>feed({nowPlaying:{title:'Circle The Drain',playback_action:'unknown'}}));assert.equal(await page.locator('.rm-transport button[aria-label="Pause"]:not(.play)').isVisible(),true);
+ await page.evaluate(()=>feed({catalog:{items:[],revision:'r',valid:true,pending:false}}));assert.equal(await page.locator('.rm-track').textContent(),'Circle The Drain','Browsing must retain actual now-playing');
+ await page.evaluate(()=>feed({nowPlaying:{title:'<b>Next track</b>',artist:'New artist',album:'',artwork:'http://unsafe.test/image'}}));
+ assert.equal(await page.locator('.rm-track').textContent(),'<b>Next track</b>');assert.equal(await page.locator('.rm-art-image').getAttribute('src'),null);
+ await page.evaluate(()=>feed({nowPlaying:null}));assert.match(await page.locator('.rm-track').textContent(),/Waiting/);assert.equal(await page.locator('.rm-art-loaded').count(),0);assert.deepEqual(errors,[]);
+ console.log('Now-playing browser view passed: live text/artwork, browse preservation, URL/HTML rejection and clearing.');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,0 +1,20 @@
+{
+  "_fileMetadata": {
+    "_schema": "1.0.0.0",
+    "_createdByAppHost": "2.2000.8.0",
+    "_created": "2026-11-17T11:20:58.3979407-06:00",
+    "_lastModifiedByAppHost": "2.2000.8.0",
+    "_minimumAppHost": "2.1900.0",
+    "_modified": "2026-11-17T11:20:58.3979261-06:00"
+  },
+  "_solution": {
+    "_name": "Floyd",
+    "_projects": [
+      {
+        "_name": "Floyd Control 4",
+        "_filename": "Floyd Control 4.cuip",
+        "_datetime": "2026-11-17T17:20:58.2309163Z"
+      }
+    ]
+  }
+}

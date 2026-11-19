@@ -1,0 +1,25 @@
+{
+  "name": "control4-room-media-ui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build && node tools/promote-live.cjs",
+    "test": "node tests/catalog.test.cjs && node tests/bridge.test.cjs && node tests/join-map.cjs && node tests/transport-keys.cjs && node tests/join-coverage.cjs && node tests/feedback.cjs && node tests/now-playing.cjs",
+    "archive": "ch5-cli archive -p RoomMedia -d dist -o archives",
+    "build:construct": "vite build --config vite.construct.config.js",
+    "test:preview": "node tests/preview.cjs",
+    "test:pages": "node tests/shared-pages.cjs"
+  },
+  "dependencies": {
+    "@crestron/ch5-crcomlib": "2.20.0",
+    "@crestron/ch5-theme": "2.20.0",
+    "@crestron/ch5-webxpanel": "2.8.0"
+  },
+  "devDependencies": {
+    "@crestron/ch5-utilities-cli": "2.19.0",
+    "playwright": "1.65.1",
+    "vite": "8.3.8"
+  }
+}

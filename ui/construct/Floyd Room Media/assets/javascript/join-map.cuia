@@ -1,0 +1,23 @@
+{FileMetadata}
+Schema = "1.0.0.0"
+CreatedByAppHost = "2.2000.8.0"
+Created = 2026-11-17 11:38:29.717112-06:00
+LastModifiedByAppHost = "2.2000.8.0"
+Modified = 2026-11-17 11:38:29.717106-06:00
+CreatedByProjectApp = "1.5001.45.0"
+LastModifiedByProjectApp = "1.5001.45.0"
+MinimumProjectApp = ""
+MinimumAppHost = "2.1900.0"
+
+{AssetAttributes}
+
+[Attributes]
+Id = "ce0e2d5a-e26c-413d-9c09-cbcceff78a65"
+Name = "join-map"
+SourceUri = "join-map.js"
+AspectRatio = "0"
+AssetSourceType = "File"
+AssetType = "JavaScript"
+Username = ""
+Password = ""
+

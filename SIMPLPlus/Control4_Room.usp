@@ -1,0 +1,166 @@
+#SYMBOL_NAME "Control4 - Room Module - Sources"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+#DEFINE_CONSTANT VideoSources 15
+#DEFINE_CONSTANT AudioSources 15
+
+// Two parameters; two leading skips in both directions.
+DIGITAL_INPUT _skip_, _skip_, Query, Discover_Sources, Inspect_Room_State, Inspect_Now_Playing, Inspect_Media_Catalog, Browse_Media_Playlists, Browse_Media_Albums, Browse_Media_Audio_Stations, Browse_Media_Movies, Browse_Media_Video_Stations, Select_Media_ID_btn, Select_Service_Preset_btn, Inspect_Service_Presets, Browse_Service_Presets, Pandora_Shuffle_On, Mute_On_btn, Mute_Off_btn, Room_Off_btn, Select_Audio_ID_btn, Select_Video_ID_btn, Video_Source[VideoSources], Audio_Source[AudioSources], _skip_;
+ANALOG_INPUT Volume_Set, Audio_List_Page_Set, Video_List_Page_Set, Video_Source_Select, Audio_Source_Select, Media_List_Page_Set, Media_Item_Select, Service_Preset_Driver_ID, Service_Preset_Source_ID, Now_Playing_Page_Set, _skip_;
+STRING_INPUT Source_ID$[16], Video_Source_Name$[512], Audio_Source_Name$[512], Media_ID$[24], Media_Select_Request$[512], Service_Preset$[2048];
+DIGITAL_OUTPUT _skip_, _skip_, Initialized_FB, Valid_FB, Power_FB, Power_Valid_FB, Mute_FB, Mute_Valid_FB, Volume_Valid_FB, Sources_Valid_FB, Has_Video_Sources_FB, Has_Audio_Sources_FB, Content_Browse_Available_FB, Media_List_Valid_FB, Media_List_Partial_FB, Media_Select_Available_FB, Video_Source_Selected_Valid_FB, Audio_Source_Selected_Valid_FB, Video_Source_Overflow_FB, Audio_Source_Overflow_FB, Now_Playing_Valid_FB, Video_Source_Available[VideoSources], Audio_Source_Available[AudioSources], _skip_;
+ANALOG_OUTPUT Volume_FB, Video_Source_Count_FB, Audio_Source_Count_FB, Audio_List_Page_FB, Video_List_Page_FB, Audio_List_Pages_FB, Video_List_Pages_FB, Video_Source_Selected_FB, Audio_Source_Selected_FB, Video_Source_Overflow_Count_FB, Audio_Source_Overflow_Count_FB, Media_Item_Count_FB, Media_List_Page_FB, Media_List_Pages_FB, Now_Playing_Page_FB, Now_Playing_Pages_FB, _skip_;
+STRING_OUTPUT Room_Name$, Diagnostic$, Audio_Source_List_JSON$, Video_Source_List_JSON$, Media_List_JSON$, Media_Kind$, Now_Playing_JSON$, Now_Playing_Progress_JSON$, Video_Source_Name_FB$[VideoSources], Audio_Source_Name_FB$[AudioSources], Source_Overflow_Message$[1];
+INTEGER_PARAMETER Gateway_ID, Room_ID;
+Control4_Room room;
+
+eventhandler OnFeedbackChanged(Control4_Room sender, AudioStatusEventArgs args)
+{
+    Valid_FB = args.Valid;
+    Power_FB = args.Power;
+    Power_Valid_FB = args.PowerValid;
+    Mute_FB = args.Muted;
+    Mute_Valid_FB = args.MuteValid;
+    Volume_FB = args.Volume;
+    Volume_Valid_FB = args.VolumeValid;
+}
+eventhandler OnBrowserChanged(Control4_Room sender, RoomBrowserEventArgs args)
+{
+    Room_Name$ = args.RoomName;
+    Sources_Valid_FB = args.SourcesValid;
+    Has_Video_Sources_FB = args.HasWatch;
+    Has_Audio_Sources_FB = args.HasListen;
+    Video_Source_Count_FB = args.WatchCount;
+    Audio_Source_Count_FB = args.ListenCount;
+}
+eventhandler OnDiagnosticReceived(Control4_Room sender, GatewayMessageEventArgs args)
+{
+    Diagnostic$ = args.Message;
+}
+eventhandler OnSourceListsChanged(Control4_Room sender, RoomSourceListsEventArgs args)
+{
+    Audio_List_Page_FB = args.AudioPage;
+    Video_List_Page_FB = args.VideoPage;
+    Audio_List_Pages_FB = args.AudioPages;
+    Video_List_Pages_FB = args.VideoPages;
+    Audio_Source_List_JSON$ = args.AudioJson;
+    Video_Source_List_JSON$ = args.VideoJson;
+}
+eventhandler OnSourceSlotChanged(Control4_Room sender, RoomSourceSlotEventArgs args)
+{
+    if (args.Video)
+    {
+        if (args.Index <= VideoSources)
+        {
+            Video_Source_Available[args.Index] = args.Available;
+            Video_Source_Name_FB$[args.Index] = args.Name;
+        }
+    }
+    else
+    {
+        if (args.Index <= AudioSources)
+        {
+            Audio_Source_Available[args.Index] = args.Available;
+            Audio_Source_Name_FB$[args.Index] = args.Name;
+        }
+    }
+}
+eventhandler OnSourceSlotsStatusChanged(Control4_Room sender, RoomSourceSlotsStatusEventArgs args)
+{
+    Video_Source_Overflow_FB = args.VideoOverflow;
+    Audio_Source_Overflow_FB = args.AudioOverflow;
+    Video_Source_Overflow_Count_FB = args.VideoOverflowCount;
+    Audio_Source_Overflow_Count_FB = args.AudioOverflowCount;
+    if (args.VideoOverflow || args.AudioOverflow)
+        MakeString(Source_Overflow_Message$[1], "Source capacity exceeded: video has %u extra; audio has %u extra. Increase VideoSources / AudioSources and recompile.", args.VideoOverflowCount, args.AudioOverflowCount);
+    else
+        Source_Overflow_Message$[1] = "";
+}
+eventhandler OnSelectedSlotsChanged(Control4_Room sender, RoomSelectedSlotsEventArgs args)
+{
+    Audio_Source_Selected_FB = args.AudioIndex;
+    Video_Source_Selected_FB = args.VideoIndex;
+    Audio_Source_Selected_Valid_FB = args.AudioValid;
+    Video_Source_Selected_Valid_FB = args.VideoValid;
+}
+PUSH Video_Source { room.SelectVideoSourceIndex(GetLastModifiedArrayIndex()); }
+PUSH Audio_Source { room.SelectAudioSourceIndex(GetLastModifiedArrayIndex()); }
+CHANGE Video_Source_Select { room.SelectVideoSourceIndex(Video_Source_Select); }
+CHANGE Audio_Source_Select { room.SelectAudioSourceIndex(Audio_Source_Select); }
+CHANGE Video_Source_Name$ { room.SelectVideoSourceName(Video_Source_Name$); }
+CHANGE Audio_Source_Name$ { room.SelectAudioSourceName(Audio_Source_Name$); }
+PUSH Select_Audio_ID_btn { room.SelectAudioSourceId(Source_ID$); }
+PUSH Select_Video_ID_btn { room.SelectVideoSourceId(Source_ID$); }
+CHANGE Audio_List_Page_Set { room.SetAudioListPage(Audio_List_Page_Set); }
+CHANGE Video_List_Page_Set { room.SetVideoListPage(Video_List_Page_Set); }
+eventhandler OnMediaPageChanged(Control4_Room sender, RoomMediaPageEventArgs args)
+{
+    Content_Browse_Available_FB = args.Valid;
+    Media_List_Valid_FB = args.Valid;
+    Media_Select_Available_FB = args.SelectionAvailable;
+    Media_List_Partial_FB = args.Partial;
+    Media_Item_Count_FB = args.Count;
+    Media_List_Page_FB = args.Page;
+    Media_List_Pages_FB = args.Pages;
+    Media_Kind$ = args.Kind;
+    Media_List_JSON$ = args.Json;
+}
+PUSH Inspect_Now_Playing { room.InspectNowPlaying(); }
+PUSH Select_Media_ID_btn { room.SelectMediaId(Media_ID$); }
+CHANGE Pandora_Shuffle_On { room.SetPandoraShuffle(Pandora_Shuffle_On); }
+PUSH Select_Service_Preset_btn { room.SelectServicePreset(Service_Preset_Driver_ID, Service_Preset$); }
+PUSH Inspect_Service_Presets { room.InspectServicePresets(Service_Preset_Driver_ID, Service_Preset$); }
+PUSH Browse_Service_Presets { room.BrowseServicePresets(Service_Preset_Driver_ID, Service_Preset_Source_ID); }
+CHANGE Media_Item_Select { room.SelectMediaIndex(Media_Item_Select); }
+CHANGE Media_Select_Request$ { room.SelectMediaRequest(Media_Select_Request$); }
+PUSH Browse_Media_Playlists { room.BrowsePlaylists(); }
+PUSH Browse_Media_Albums { room.BrowseAlbums(); }
+PUSH Browse_Media_Audio_Stations { room.BrowseAudioStations(); }
+PUSH Browse_Media_Movies { room.BrowseMovies(); }
+PUSH Browse_Media_Video_Stations { room.BrowseVideoStations(); }
+CHANGE Media_List_Page_Set { room.SetMediaPage(Media_List_Page_Set); }
+PUSH Query { room.Query(); }
+PUSH Inspect_Room_State { room.InspectRoomState(); }
+PUSH Inspect_Media_Catalog { room.InspectMediaCatalog(); }
+PUSH Discover_Sources { room.Discover(); }
+PUSH Mute_On_btn { room.MuteOn(); }
+PUSH Mute_Off_btn { room.MuteOff(); }
+PUSH Room_Off_btn { room.RoomOff(); }
+CHANGE Volume_Set { room.SetVolume(Volume_Set); }
+eventhandler OnNowPlayingChanged(Control4_Room sender, RoomMediaPageEventArgs args)
+{
+    Now_Playing_Valid_FB = args.Valid;
+    Now_Playing_Page_FB = args.Page;
+    Now_Playing_Pages_FB = args.Pages;
+    Now_Playing_JSON$ = args.Json;
+}
+CHANGE Now_Playing_Page_Set { room.SetNowPlayingPage(Now_Playing_Page_Set); }
+eventhandler OnProgressChanged(Control4_Room sender, RoomCatalogEventArgs args)
+{
+    Now_Playing_Progress_JSON$ = args.Json;
+}
+FUNCTION Main()
+{
+    RegisterEvent(room, FeedbackChanged, OnFeedbackChanged);
+    RegisterEvent(room, BrowserChanged, OnBrowserChanged);
+    RegisterEvent(room, SourceListsChanged, OnSourceListsChanged);
+    RegisterEvent(room, DiagnosticReceived, OnDiagnosticReceived);
+    RegisterEvent(room, SourceSlotChanged, OnSourceSlotChanged);
+    RegisterEvent(room, SourceSlotsStatusChanged, OnSourceSlotsStatusChanged);
+    RegisterEvent(room, SelectedSlotsChanged, OnSelectedSlotsChanged);
+    RegisterEvent(room, MediaPageChanged, OnMediaPageChanged);
+    RegisterEvent(room, NowPlayingChanged, OnNowPlayingChanged);
+    RegisterEvent(room, ProgressChanged, OnProgressChanged);
+    WaitForInitializationComplete();
+    Content_Browse_Available_FB = 0;
+    Video_Source_Selected_FB = 0;
+    Audio_Source_Selected_FB = 0;
+    Video_Source_Selected_Valid_FB = 0;
+    Audio_Source_Selected_Valid_FB = 0;
+    Initialized_FB = 0;
+    if (room.ConfigureSourceSlots(VideoSources, AudioSources))
+        Initialized_FB = room.Initialize(Gateway_ID, Room_ID);
+    room.SetPandoraShuffle(Pandora_Shuffle_On);
+}

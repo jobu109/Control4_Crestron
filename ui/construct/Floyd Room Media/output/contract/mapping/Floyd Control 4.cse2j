@@ -1,0 +1,19 @@
+{
+  "name": "Floyd Control 4",
+  "timestamp": "2026-11-19T18:54:47.5277215+00:00",
+  "version": "1.0.0.0",
+  "schema_version": 1,
+  "extra_value": "",
+  "signals": {
+    "states": {
+      "boolean": {},
+      "numeric": {},
+      "string": {}
+    },
+    "events": {
+      "boolean": {},
+      "numeric": {},
+      "string": {}
+    }
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "schema_version": 2,
+  "request_method": "GET",
+  "report_kind": "command_metadata_comparison",
+  "source_count": 4,
+  "successful_source_count": 4,
+  "error_count": 0,
+  "sources": [
+    {
+      "source_id": 20,
+      "http_status": 200,
+      "request_method": "GET",
+      "request_path": "/api/v1/items/20/commands",
+      "response_type": "Array",
+      "command_list_recognized": true,
+      "command_count": 0,
+      "exported_command_count": 0,
+      "unreported_command_count": 0,
+      "inspection_truncated": false,
+      "commands": [],
+      "browse_name_matches": [],
+      "match_note": "Name matches are heuristic metadata candidates, not verified browse operations. No command was executed.",
+      "unrecognized_response_shape": null,
+      "first_entry_shape": null,
+      "browse_endpoint_status": "not_established",
+      "source_label": "TuneIn"
+    },
+    {
+      "source_id": 65,
+      "http_status": 200,
+      "request_method": "GET",
+      "request_path": "/api/v1/items/65/commands",
+      "response_type": "Array",
+      "command_list_recognized": true,
+      "command_count": 1,
+      "exported_command_count": 1,
+      "unreported_command_count": 0,
+      "inspection_truncated": false,
+      "commands": [
+        {
+          "command_name": "SelectPreset",
+          "parameter_container_type": "Array",
+          "parameter_definitions": [
+            {
+              "name": "Preset"
+            },
+            {
+              "name": "Room"
+            }
+          ],
+          "unreported_parameter_count": 0,
+          "parameters_truncated": false
+        }
+      ],
+      "browse_name_matches": [],
+      "match_note": "Name matches are heuristic metadata candidates, not verified browse operations. No command was executed.",
+      "unrecognized_response_shape": null,
+      "first_entry_shape": {
+        "type": "Object",
+        "known_keys": [
+          "command",
+          "params"
+        ],
+        "unreported_key_count": 3
+      },
+      "browse_endpoint_status": "not_established",
+      "spotify_preset_parameter_schemas": [
+        {
+          "type": "Array",
+          "count": 2,
+          "children": [
+            {
+              "type": "Object",
+              "fields": {
+                "name": {
+                  "type": "String",
+                  "schema_value": "Preset"
+                },
+                "type": {
+                  "type": "String"
+                }
+              },
+              "omitted_fields": 1
+            },
+            {
+              "type": "Object",
+              "fields": {
+                "name": {
+                  "type": "String",
+                  "schema_value": "Room"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "items": {
+                  "type": "Array",
+                  "count": 1,
+                  "children": [
+                    {
+                      "type": "String"
+                    }
+                  ],
+                  "omitted": 0
+                }
+              },
+              "omitted_fields": 1
+            }
+          ],
+          "omitted": 0
+        }
+      ],
+      "spotify_preset_schema_truncated": false,
+      "spotify_preset_note": "Read-only parameter structure and explicit choice fields only; choices are not validated playback selectors. No preset executed.",
+      "source_label": "Spotify"
+    },
+    {
+      "source_id": 599,
+      "http_status": 200,
+      "request_method": "GET",
+      "request_path": "/api/v1/items/599/commands",
+      "response_type": "Array",
+      "command_list_recognized": true,
+      "command_count": 0,
+      "exported_command_count": 0,
+      "unreported_command_count": 0,
+      "inspection_truncated": false,
+      "commands": [],
+      "browse_name_matches": [],
+      "match_note": "Name matches are heuristic metadata candidates, not verified browse operations. No command was executed.",
+      "unrecognized_response_shape": null,
+      "first_entry_shape": null,
+      "browse_endpoint_status": "not_established",
+      "source_label": "Amazon Music"
+    },
+    {
+      "source_id": 100002,
+      "http_status": 200,
+      "request_method": "GET",
+      "request_path": "/api/v1/items/100002/commands",
+      "response_type": "Array",
+      "command_list_recognized": true,
+      "command_count": 0,
+      "exported_command_count": 0,
+      "unreported_command_count": 0,
+      "inspection_truncated": false,
+      "commands": [],
+      "browse_name_matches": [],
+      "match_note": "Name matches are heuristic metadata candidates, not verified browse operations. No command was executed.",
+      "unrecognized_response_shape": null,
+      "first_entry_shape": null,
+      "browse_endpoint_status": "not_established",
+      "source_label": "Digital Media"
+    }
+  ],
+  "browse_endpoint_status": "not_established",
+  "generated_utc": "2026-11-16T21:46:48.7224870Z"
+}

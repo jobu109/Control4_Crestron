@@ -1,0 +1,23 @@
+{FileMetadata}
+Schema = "1.0.0.0"
+CreatedByAppHost = "2.2000.8.0"
+Created = 2026-11-17 11:38:29.705304-06:00
+LastModifiedByAppHost = "2.2000.8.0"
+Modified = 2026-11-17 11:38:29.705298-06:00
+CreatedByProjectApp = "1.5001.45.0"
+LastModifiedByProjectApp = "1.5001.45.0"
+MinimumProjectApp = ""
+MinimumAppHost = "2.1900.0"
+
+{AssetAttributes}
+
+[Attributes]
+Id = "a58092cf-ceed-47c8-9704-28ddf92c9051"
+Name = "catalog"
+SourceUri = "catalog.js"
+AspectRatio = "0"
+AssetSourceType = "File"
+AssetType = "JavaScript"
+Username = ""
+Password = ""
+

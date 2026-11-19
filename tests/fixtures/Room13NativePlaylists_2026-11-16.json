@@ -1,0 +1,25 @@
+{
+  "room_id": 13,
+  "kind": "playlists",
+  "revision": "ab1013f64a9d4408930e8dd594d8796e",
+  "scope": "native_room_catalog_not_service_library",
+  "generated_utc": "2026-11-16T16:35:16.845757Z",
+  "total": 2,
+  "source_total": 2,
+  "omitted": 0,
+  "unnamed": 0,
+  "truncated": false,
+  "items": [
+    {
+      "id": "1",
+      "name": "Blues",
+      "label_available": true
+    },
+    {
+      "id": "2",
+      "name": "Blues Win!!!",
+      "label_available": true
+    }
+  ],
+  "selection_supported": false
+}

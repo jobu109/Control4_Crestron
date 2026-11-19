@@ -1,0 +1,36 @@
+{FileMetadata}
+Schema = "1.0.0.0"
+CreatedByAppHost = "2.2000.8.0"
+Created = 2026-11-17 11:20:58.317258-06:00
+LastModifiedByAppHost = "2.2000.8.0"
+Modified = 2026-11-17 11:22:21.911654-06:00
+CreatedByProjectApp = "1.5001.45.0"
+LastModifiedByProjectApp = "1.5001.45.0"
+MinimumProjectApp = "1.2600.1"
+MinimumAppHost = "2.1900.0"
+
+{DeviceResolutionSource}
+[]
+
+{ProjectAttributes}
+
+[Attributes]
+Name = "Floyd Control 4"
+ThemeId = "DesignIdeasDarkBkd-theme.css"
+ProjectThemeIds = "DesignIdeasDarkBkd-theme.css,dark-theme.css"
+ThemePageColor = "rgba(0, 0, 0, 1)"
+IncludeUnusedAsset = "True"
+MaintainAspectRatio = "False"
+OverrideThemeColor = "False"
+SdkId = "CH5:2.20.0"
+ComponentKey = "UiEditor"
+Id = "5aa72a4c-4a08-4074-b4c5-95b3eafbc06e"
+RuntimeThemeJoin = "0"
+RuntimeLanguageJoin = "0"
+DefaultComponentMode = "custom"
+DefaultFontFamily = "Roboto"
+DeviceResolutionIds = "D-L-TSW1070-1280-0800,D-L-TSW1070-1280-0800"
+ipId = "03"
+ProjectSchemaVersion = "13"
+ContractIsStale = "false"
+

@@ -1,0 +1,12 @@
+IMPORTANT: Earlier page files omitted native Elements records. This copy is now corrected.
+Close a stale open editor WITHOUT saving, then reopen this Floyd.csln.
+Each page has one native html-div component with populated Custom HTML.
+
+Open Floyd.csln in Construct after closing any previous editor copy.
+Project: Floyd Control 4
+Pages: Room Module (Listen), WatchRemot (Watch), RoomSelect.
+All canvases contain visible fallback HTML. Runtime uses shared room-shared.css/js.
+Default enabled:false is offline preview; no joins are sent.
+See docs/UI_CONSTRUCT_SHARED_PAGES.md for live wiring, paths and limitations.
+Original Documents/Floyd solution remains unchanged.
+Native Construct open/build/device verification is pending.

@@ -1,0 +1,4563 @@
+{
+  "room_id": 13,
+  "source_id": 1648,
+  "generated_utc": "2026-11-18T02:30:09.52976Z",
+  "capture_seconds": 60,
+  "variables": [
+    {
+      "type": "Array",
+      "entries": [
+        {
+          "type": "Object",
+          "variable_name": "CURRENT_SELECTED_DEVICE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT_SELECTED_DEVICE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "CURRENT_AUDIO_DEVICE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT_AUDIO_DEVICE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "CURRENT_VIDEO_DEVICE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT_VIDEO_DEVICE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "AUDIO_VOLUME_DEVICE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "AUDIO_VOLUME_DEVICE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "VIDEO_VOLUME_DEVICE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "VIDEO_VOLUME_DEVICE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "CURRENT_MEDIA",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT_MEDIA"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Object",
+              "fields": {
+                "mediainfo": {
+                  "type": "Object",
+                  "fields": {
+                    "mediaid": {
+                      "type": "Integer"
+                    },
+                    "mediatype": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                }
+              },
+              "omitted": 0
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "CURRENT_AUDIO_PATH",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT_AUDIO_PATH"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String",
+              "content_format": "xml_outline_only",
+              "xml_tags": [
+                "devices",
+                "device",
+                "id",
+                "provider_binding_id",
+                "consumer_binding_id"
+              ]
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "CURRENT_VIDEO_PATH",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT_VIDEO_PATH"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String",
+              "content_format": "xml_outline_only",
+              "xml_tags": [
+                "devices",
+                "device",
+                "id",
+                "provider_binding_id",
+                "consumer_binding_id"
+              ]
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "CURRENT_VIDEO_AUDIO_PATH",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT_VIDEO_AUDIO_PATH"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "POWER_STATE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "POWER_STATE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "CURRENT_VOLUME",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT_VOLUME"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "TEMPERATURE_ID",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "TEMPERATURE_ID"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "TEMPERATURE_CONTROL_ID",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "TEMPERATURE_CONTROL_ID"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "SECURITY_SYSTEM_ID",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "SECURITY_SYSTEM_ID"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "CURRENT_VOLUME_DEVICE_ID",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT_VOLUME_DEVICE_ID"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "HAS_DISCRETE_VOLUME",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "HAS_DISCRETE_VOLUME"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "HAS_DISCRETE_MUTE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "HAS_DISCRETE_MUTE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "IS_MUTED",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "IS_MUTED"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "IN_NAVIGATION",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "IN_NAVIGATION"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "USE_DEFAULT_VOLUMES",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "USE_DEFAULT_VOLUMES"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Boolean"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "DEFAULT_AUDIO_VOLUME",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "DEFAULT_AUDIO_VOLUME"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "DEFAULT_VIDEO_VOLUME",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "DEFAULT_VIDEO_VOLUME"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "VOLUME_IS_LINKED",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "VOLUME_IS_LINKED"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "MUTE_IS_LINKED",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "MUTE_IS_LINKED"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "ROOMOFF_IS_LINKED",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "ROOMOFF_IS_LINKED"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "LINKED_ROOM_LIST",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "LINKED_ROOM_LIST"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "SELECTIONS_LINKED",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "SELECTIONS_LINKED"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "CURRENT_LINKED_MEDIA_SCENE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT_LINKED_MEDIA_SCENE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "ROOM_HIDDEN",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "ROOM_HIDDEN"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "MEDIA_SCENE_ACTIVE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "MEDIA_SCENE_ACTIVE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "CURRENT MEDIA INFO",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT MEDIA INFO"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Object",
+              "fields": {
+                "mediainfo": {
+                  "type": "Object",
+                  "fields": {
+                    "deviceid": {
+                      "type": "Integer",
+                      "observed_value": 100002,
+                      "units_or_semantics": "unverified"
+                    },
+                    "queueid": {
+                      "type": "Integer",
+                      "observed_value": 10088,
+                      "units_or_semantics": "unverified"
+                    },
+                    "streamid": {
+                      "type": "Integer",
+                      "observed_value": 0,
+                      "units_or_semantics": "unverified"
+                    },
+                    "source": {
+                      "type": "Integer"
+                    },
+                    "mediatype": {
+                      "type": "String"
+                    },
+                    "mediatypeV2": {
+                      "type": "String"
+                    },
+                    "medSrcDev": {
+                      "type": "Integer",
+                      "observed_value": 1648,
+                      "units_or_semantics": "unverified"
+                    },
+                    "queueInfo": {
+                      "type": "Integer"
+                    },
+                    "streamStatus": {
+                      "type": "String"
+                    },
+                    "stationid": {
+                      "type": "String"
+                    },
+                    "album": {
+                      "type": "String",
+                      "display_value": "Men of Honor"
+                    },
+                    "artist": {
+                      "type": "String",
+                      "display_value": "Adrenaline Mob"
+                    },
+                    "title": {
+                      "type": "String",
+                      "display_value": "Feel the Adrenaline"
+                    },
+                    "channel": {
+                      "type": "String"
+                    },
+                    "meta": {
+                      "type": "Object",
+                      "fields": {
+                        "audioFormat": {
+                          "type": "String"
+                        },
+                        "sampleRate": {
+                          "type": "String"
+                        },
+                        "bitDepth": {
+                          "type": "Integer"
+                        },
+                        "channels": {
+                          "type": "Integer"
+                        },
+                        "bitRate": {
+                          "type": "Integer"
+                        },
+                        "audioQuality": {
+                          "type": "String"
+                        }
+                      },
+                      "omitted": 0
+                    },
+                    "img": {
+                      "type": "String",
+                      "artwork_reference_present": true,
+                      "address": {
+                        "present": true,
+                        "format": "unrecognized"
+                      }
+                    }
+                  },
+                  "omitted": 0
+                }
+              },
+              "omitted": 0
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "LAST_DEVICE_GROUP",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "LAST_DEVICE_GROUP"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "AVAILABLE_CAMERAS",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "AVAILABLE_CAMERAS"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String",
+              "content_format": "xml_outline_only",
+              "xml_tags": [
+                "Cameras"
+              ]
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "POOLS",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "POOLS"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "SCENE_IS_DISCRETE_VOLUME",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "SCENE_IS_DISCRETE_VOLUME"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "PLAYING_AUDIO_DEVICE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "PLAYING_AUDIO_DEVICE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "ANNOUNCEMENT_DISABLED",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "ANNOUNCEMENT_DISABLED"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "CURRENT_VIDEO_AUDIO_DEVICE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "CURRENT_VIDEO_AUDIO_DEVICE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_IS_HIDDEN",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_IS_HIDDEN"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_AUDIO_MODE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_AUDIO_MODE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_HAS_LOUDNESS_CONTROL",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_HAS_LOUDNESS_CONTROL"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_LOUDNESS_ON",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_LOUDNESS_ON"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_HAS_TONE_CONTROL",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_HAS_TONE_CONTROL"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_BASS_LEVEL",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_BASS_LEVEL"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_TREBLE_LEVEL",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_TREBLE_LEVEL"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_TONE_LOWER_LIMIT",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_TONE_LOWER_LIMIT"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_TONE_UPPER_LIMIT",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_TONE_UPPER_LIMIT"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_HAS_EQ_CONTROL",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_HAS_EQ_CONTROL"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_BAND_COUNT",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_BAND_COUNT"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_BAND_LOWER_LIMIT",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_BAND_LOWER_LIMIT"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_BAND_UPPER_LIMIT",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_BAND_UPPER_LIMIT"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_BAND_FREQ_VALUES",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_BAND_FREQ_VALUES"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_BAND_GAIN_VALUES",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_BAND_GAIN_VALUES"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_PRESET_LIST",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_PRESET_LIST"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "EQ_SELECTED_PRESET",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "EQ_SELECTED_PRESET"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "MEDIA WALL INFO",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "MEDIA WALL INFO"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Object",
+              "fields": {
+                "wallmediainfo": {
+                  "type": "Object",
+                  "fields": {
+                    "notifyDevId": {
+                      "type": "Integer",
+                      "observed_value": 100002,
+                      "units_or_semantics": "unverified"
+                    },
+                    "mediainfo": {
+                      "type": "Array",
+                      "entries": [
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "deviceid": {
+                              "type": "Integer",
+                              "observed_value": 542,
+                              "units_or_semantics": "unverified"
+                            },
+                            "queueid": {
+                              "type": "Integer",
+                              "observed_value": 0,
+                              "units_or_semantics": "unverified"
+                            },
+                            "mediaid": {
+                              "type": "Integer"
+                            },
+                            "mediatype": {
+                              "type": "String"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "deviceid": {
+                              "type": "Integer",
+                              "observed_value": 2061,
+                              "units_or_semantics": "unverified"
+                            },
+                            "queueid": {
+                              "type": "Integer",
+                              "observed_value": 0,
+                              "units_or_semantics": "unverified"
+                            },
+                            "mediaid": {
+                              "type": "Integer"
+                            },
+                            "mediatype": {
+                              "type": "String"
+                            },
+                            "endpoints": {
+                              "type": "Object",
+                              "fields": {
+                                "endpoint": {
+                                  "type": "Array",
+                                  "entries": [
+                                    {
+                                      "type": "Integer"
+                                    }
+                                  ],
+                                  "omitted": 0
+                                }
+                              },
+                              "omitted": 0
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "deviceid": {
+                              "type": "Integer",
+                              "observed_value": 2217,
+                              "units_or_semantics": "unverified"
+                            },
+                            "queueid": {
+                              "type": "Integer",
+                              "observed_value": 0,
+                              "units_or_semantics": "unverified"
+                            },
+                            "mediaid": {
+                              "type": "Integer"
+                            },
+                            "mediatype": {
+                              "type": "String"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "deviceid": {
+                              "type": "Integer",
+                              "observed_value": 100002,
+                              "units_or_semantics": "unverified"
+                            },
+                            "queueid": {
+                              "type": "Integer",
+                              "observed_value": 10088,
+                              "units_or_semantics": "unverified"
+                            },
+                            "streamid": {
+                              "type": "Integer",
+                              "observed_value": 0,
+                              "units_or_semantics": "unverified"
+                            },
+                            "source": {
+                              "type": "Integer"
+                            },
+                            "mediatype": {
+                              "type": "String"
+                            },
+                            "mediatypeV2": {
+                              "type": "String"
+                            },
+                            "medSrcDev": {
+                              "type": "Integer",
+                              "observed_value": 1648,
+                              "units_or_semantics": "unverified"
+                            },
+                            "queueInfo": {
+                              "type": "Integer"
+                            },
+                            "streamStatus": {
+                              "type": "String"
+                            },
+                            "stationid": {
+                              "type": "String"
+                            },
+                            "album": {
+                              "type": "String",
+                              "display_value": "Men of Honor"
+                            },
+                            "artist": {
+                              "type": "String",
+                              "display_value": "Adrenaline Mob"
+                            },
+                            "title": {
+                              "type": "String",
+                              "display_value": "Feel the Adrenaline"
+                            },
+                            "channel": {
+                              "type": "String"
+                            },
+                            "meta": {
+                              "type": "Object",
+                              "fields": {
+                                "audioFormat": {
+                                  "type": "String"
+                                },
+                                "sampleRate": {
+                                  "type": "String"
+                                },
+                                "bitDepth": {
+                                  "type": "Integer"
+                                },
+                                "channels": {
+                                  "type": "Integer"
+                                },
+                                "bitRate": {
+                                  "type": "Integer"
+                                },
+                                "audioQuality": {
+                                  "type": "String"
+                                }
+                              },
+                              "omitted": 0
+                            },
+                            "img": {
+                              "type": "String",
+                              "artwork_reference_present": true,
+                              "address": {
+                                "present": true,
+                                "format": "unrecognized"
+                              }
+                            },
+                            "notifyDevId": {
+                              "type": "Integer",
+                              "observed_value": 100002,
+                              "units_or_semantics": "unverified"
+                            }
+                          },
+                          "omitted": 0
+                        }
+                      ],
+                      "omitted": 0
+                    }
+                  },
+                  "omitted": 0
+                }
+              },
+              "omitted": 0
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "MW_MINIAPPNOPASSMODE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "MW_MINIAPPNOPASSMODE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        }
+      ],
+      "omitted": 0,
+      "item_id": 13
+    },
+    {
+      "type": "Array",
+      "entries": [
+        {
+          "type": "Object",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        }
+      ],
+      "omitted": 0,
+      "item_id": 1648
+    },
+    {
+      "type": "Array",
+      "entries": [
+        {
+          "type": "Object",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        }
+      ],
+      "omitted": 0,
+      "item_id": 1647
+    },
+    {
+      "type": "Array",
+      "entries": [
+        {
+          "type": "Object",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Object",
+              "fields": {
+                "histories": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "ROOM_QUEUE_SETTINGS",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "ROOM_QUEUE_SETTINGS"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Object",
+              "fields": {
+                "room_queue_settings": {
+                  "type": "Object",
+                  "fields": {
+                    "room_info": {
+                      "type": "Array",
+                      "entries": [
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "roomid": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        }
+                      ],
+                      "omitted": 0
+                    }
+                  },
+                  "omitted": 0
+                }
+              },
+              "omitted": 0
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "QUEUE_STATUS",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "QUEUE_STATUS"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Object",
+              "fields": {
+                "queues": {
+                  "type": "Object",
+                  "fields": {
+                    "queue": {
+                      "type": "Array",
+                      "entries": [
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "id": {
+                              "type": "Integer"
+                            },
+                            "name": {
+                              "type": "String"
+                            },
+                            "state": {
+                              "type": "String"
+                            },
+                            "item": {
+                              "type": "String"
+                            },
+                            "index": {
+                              "type": "Integer"
+                            },
+                            "rooms": {
+                              "type": "Object",
+                              "fields": {
+                                "id": {
+                                  "type": "Integer"
+                                }
+                              },
+                              "omitted": 0
+                            }
+                          },
+                          "omitted": 0
+                        }
+                      ],
+                      "omitted": 0
+                    }
+                  },
+                  "omitted": 0
+                }
+              },
+              "omitted": 0
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "QUEUE_INFO",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "QUEUE_INFO"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Object",
+              "fields": {
+                "info": {
+                  "type": "Object",
+                  "fields": {
+                    "id": {
+                      "type": "Integer"
+                    },
+                    "name": {
+                      "type": "String"
+                    },
+                    "songs": {
+                      "type": "String"
+                    }
+                  },
+                  "omitted": 0
+                }
+              },
+              "omitted": 0
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "QUEUE_STATUS_V2",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "QUEUE_STATUS_V2"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Object",
+              "fields": {
+                "queues": {
+                  "type": "Object",
+                  "fields": {
+                    "queue": {
+                      "type": "Array",
+                      "entries": [
+                        {
+                          "type": "Object",
+                          "fields": {
+                            "id": {
+                              "type": "Integer"
+                            },
+                            "owner": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            },
+                            "name": {
+                              "type": "String"
+                            },
+                            "device_id": {
+                              "type": "Integer"
+                            },
+                            "state": {
+                              "type": "String"
+                            },
+                            "song": {
+                              "type": "Object",
+                              "fields": {
+                                "id": {
+                                  "type": "String"
+                                },
+                                "source": {
+                                  "type": "Integer"
+                                }
+                              },
+                              "omitted": 1
+                            },
+                            "index": {
+                              "type": "Integer"
+                            },
+                            "rooms": {
+                              "type": "Object",
+                              "fields": {
+                                "id": {
+                                  "type": "Integer"
+                                }
+                              },
+                              "omitted": 0
+                            }
+                          },
+                          "omitted": 0
+                        }
+                      ],
+                      "omitted": 0
+                    }
+                  },
+                  "omitted": 0
+                }
+              },
+              "omitted": 0
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "QUEUE_INFO_V2",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "QUEUE_INFO_V2"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Object",
+              "fields": {
+                "info": {
+                  "type": "Object",
+                  "fields": {
+                    "id": {
+                      "type": "Integer"
+                    },
+                    "name": {
+                      "type": "String"
+                    },
+                    "songs": {
+                      "type": "Object",
+                      "fields": {
+                        "song": {
+                          "type": "Array",
+                          "entries": [
+                            {
+                              "type": "Object",
+                              "fields": {
+                                "source": {
+                                  "type": "Integer"
+                                }
+                              },
+                              "omitted": 1
+                            }
+                          ],
+                          "omitted": 0
+                        }
+                      },
+                      "omitted": 0
+                    }
+                  },
+                  "omitted": 0
+                }
+              },
+              "omitted": 0
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "PLAY_PREFERENCE",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "PLAY_PREFERENCE"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "ROOM_MAP_INFO",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "ROOM_MAP_INFO"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Object",
+              "fields": {
+                "info": {
+                  "type": "Object",
+                  "fields": {
+                    "audioQueueInfo": {
+                      "type": "Object",
+                      "fields": {
+                        "queue": {
+                          "type": "Object",
+                          "fields": {
+                            "id": {
+                              "type": "Integer"
+                            },
+                            "owner": {
+                              "type": "Integer"
+                            },
+                            "shuffle": {
+                              "type": "Integer"
+                            },
+                            "repeat": {
+                              "type": "Integer"
+                            },
+                            "name": {
+                              "type": "String"
+                            },
+                            "device_id": {
+                              "type": "Integer"
+                            },
+                            "state": {
+                              "type": "String"
+                            },
+                            "song": {
+                              "type": "Object",
+                              "fields": {
+                                "id": {
+                                  "type": "String"
+                                },
+                                "source": {
+                                  "type": "Integer"
+                                }
+                              },
+                              "omitted": 1
+                            },
+                            "index": {
+                              "type": "Integer"
+                            },
+                            "rooms": {
+                              "type": "Object",
+                              "fields": {
+                                "id": {
+                                  "type": "Integer"
+                                }
+                              },
+                              "omitted": 0
+                            }
+                          },
+                          "omitted": 0
+                        },
+                        "roomInfo": {
+                          "type": "Object",
+                          "fields": {
+                            "roomId": {
+                              "type": "Integer"
+                            },
+                            "ip": {
+                              "type": "String"
+                            },
+                            "port": {
+                              "type": "Integer"
+                            },
+                            "channel": {
+                              "type": "Integer"
+                            }
+                          },
+                          "omitted": 0
+                        }
+                      },
+                      "omitted": 0
+                    }
+                  },
+                  "omitted": 0
+                }
+              },
+              "omitted": 0
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "MAX_AUDIO_QUALITY",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "MAX_AUDIO_QUALITY"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "DEVICES_PORTS_BOUND",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "DEVICES_PORTS_BOUND"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "String"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "AUDIO_MODE_VER",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "AUDIO_MODE_VER"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "AUDIO_FORCED_ADV",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "AUDIO_FORCED_ADV"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "ORIGINAL_AUDIO",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "ORIGINAL_AUDIO"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        },
+        {
+          "type": "Object",
+          "variable_name": "MOIP_CONTROLLER_ONLINE_COUNT",
+          "fields": {
+            "id": {
+              "type": "Integer"
+            },
+            "varName": {
+              "type": "String",
+              "identifier": "MOIP_CONTROLLER_ONLINE_COUNT"
+            },
+            "type": {
+              "type": "String"
+            },
+            "hidden": {
+              "type": "Integer"
+            },
+            "value": {
+              "type": "Integer"
+            },
+            "variableId": {
+              "type": "Integer"
+            },
+            "name": {
+              "type": "String"
+            },
+            "roomName": {
+              "type": "String"
+            }
+          },
+          "omitted": 0
+        }
+      ],
+      "omitted": 0,
+      "item_id": 100002
+    }
+  ],
+  "events": [
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:09.697905Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:10.491281Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:11.495608Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:12.490708Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:13.491071Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:14.490824Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:15.491027Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:16.490803Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:16.869339Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "DashboardChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "QueueId": {
+                    "type": "Integer",
+                    "observed_value": 10088,
+                    "units_or_semantics": "unverified"
+                  },
+                  "Items": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:17.064778Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:17.065829Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "QueueChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "NowPlaying": {
+                    "type": "String"
+                  },
+                  "NowPlayingIndex": {
+                    "type": "Integer",
+                    "observed_value": 1,
+                    "units_or_semantics": "unverified"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:21.584647Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "DashboardChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "QueueId": {
+                    "type": "Integer",
+                    "observed_value": 10088,
+                    "units_or_semantics": "unverified"
+                  },
+                  "Items": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:21.585596Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:21.586479Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "QueueChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "NowPlaying": {
+                    "type": "String"
+                  },
+                  "NowPlayingIndex": {
+                    "type": "Integer",
+                    "observed_value": 1,
+                    "units_or_semantics": "unverified"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:22.691779Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:23.490945Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:24.491433Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:25.491962Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:26.491707Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:27.506505Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:28.49234Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:29.491233Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:30.135433Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "DashboardChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "QueueId": {
+                    "type": "Integer",
+                    "observed_value": 10088,
+                    "units_or_semantics": "unverified"
+                  },
+                  "Items": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:30.136366Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:30.137234Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "QueueChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "NowPlaying": {
+                    "type": "String"
+                  },
+                  "NowPlayingIndex": {
+                    "type": "Integer",
+                    "observed_value": 1,
+                    "units_or_semantics": "unverified"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:48.518623Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "DashboardChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "QueueId": {
+                    "type": "Integer",
+                    "observed_value": 10088,
+                    "units_or_semantics": "unverified"
+                  },
+                  "Items": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:48.714013Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:48.715079Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "QueueChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "NowPlaying": {
+                    "type": "String"
+                  },
+                  "NowPlayingIndex": {
+                    "type": "Integer",
+                    "observed_value": 1,
+                    "units_or_semantics": "unverified"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:49.663716Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:50.509002Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:51.508041Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    },
+    {
+      "item_id": 1648,
+      "received_utc": "2026-11-18T02:30:52.583139Z",
+      "event_type": "OnDataToUI",
+      "data": {
+        "type": "Object",
+        "fields": {
+          "EVENT": {
+            "type": "Object",
+            "fields": {
+              "ROOMS": {
+                "type": "Integer"
+              },
+              "NAME": {
+                "type": "String",
+                "identifier": "ProgressChanged"
+              },
+              "ARGS": {
+                "type": "Object",
+                "fields": {
+                  "length": {
+                    "type": "Integer"
+                  },
+                  "canSeek": {
+                    "type": "Boolean"
+                  },
+                  "offset": {
+                    "type": "Integer"
+                  },
+                  "label": {
+                    "type": "String"
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        "omitted": 0
+      }
+    }
+  ],
+  "dropped_events": 11,
+  "driver_id": 1647
+}

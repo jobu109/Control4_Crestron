@@ -1,0 +1,39 @@
+# Workstation and build outputs
+.vs/
+.vscode/
+.local/
+**/bin/
+**/obj/
+**/node_modules/
+**/packages/
+**/dist/
+**/CompilerWork/
+**/SPlsWork/
+**/_baseline/
+**/previews/
+**/__pycache__/
+*.log
+*.suo
+*.user
+
+# Local captures, archived research and third-party reference copies
+/reports/
+/research/
+
+# Generated deployment packages and backups
+*.clz
+*.ch5z
+*.c4z
+*.cuib
+*.zip
+*.7z
+
+# Credentials and machine-private material
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.p12
+*.key
+*.c4p

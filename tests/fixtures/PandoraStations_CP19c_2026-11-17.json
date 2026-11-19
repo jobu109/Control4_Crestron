@@ -1,0 +1,831 @@
+{
+  "room_id": 13,
+  "kind": "service_presets",
+  "scope": "service_saved_items",
+  "driver_id": 1647,
+  "source_id": 1648,
+  "revision": "edaa5ca3975c4f70815e48660c5db49b",
+  "generated_utc": "2026-11-17T15:46:58.665218Z",
+  "items": [
+    {
+      "id": "457",
+      "name": "'Weird Al' Yankovic Radio",
+      "label_available": true
+    },
+    {
+      "id": "387",
+      "name": "1738 (feat. Coi Leray) Radio",
+      "label_available": true
+    },
+    {
+      "id": "392",
+      "name": "1812 Overture, Finale Radio",
+      "label_available": true
+    },
+    {
+      "id": "455",
+      "name": "90s Alternative  Radio",
+      "label_available": true
+    },
+    {
+      "id": "395",
+      "name": "A Complicated Song (Parody of \"Complicated\" by Avril Lavigne) R",
+      "label_available": true
+    },
+    {
+      "id": "363",
+      "name": "Adrenaline Mob Radio",
+      "label_available": true
+    },
+    {
+      "id": "366",
+      "name": "Another Escape Radio",
+      "label_available": true
+    },
+    {
+      "id": "376",
+      "name": "Astronaut In The Ocean (Remix) (feat. Egor Kreed) Radio",
+      "label_available": true
+    },
+    {
+      "id": "458",
+      "name": "Astronaut In The Ocean (Remix) (feat. G-Eazy & DDG) Radio",
+      "label_available": true
+    },
+    {
+      "id": "384",
+      "name": "Avenged Sevenfold Radio",
+      "label_available": true
+    },
+    {
+      "id": "364",
+      "name": "Away (Live) Radio",
+      "label_available": true
+    },
+    {
+      "id": "413",
+      "name": "Bad Words Radio",
+      "label_available": true
+    },
+    {
+      "id": "388",
+      "name": "Believer Radio",
+      "label_available": true
+    },
+    {
+      "id": "439",
+      "name": "Believer Radio",
+      "label_available": true
+    },
+    {
+      "id": "496",
+      "name": "Best Friend (feat. Eminem) Radio",
+      "label_available": true
+    },
+    {
+      "id": "427",
+      "name": "Beyoncé Radio",
+      "label_available": true
+    },
+    {
+      "id": "437",
+      "name": "Bloodline Radio",
+      "label_available": true
+    },
+    {
+      "id": "474",
+      "name": "Blues Traveler Radio",
+      "label_available": true
+    },
+    {
+      "id": "508",
+      "name": "Bohemian Rhapsody (Remastered 2011) Radio",
+      "label_available": true
+    },
+    {
+      "id": "402",
+      "name": "Breaking Benjamin Radio",
+      "label_available": true
+    },
+    {
+      "id": "431",
+      "name": "C418 Radio",
+      "label_available": true
+    },
+    {
+      "id": "476",
+      "name": "Calming Instrumental Covers Radio",
+      "label_available": true
+    },
+    {
+      "id": "480",
+      "name": "Carousel Radio",
+      "label_available": true
+    },
+    {
+      "id": "488",
+      "name": "Chris Snelling, Chris Mercer, Jonathan Sarlat, Nils Hahn, Robin",
+      "label_available": true
+    },
+    {
+      "id": "456",
+      "name": "Christmas Radio",
+      "label_available": true
+    },
+    {
+      "id": "373",
+      "name": "DJ Bobo Radio",
+      "label_available": true
+    },
+    {
+      "id": "432",
+      "name": "David Gossage, Patrick Graham, Nelson Carter, Sean Dagher & Lin",
+      "label_available": true
+    },
+    {
+      "id": "369",
+      "name": "Dinosaur Pile-Up Radio",
+      "label_available": true
+    },
+    {
+      "id": "403",
+      "name": "Disturbed Radio",
+      "label_available": true
+    },
+    {
+      "id": "367",
+      "name": "Don't Say Goodnight (It's Time for Love) (Part I & 2) Radio",
+      "label_available": true
+    },
+    {
+      "id": "360",
+      "name": "Elton John Radio",
+      "label_available": true
+    },
+    {
+      "id": "499",
+      "name": "Face Off Radio",
+      "label_available": true
+    },
+    {
+      "id": "433",
+      "name": "Father & Son (with Paul Shaffer and the Hall of Fame Orchestra)",
+      "label_available": true
+    },
+    {
+      "id": "400",
+      "name": "Fight The Fury Radio",
+      "label_available": true
+    },
+    {
+      "id": "467",
+      "name": "Fire From The Gods Radio",
+      "label_available": true
+    },
+    {
+      "id": "440",
+      "name": "First Of May Radio",
+      "label_available": true
+    },
+    {
+      "id": "465",
+      "name": "Five Finger Death Punch Radio",
+      "label_available": true
+    },
+    {
+      "id": "446",
+      "name": "From Ashes to New Radio",
+      "label_available": true
+    },
+    {
+      "id": "435",
+      "name": "Fucked with an Anchor Radio",
+      "label_available": true
+    },
+    {
+      "id": "416",
+      "name": "Future Radio",
+      "label_available": true
+    },
+    {
+      "id": "493",
+      "name": "GIVE HEAVEN SOME HELL Radio",
+      "label_available": true
+    },
+    {
+      "id": "378",
+      "name": "Garden Of Delight Radio",
+      "label_available": true
+    },
+    {
+      "id": "383",
+      "name": "Garden Of Delight Radio",
+      "label_available": true
+    },
+    {
+      "id": "421",
+      "name": "Gasolina Radio",
+      "label_available": true
+    },
+    {
+      "id": "423",
+      "name": "Geek Music Radio",
+      "label_available": true
+    },
+    {
+      "id": "397",
+      "name": "Ghost B.C. Radio",
+      "label_available": true
+    },
+    {
+      "id": "500",
+      "name": "Goodness Gracious Radio",
+      "label_available": true
+    },
+    {
+      "id": "459",
+      "name": "HARDY Radio",
+      "label_available": true
+    },
+    {
+      "id": "471",
+      "name": "Halloween Radio",
+      "label_available": true
+    },
+    {
+      "id": "463",
+      "name": "Hard Rock Radio",
+      "label_available": true
+    },
+    {
+      "id": "512",
+      "name": "Heavy Metal Radio",
+      "label_available": true
+    },
+    {
+      "id": "365",
+      "name": "Helloween Radio",
+      "label_available": true
+    },
+    {
+      "id": "359",
+      "name": "Highly Suspect Radio",
+      "label_available": true
+    },
+    {
+      "id": "478",
+      "name": "Hoist The Colours Radio",
+      "label_available": true
+    },
+    {
+      "id": "417",
+      "name": "Hollywood Undead Radio",
+      "label_available": true
+    },
+    {
+      "id": "362",
+      "name": "Hope Radio",
+      "label_available": true
+    },
+    {
+      "id": "390",
+      "name": "I Never Lie Radio",
+      "label_available": true
+    },
+    {
+      "id": "441",
+      "name": "I Prevail Radio",
+      "label_available": true
+    },
+    {
+      "id": "448",
+      "name": "I Wanna Sex You Up (Re-Recorded - Slowed + Reverb) Radio",
+      "label_available": true
+    },
+    {
+      "id": "449",
+      "name": "I'm A Boy (40th Anniversary Version - Live At Leeds) Radio",
+      "label_available": true
+    },
+    {
+      "id": "407",
+      "name": "IShowSpeed Radio",
+      "label_available": true
+    },
+    {
+      "id": "462",
+      "name": "Imagine Dragons Radio",
+      "label_available": true
+    },
+    {
+      "id": "393",
+      "name": "Incubus Radio",
+      "label_available": true
+    },
+    {
+      "id": "514",
+      "name": "Instrumental Radio",
+      "label_available": true
+    },
+    {
+      "id": "357",
+      "name": "Instrumental Radio",
+      "label_available": true
+    },
+    {
+      "id": "428",
+      "name": "Instrumental music for a good reading Radio",
+      "label_available": true
+    },
+    {
+      "id": "377",
+      "name": "It's the Milkman Radio",
+      "label_available": true
+    },
+    {
+      "id": "411",
+      "name": "JIM BOB Radio",
+      "label_available": true
+    },
+    {
+      "id": "438",
+      "name": "Jack Sparrow Radio",
+      "label_available": true
+    },
+    {
+      "id": "486",
+      "name": "Jim Bob Radio",
+      "label_available": true
+    },
+    {
+      "id": "419",
+      "name": "Jump Up Radio",
+      "label_available": true
+    },
+    {
+      "id": "443",
+      "name": "Jumps the Gun Radio",
+      "label_available": true
+    },
+    {
+      "id": "399",
+      "name": "KIDZ BOP Kids (Children's) Radio",
+      "label_available": true
+    },
+    {
+      "id": "468",
+      "name": "Karnivool Radio",
+      "label_available": true
+    },
+    {
+      "id": "398",
+      "name": "Killed A Man Radio",
+      "label_available": true
+    },
+    {
+      "id": "451",
+      "name": "Lucero Radio",
+      "label_available": true
+    },
+    {
+      "id": "445",
+      "name": "MONSTERS Radio",
+      "label_available": true
+    },
+    {
+      "id": "511",
+      "name": "Max Arnald, Chris Mercer, Yann Nyman, Django Wallace, Paula Kie",
+      "label_available": true
+    },
+    {
+      "id": "430",
+      "name": "Me and My Brother Radio",
+      "label_available": true
+    },
+    {
+      "id": "379",
+      "name": "Miles Away Radio",
+      "label_available": true
+    },
+    {
+      "id": "495",
+      "name": "Miles On It Radio",
+      "label_available": true
+    },
+    {
+      "id": "479",
+      "name": "Milkman Radio",
+      "label_available": true
+    },
+    {
+      "id": "415",
+      "name": "Misery (Acoustic Version) Radio",
+      "label_available": true
+    },
+    {
+      "id": "375",
+      "name": "Misery (Remastered 2009) Radio",
+      "label_available": true
+    },
+    {
+      "id": "509",
+      "name": "Misery Radio",
+      "label_available": true
+    },
+    {
+      "id": "481",
+      "name": "Monkey D. Luffy Sings A Song Radio",
+      "label_available": true
+    },
+    {
+      "id": "391",
+      "name": "Moon Radio",
+      "label_available": true
+    },
+    {
+      "id": "491",
+      "name": "Moonlight Radio",
+      "label_available": true
+    },
+    {
+      "id": "420",
+      "name": "Morgan Wallen Radio",
+      "label_available": true
+    },
+    {
+      "id": "386",
+      "name": "Mr. Ray & The Little Sunshine Kids (Children's) Radio",
+      "label_available": true
+    },
+    {
+      "id": "408",
+      "name": "Naughty Girl (Live) Radio",
+      "label_available": true
+    },
+    {
+      "id": "473",
+      "name": "Neighbors Radio",
+      "label_available": true
+    },
+    {
+      "id": "396",
+      "name": "O.A.R. Radio",
+      "label_available": true
+    },
+    {
+      "id": "404",
+      "name": "Otep Radio",
+      "label_available": true
+    },
+    {
+      "id": "424",
+      "name": "Past Lives Radio",
+      "label_available": true
+    },
+    {
+      "id": "382",
+      "name": "Pirate Radio Radio",
+      "label_available": true
+    },
+    {
+      "id": "414",
+      "name": "Pirate Rap Radio",
+      "label_available": true
+    },
+    {
+      "id": "501",
+      "name": "Pirate Song Radio",
+      "label_available": true
+    },
+    {
+      "id": "513",
+      "name": "Pirates Of The Caribbean - Main Theme - He's A Pirate Radio",
+      "label_available": true
+    },
+    {
+      "id": "506",
+      "name": "Play My Music Radio",
+      "label_available": true
+    },
+    {
+      "id": "410",
+      "name": "Put Some Miles on It Radio",
+      "label_available": true
+    },
+    {
+      "id": "507",
+      "name": "ROCKSTAR (feat. Roddy Ricch) Radio",
+      "label_available": true
+    },
+    {
+      "id": "436",
+      "name": "ROCKSTAR Radio",
+      "label_available": true
+    },
+    {
+      "id": "358",
+      "name": "Ra Radio",
+      "label_available": true
+    },
+    {
+      "id": "442",
+      "name": "Radioactive (feat. Kendrick Lamar) Radio",
+      "label_available": true
+    },
+    {
+      "id": "464",
+      "name": "Ransom Radio",
+      "label_available": true
+    },
+    {
+      "id": "361",
+      "name": "Rare Americans Radio",
+      "label_available": true
+    },
+    {
+      "id": "371",
+      "name": "Red Sun Rising Radio",
+      "label_available": true
+    },
+    {
+      "id": "505",
+      "name": "Relaxing Stress Relief Meditation Music 🌸🧘‍♀️ Radio",
+      "label_available": true
+    },
+    {
+      "id": "412",
+      "name": "Rival Sons Radio",
+      "label_available": true
+    },
+    {
+      "id": "503",
+      "name": "Rockstar (with Bailey Zimmerman) (Live From Nashville) Radio",
+      "label_available": true
+    },
+    {
+      "id": "380",
+      "name": "SAD! Radio",
+      "label_available": true
+    },
+    {
+      "id": "460",
+      "name": "SOLD OUT Radio",
+      "label_available": true
+    },
+    {
+      "id": "497",
+      "name": "Save Me (with Lainey Wilson) Radio",
+      "label_available": true
+    },
+    {
+      "id": "461",
+      "name": "Scary Halloween Music Radio",
+      "label_available": true
+    },
+    {
+      "id": "452",
+      "name": "Shaman's Harvest Radio",
+      "label_available": true
+    },
+    {
+      "id": "504",
+      "name": "Shower Radio",
+      "label_available": true
+    },
+    {
+      "id": "470",
+      "name": "Silly Pirate Song Radio",
+      "label_available": true
+    },
+    {
+      "id": "466",
+      "name": "Skillet Radio",
+      "label_available": true
+    },
+    {
+      "id": "401",
+      "name": "Slipknot Radio",
+      "label_available": true
+    },
+    {
+      "id": "482",
+      "name": "So Cold Radio",
+      "label_available": true
+    },
+    {
+      "id": "370",
+      "name": "Something Wicked Radio",
+      "label_available": true
+    },
+    {
+      "id": "515",
+      "name": "Songs Like This Radio",
+      "label_available": true
+    },
+    {
+      "id": "426",
+      "name": "Soothing Music Specialists Radio",
+      "label_available": true
+    },
+    {
+      "id": "516",
+      "name": "Starset Radio",
+      "label_available": true
+    },
+    {
+      "id": "475",
+      "name": "Stronger (What Doesn't Kill You) Radio",
+      "label_available": true
+    },
+    {
+      "id": "374",
+      "name": "Sublime Radio",
+      "label_available": true
+    },
+    {
+      "id": "498",
+      "name": "TEXAS HOLD 'EM Radio",
+      "label_available": true
+    },
+    {
+      "id": "405",
+      "name": "TRUCK BED Radio",
+      "label_available": true
+    },
+    {
+      "id": "453",
+      "name": "Team Radio",
+      "label_available": true
+    },
+    {
+      "id": "484",
+      "name": "That Should Be Me Radio",
+      "label_available": true
+    },
+    {
+      "id": "434",
+      "name": "That's What I Like (PARTYNEXTDOOR Remix) Radio",
+      "label_available": true
+    },
+    {
+      "id": "494",
+      "name": "That's What I Like Radio",
+      "label_available": true
+    },
+    {
+      "id": "425",
+      "name": "That's the Way (I Like It) (2004 Remaster) Radio",
+      "label_available": true
+    },
+    {
+      "id": "492",
+      "name": "The Devil in I Radio",
+      "label_available": true
+    },
+    {
+      "id": "368",
+      "name": "The Last Song Radio",
+      "label_available": true
+    },
+    {
+      "id": "450",
+      "name": "The Milkman Radio",
+      "label_available": true
+    },
+    {
+      "id": "469",
+      "name": "The Muffin Man (Sing-Along) (Instrumental) Radio",
+      "label_available": true
+    },
+    {
+      "id": "385",
+      "name": "The Muffin Man Radio",
+      "label_available": true
+    },
+    {
+      "id": "483",
+      "name": "The One With You Radio",
+      "label_available": true
+    },
+    {
+      "id": "490",
+      "name": "The Struts Radio",
+      "label_available": true
+    },
+    {
+      "id": "447",
+      "name": "Theme From Mahogany (Do You Know Where You're Going To) (Altern",
+      "label_available": true
+    },
+    {
+      "id": "381",
+      "name": "Thumbprint Radio",
+      "label_available": true
+    },
+    {
+      "id": "444",
+      "name": "Tic Tac Toe (feat. Kodak Black) Radio",
+      "label_available": true
+    },
+    {
+      "id": "422",
+      "name": "Tic Tac Toe Radio",
+      "label_available": true
+    },
+    {
+      "id": "454",
+      "name": "Tool Radio",
+      "label_available": true
+    },
+    {
+      "id": "485",
+      "name": "Trap Queen (feat. Quavo & Gucci Mane) Radio",
+      "label_available": true
+    },
+    {
+      "id": "477",
+      "name": "Twelve Foot Ninja Radio",
+      "label_available": true
+    },
+    {
+      "id": "517",
+      "name": "Twenty One Pilots Radio",
+      "label_available": true
+    },
+    {
+      "id": "409",
+      "name": "Unsainted Radio",
+      "label_available": true
+    },
+    {
+      "id": "502",
+      "name": "Various Artists Radio",
+      "label_available": true
+    },
+    {
+      "id": "472",
+      "name": "Volbeat Radio",
+      "label_available": true
+    },
+    {
+      "id": "406",
+      "name": "Waka Waka (This Time for Africa) [The Official 2010 FIFA World",
+      "label_available": true
+    },
+    {
+      "id": "356",
+      "name": "Warriors Radio",
+      "label_available": true
+    },
+    {
+      "id": "510",
+      "name": "Wellerman Radio",
+      "label_available": true
+    },
+    {
+      "id": "429",
+      "name": "You and Me Radio",
+      "label_available": true
+    },
+    {
+      "id": "372",
+      "name": "You're Welcome Radio",
+      "label_available": true
+    },
+    {
+      "id": "418",
+      "name": "You've Got a Friend in Me (-KINGDOM HEARTS III Version-) Radio",
+      "label_available": true
+    },
+    {
+      "id": "394",
+      "name": "ZAYN Radio",
+      "label_available": true
+    },
+    {
+      "id": "389",
+      "name": "jobu109's QuickMix",
+      "label_available": true
+    },
+    {
+      "id": "489",
+      "name": "time of night Radio",
+      "label_available": true
+    },
+    {
+      "id": "487",
+      "name": "wish it was me Radio",
+      "label_available": true
+    }
+  ],
+  "total": 162,
+  "source_total": 196,
+  "omitted": 0,
+  "unnamed": 0,
+  "truncated": false,
+  "selection_supported": true,
+  "selection_adapters": [
+    "Play Item"
+  ],
+  "pandora_shuffle": "Off"
+}

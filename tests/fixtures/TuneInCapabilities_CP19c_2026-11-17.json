@@ -1,0 +1,91 @@
+{
+  "generated_utc": "2026-11-17T16:06:18.550779Z",
+  "mapping": [
+    {
+      "source_id": 20,
+      "status": "verified_relationship_and_catalog_inspected",
+      "source_detail_fields": {
+        "type": "Integer",
+        "typeName": "String",
+        "name": "String",
+        "parentId": "Integer",
+        "id": "Integer",
+        "filename": "String",
+        "proxy": "String",
+        "proxyOrder": "Integer",
+        "proxyMeta": "Array",
+        "categories": "Array",
+        "siteId": "Integer",
+        "siteName": "String",
+        "buildingId": "Integer",
+        "buildingName": "String",
+        "floorId": "Integer",
+        "floorName": "String",
+        "roomId": "Integer",
+        "roomName": "String",
+        "largeImage": "String",
+        "smallImage": "String",
+        "protocolId": "Integer",
+        "protocolName": "String",
+        "protocolFilename": "String",
+        "capabilities": "Object",
+        "control": "String",
+        "version": "Integer",
+        "created": "String",
+        "modified": "String",
+        "model": "String",
+        "manufacturer": "String",
+        "protocolControl": "String",
+        "deviceOrder": "Integer",
+        "allControlBindingsHidden": "Integer",
+        "URIs": "Object"
+      },
+      "relationships": {
+        "protocolId": 19
+      },
+      "candidate_driver_id": 19,
+      "driver_commands": {
+        "source_id": 19,
+        "http_status": 200,
+        "request_method": "GET",
+        "request_path": "/api/v1/items/19/commands",
+        "response_type": "Array",
+        "command_list_recognized": true,
+        "command_count": 0,
+        "exported_command_count": 0,
+        "unreported_command_count": 0,
+        "inspection_truncated": false,
+        "commands": [],
+        "browse_name_matches": [],
+        "match_note": "Name matches are heuristic metadata candidates, not verified browse operations. No command was executed.",
+        "unrecognized_response_shape": null,
+        "first_entry_shape": null,
+        "browse_endpoint_status": "not_established"
+      },
+      "inspection_kind": "service_driver_mapping",
+      "room_id": 13,
+      "generated_utc": "2026-11-17T16:05:52.753952Z",
+      "selection_adapters": [],
+      "selectable_items": 0
+    }
+  ],
+  "catalog": [
+    {
+      "room_id": 13,
+      "kind": "service_presets",
+      "scope": "service_saved_presets",
+      "driver_id": 19,
+      "source_id": 20,
+      "revision": "1909da532c0f4dbabfb52ae79b6fe400",
+      "generated_utc": "2026-11-17T16:05:53.315903Z",
+      "items": [],
+      "total": 0,
+      "source_total": 196,
+      "omitted": 27,
+      "unnamed": 0,
+      "truncated": false,
+      "selection_supported": false,
+      "selection_adapters": []
+    }
+  ]
+}

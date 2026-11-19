@@ -1,0 +1,36 @@
+#SYMBOL_NAME "Control4 - Panel Room Router"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+
+DIGITAL_INPUT _skip_, _skip_, _skip_;
+STRING_INPUT Request$[255];
+DIGITAL_OUTPUT _skip_, _skip_, _skip_;
+STRING_OUTPUT State$, Audio$, Video$, Catalog$, Playing$, Progress$, Keys$;
+INTEGER_PARAMETER Gateway_ID;
+STRING_PARAMETER Room_IDs$[255];
+
+Control4_Panel_Room adapter;
+
+eventhandler OnPacket(Control4_Panel_Room sender, PanelRoomPacket args)
+{
+    switch (args.Stream)
+    {
+        case (0): State$ = args.Json;
+        case (1): Audio$ = args.Json;
+        case (2): Video$ = args.Json;
+        case (3): Catalog$ = args.Json;
+        case (4): Playing$ = args.Json;
+        case (5): Progress$ = args.Json;
+        case (6): Keys$ = args.Json;
+    }
+}
+
+CHANGE Request$ { adapter.Request(Request$); }
+
+FUNCTION Main()
+{
+    RegisterEvent(adapter, PacketReady, OnPacket);
+    adapter.Initialize(Gateway_ID, Room_IDs$);
+}

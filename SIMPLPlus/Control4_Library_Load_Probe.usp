@@ -1,0 +1,14 @@
+#SYMBOL_NAME "Control4 - Library Load Probe"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+
+// Checks the presence of the library without GatewayRegistry or network activity.
+DIGITAL_OUTPUT Probe_Initialized_FB;
+Control4_Gateway gateway;
+FUNCTION Main()
+{
+    WaitForInitializationComplete();
+    Probe_Initialized_FB = 1;
+}

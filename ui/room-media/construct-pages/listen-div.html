@@ -1,0 +1,141 @@
+<style>/* Fixed panel viewport. Only station/metadata regions may scroll. */
+html,body{margin:0;width:100%;height:100%;}
+[data-c4-page]{box-sizing:border-box;width:100%;height:100%;min-height:0!important;overflow:hidden!important;}
+[data-c4-page].rm,[data-c4-page]>.c4-static{box-sizing:border-box;min-height:0!important;height:100%;padding:20px!important;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;gap:14px;overflow:hidden!important;}
+[data-c4-page].rm .rm-header{margin:0;}
+[data-c4-page].rm .rm-body{min-height:0;gap:22px;}
+[data-c4-page].rm .rm-browser{min-height:0;display:flex;flex-direction:column;padding:20px;}
+[data-c4-page].rm .rm-list{height:auto;min-height:0;flex:1;overflow:auto;}
+[data-c4-page].rm .rm-station{min-height:48px;}
+[data-c4-page].rm .rm-page{margin-top:10px;padding-top:10px;flex:none;}
+[data-c4-page].rm .rm-search{margin:14px 0 10px;flex:none;}
+[data-c4-page].rm .rm-now{min-height:0;overflow:auto;}
+[data-c4-page].rm .rm-art{height:250px;flex:none;}
+[data-c4-page].rm .rm-now h2{font-size:22px;margin-top:16px;}
+[data-c4-page].rm .rm-footer{margin:0;padding:12px 18px;}
+[data-c4-page].rm .rm-preview{margin:0;}
+[data-c4-page].rm .rm-watch{margin-top:16px;gap:10px;}
+/* Inline baseline markup is retained for Construct's editor canvas. */
+[data-c4-page]>.c4-static>div{margin-top:0!important;margin-bottom:0!important;min-height:0;}
+[data-c4-page]>.c4-static>div:nth-child(2){overflow:hidden;flex-wrap:nowrap!important;height:100%;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div{height:100%;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2){min-height:0;display:flex;flex-direction:column;padding:18px!important;overflow:hidden;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2)>div{flex-shrink:0;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2)>div:nth-child(3){padding:12px!important;margin:12px 0 6px!important;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2)>div:nth-child(n+4):nth-last-child(n+2){flex:1;min-height:36px;padding:8px 10px!important;white-space:nowrap;overflow:hidden;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2)>div:last-child{margin-top:10px!important;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3){min-height:0;overflow:auto;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3)>div:nth-child(2){height:250px!important;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3)>div:nth-child(3){font-size:22px!important;margin-top:14px!important;}
+[data-c4-page="rooms"].rm{display:block;overflow:auto!important;}
+@media(max-width:1000px){
+ [data-c4-page].rm .rm-body{overflow:auto;align-content:start;}
+ [data-c4-page].rm .rm-browser{min-height:470px;}
+ [data-c4-page].rm .rm-now{overflow:visible;}
+}
+
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3)>div:nth-child(2)>div:nth-child(2){font-size:30px!important;margin-top:18px!important;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3)>div:nth-child(2)>div:last-child{margin-top:12px!important;}
+
+[data-c4-page].rm .rm-sources{min-height:0;overflow:auto;}
+
+[data-c4-page].rm .rm-now h2{margin-top:12px;margin-bottom:4px}
+[data-c4-page].rm .rm-album{min-height:18px;margin-top:4px}
+[data-c4-page].rm .rm-playing-from{margin-top:6px}
+[data-c4-page].rm .rm-playing-from:empty{display:none}
+[data-c4-page].rm .rm-transport{margin:14px 0 8px}
+[data-c4-page].rm .rm-meta-note{margin-top:8px}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2){flex:0.85 1 280px!important;min-width:280px!important}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3){flex:1.15 1 400px!important;max-width:none!important;min-width:400px!important}
+</style><div data-c4-page="listen"><div class="c4-static" style="box-sizing:border-box;width:100%;min-height:740px;padding:26px;background:#101416;color:#f4f5f6;font:16px 'Segoe UI',Arial,sans-serif;overflow:auto;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:26px;">
+    <div><div style="font-size:11px;letter-spacing:3px;color:#99a6ab;margin-bottom:8px;">HOME / ENTERTAINMENT</div><div style="font-size:27px;font-weight:600;">Living Room &#8964;</div></div>
+    <div style="display:flex;gap:8px;"><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #46776b;background:#26463e;border-radius:12px;padding:14px 20px;min-height:48px;">Listen</button><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #39484e;background:#222e33;border-radius:12px;padding:14px 20px;min-height:48px;">Watch</button></div>
+    <div style="font-size:12px;color:#c7d5d2;border:1px solid #39484e;padding:10px 14px;border-radius:20px;" data-startup-status>Layout preview</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:stretch;">
+    <div style="flex:0 0 145px;">
+      <div style="font-size:11px;letter-spacing:2px;color:#99a6ab;margin-bottom:18px;">SOURCES</div>
+      <div style="margin-bottom:12px;"><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #39484e;background:#222e33;border-radius:12px;padding:14px 20px;min-height:48px;">S &nbsp; Spotify</button></div>
+      <div><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #46776b;background:#26463e;border-radius:12px;padding:14px 20px;min-height:48px;">P &nbsp; Pandora</button></div>
+      <div style="color:#99a6ab;font-size:12px;line-height:1.6;margin:22px 8px;">Your room.<br>Your music.</div>
+    </div>
+    <div style="box-sizing:border-box;flex:1 1 360px;min-width:280px;border:1px solid #303d42;background:#1a2125;border-radius:20px;padding:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:25px;font-weight:600;">Pandora</span><span style="font-size:12px;color:#add5ca;background:#263c35;padding:8px 12px;border-radius:20px;">162 stations</span></div>
+      <div style="color:#99a6ab;font-size:13px;margin-top:6px;">Saved stations</div>
+      <div style="background:#121a1e;border:1px solid #39484e;border-radius:10px;padding:14px;margin:20px 0 8px;color:#8fa0a6;">Search saved stations</div>
+      <div style="display:flex;align-items:center;gap:15px;padding:17px 10px;border-bottom:1px solid #303d42;"><span style="color:#68d6be;font-size:22px;">&#9835;</span><span style="flex:1;">Instrumental Radio</span><span style="color:#91aaa5;">&#8250;</span></div><div style="display:flex;align-items:center;gap:15px;padding:17px 10px;border-bottom:1px solid #303d42;"><span style="color:#68d6be;font-size:22px;">&#9835;</span><span style="flex:1;">SAD! Radio</span><span style="color:#91aaa5;">&#8250;</span></div><div style="display:flex;align-items:center;gap:15px;padding:17px 10px;border-bottom:1px solid #303d42;"><span style="color:#68d6be;font-size:22px;">&#9835;</span><span style="flex:1;">90s Alternative Radio</span><span style="color:#91aaa5;">&#8250;</span></div><div style="display:flex;align-items:center;gap:15px;padding:17px 10px;border-bottom:1px solid #303d42;"><span style="color:#68d6be;font-size:22px;">&#9835;</span><span style="flex:1;">Classic Rock Radio</span><span style="color:#91aaa5;">&#8250;</span></div><div style="display:flex;align-items:center;gap:15px;padding:17px 10px;border-bottom:1px solid #303d42;"><span style="color:#68d6be;font-size:22px;">&#9835;</span><span style="flex:1;">Instrumental Jazz Radio</span><span style="color:#91aaa5;">&#8250;</span></div><div style="display:flex;align-items:center;gap:15px;padding:17px 10px;border-bottom:1px solid #303d42;"><span style="color:#68d6be;font-size:22px;">&#9835;</span><span style="flex:1;">Today's Hits Radio</span><span style="color:#91aaa5;">&#8250;</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:19px;"><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #39484e;background:#222e33;border-radius:12px;padding:14px 20px;min-height:48px;">&#8249;</button><span style="font-size:12px;color:#99a6ab;">Page 1 of 27</span><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #39484e;background:#222e33;border-radius:12px;padding:14px 20px;min-height:48px;">&#8250;</button></div>
+    </div>
+    <div style="flex:1 1 280px;max-width:350px;">
+      <div style="font-size:11px;letter-spacing:2px;color:#99a6ab;margin-bottom:16px;">NOW PLAYING</div>
+      <div style="box-sizing:border-box;height:235px;background:#36594e;background:linear-gradient(135deg,#254443,#688777 65%,#b8a477);border-radius:18px;padding:23px;border:1px solid #607c72;">
+        <div style="font-size:10px;letter-spacing:1px;">ARTWORK PLACEHOLDER</div>
+        <div style="font-size:35px;font-weight:700;line-height:1.1;margin-top:30px;">Sound<br>at home.</div>
+        <div style="font-size:11px;margin-top:24px;">Album artwork feed pending</div>
+      </div>
+      <div style="font-size:23px;font-weight:600;line-height:1.3;margin-top:20px;">Loosing Interest<br>(feat. Shiloh Dynasty)</div>
+      <div style="color:#b3c4cb;margin-top:8px;">timmies</div>
+      <div style="color:#99a6ab;font-size:12px;margin-top:8px;">Passion &amp; Confusion (feat. Shiloh Dynasty)</div>
+      <div style="color:#8fc5b8;font-size:12px;margin:22px 0;">Playing from &#183; SAD! Radio</div>
+      <div style="display:flex;gap:9px;"><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #39484e;background:#222e33;border-radius:12px;padding:14px 20px;min-height:48px;">&#10074;&#8249;</button><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #46776b;background:#26463e;border-radius:12px;padding:14px 20px;min-height:48px;">&#9654;</button><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #39484e;background:#222e33;border-radius:12px;padding:14px 20px;min-height:48px;">&#10074;&#10074;</button><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #39484e;background:#222e33;border-radius:12px;padding:14px 20px;min-height:48px;">&#8250;&#10074;</button></div>
+      <div style="font-size:12px;color:#becacb;margin-top:18px;">&#9744; Shuffle on next station selection</div>
+      <div style="font-size:10px;color:#99a6ab;margin-top:15px;">Captured metadata sample &#183; not a live feed</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:18px;background:#1a2428;border:1px solid #35434a;border-radius:18px;padding:18px;margin-top:24px;">
+    <span>Volume</span><button type="button" disabled aria-label="Volume down" style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #39484e;background:#222e33;border-radius:10px;min-width:44px;min-height:44px;font-size:24px;">&#8722;</button><div style="width:230px;height:6px;background:#485356;border-radius:4px;"><div style="width:29%;height:6px;background:#68d6be;border-radius:4px;"></div></div><button type="button" disabled aria-label="Volume up" style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #39484e;background:#222e33;border-radius:10px;min-width:44px;min-height:44px;font-size:24px;">+</button><span style="flex:1;">29%</span><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #39484e;background:#222e33;border-radius:12px;padding:14px 20px;min-height:48px;">Mute</button><button type="button" disabled style="font:inherit;color:#f4f5f6;opacity:1;border:1px solid #39484e;background:#222e33;border-radius:12px;padding:14px 20px;min-height:48px;">&#9211; &nbsp; Room off</button>
+  </div>
+  <div style="text-align:center;color:#99a6ab;font-size:11px;margin-top:16px;">Visual preview only &#183; sample station rows &#183; controls are not connected</div>
+</div>
+</div>
+<script>
+(function(global){
+  // The installed Construct editor places scripted Divs in a non-interactive
+  // *_iframe (pointer-events:none). Its canvas does not expose build assets.
+  // Keep visible baseline HTML here; do not treat the canvas as a live client.
+  var editorCanvas=false;
+  try {
+    var frame=global.frameElement;
+    editorCanvas=!!(frame && /_iframe$/.test(frame.id) && frame.style.pointerEvents==='none');
+  } catch (_) {}
+  if(editorCanvas){
+    document.querySelectorAll('[data-startup-status]').forEach(function(note){note.textContent='Layout preview · Construct editor';});
+    return;
+  }
+  // Project output paths. Adjust if your Construct output uses another location.
+  var paths={css:['app/project/assets/css/room-shared.css','assets/css/room-shared.css','room-shared.css'],js:['app/project/assets/javascript/room-shared.js','assets/javascript/room-shared.js','room-shared.js']};
+  function load(tag,urls,index){
+    return new Promise(function(resolve,reject){
+      var element=document.createElement(tag);
+      if(tag==='link'){element.rel='stylesheet';element.href=urls[index];}else{element.src=urls[index];element.async=false;}
+      element.onload=resolve;
+      element.onerror=function(){element.remove();if(index+1<urls.length)load(tag,urls,index+1).then(resolve,reject);else reject(Error('Room media shared asset missing: '+urls.join(' or ')));};
+      document.head.appendChild(element);
+    });
+  }
+  // Construct's built index loads the shared implementation in the host.
+  // Reuse it across srcdoc Divs; each frame still needs its own stylesheet.
+  var host=null;
+  try { if(global.parent!==global && global.parent.RoomMediaPages)host=global.parent; } catch (_) {}
+  if(host){
+    load('link',paths.css,0).then(function(){
+      var root=document.querySelector('[data-c4-page]');
+      if(!root)return;
+      host.RoomMediaPages.attach(root);
+      global.addEventListener('pagehide',function(){host.RoomMediaPages.detach(root);},{once:true});
+    }).catch(function(error){
+      document.querySelectorAll('[data-startup-status]').forEach(function(note){note.textContent='Layout preview: shared CSS could not load. Check Construct output paths.';});
+      console.error(error);
+    });
+    return;
+  }
+  if(!global.__roomMediaLoadPromise){
+    global.__roomMediaLoadPromise=Promise.all([load('link',paths.css,0),load('script',paths.js,0)]).catch(function(error){global.__roomMediaLoadPromise=null;throw error;});
+  }
+  global.__roomMediaLoadPromise.then(function(){global.RoomMediaPages.start();}).catch(function(error){
+    document.querySelectorAll('[data-startup-status]').forEach(function(note){note.textContent='Layout preview: shared assets could not load. Check Construct output paths.';});
+    console.error(error);
+  });
+})(window);
+</script>

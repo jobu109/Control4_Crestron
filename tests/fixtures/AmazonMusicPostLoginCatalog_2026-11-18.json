@@ -1,0 +1,39 @@
+{
+  "generated_utc": "2026-11-18T15:48:28.513525Z",
+  "catalogs": [
+    {
+      "room_id": 13,
+      "kind": "service_presets",
+      "scope": "service_saved_presets",
+      "driver_id": 598,
+      "source_id": 599,
+      "revision": "7b186bf8ba5f49a6abada9b0787b8277",
+      "generated_utc": "2026-11-18T15:44:13.739031Z",
+      "items": [],
+      "total": 0,
+      "source_total": 196,
+      "omitted": 0,
+      "unnamed": 0,
+      "truncated": false,
+      "selection_supported": false,
+      "selection_adapters": []
+    },
+    {
+      "room_id": 13,
+      "kind": "service_presets",
+      "scope": "service_saved_presets",
+      "driver_id": 598,
+      "source_id": 599,
+      "revision": "9d4b641ed7a54bb6b7dc4c4f70f242ac",
+      "generated_utc": "2026-11-18T15:48:15.264899Z",
+      "items": [],
+      "total": 0,
+      "source_total": 196,
+      "omitted": 0,
+      "unnamed": 0,
+      "truncated": false,
+      "selection_supported": false,
+      "selection_adapters": []
+    }
+  ]
+}

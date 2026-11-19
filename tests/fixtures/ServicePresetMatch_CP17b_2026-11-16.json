@@ -1,0 +1,149 @@
+{
+  "source_count": 181,
+  "visited": 181,
+  "scan_incomplete": false,
+  "exact_selector_matches": [
+    {
+      "record_index": 180,
+      "selector_paths": [
+        "$.location"
+      ],
+      "record_shape": {
+        "type": "Object",
+        "fields": {
+          "id": {
+            "type": "Integer",
+            "numeric_id": "171"
+          },
+          "device_id": {
+            "type": "Integer",
+            "numeric_id": "65"
+          },
+          "name": {
+            "type": "String"
+          },
+          "location": {
+            "type": "String",
+            "matches_reference_selector": true
+          },
+          "audio_only": {
+            "type": "Boolean"
+          },
+          "genre": {
+            "type": "String"
+          },
+          "description": {
+            "type": "String"
+          },
+          "img": {
+            "type": "String"
+          }
+        },
+        "omitted": 0
+      }
+    }
+  ],
+  "sample_shapes": [
+    {
+      "type": "Object",
+      "fields": {
+        "id": {
+          "type": "Integer",
+          "numeric_id": "231"
+        },
+        "device_id": {
+          "type": "Integer",
+          "numeric_id": "20"
+        },
+        "name": {
+          "type": "String"
+        },
+        "location": {
+          "type": "String"
+        },
+        "audio_only": {
+          "type": "Boolean"
+        },
+        "genre": {
+          "type": "String"
+        },
+        "description": {
+          "type": "String"
+        },
+        "img": {
+          "type": "String"
+        }
+      },
+      "omitted": 0
+    },
+    {
+      "type": "Object",
+      "fields": {
+        "id": {
+          "type": "Integer",
+          "numeric_id": "217"
+        },
+        "device_id": {
+          "type": "Integer",
+          "numeric_id": "20"
+        },
+        "name": {
+          "type": "String"
+        },
+        "location": {
+          "type": "String"
+        },
+        "audio_only": {
+          "type": "Boolean"
+        },
+        "genre": {
+          "type": "String"
+        },
+        "description": {
+          "type": "String"
+        },
+        "img": {
+          "type": "String"
+        }
+      },
+      "omitted": 0
+    },
+    {
+      "type": "Object",
+      "fields": {
+        "id": {
+          "type": "Integer",
+          "numeric_id": "224"
+        },
+        "device_id": {
+          "type": "Integer",
+          "numeric_id": "20"
+        },
+        "name": {
+          "type": "String"
+        },
+        "location": {
+          "type": "String"
+        },
+        "audio_only": {
+          "type": "Boolean"
+        },
+        "genre": {
+          "type": "String"
+        },
+        "description": {
+          "type": "String"
+        },
+        "img": {
+          "type": "String"
+        }
+      },
+      "omitted": 0
+    }
+  ],
+  "note": "Exact case-insensitive hex matches only. Selector text and unrelated string values suppressed; driver ownership is not inferred.",
+  "inspection_kind": "service_preset_catalog_mapping",
+  "room_id": 13,
+  "requested_driver_id": 64,
+  "generated_utc": "2026-11-17T01:23:32.890766Z"
+}

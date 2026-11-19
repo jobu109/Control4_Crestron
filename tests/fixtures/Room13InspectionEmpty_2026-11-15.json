@@ -1,0 +1,35 @@
+[
+  {
+    "room_id": 13,
+    "generated_utc": "2026-11-16T02:50:49.796639Z",
+    "request_path": "/api/v1/items/13/variables",
+    "variable_count": 57,
+    "exported_variable_count": 0,
+    "omitted_variable_count": 57,
+    "inspection_truncated": false,
+    "variables": [],
+    "interpretation": "Numeric source candidates are observations, not verified active-source IDs. No selected feedback is asserted."
+  },
+  {
+    "room_id": 13,
+    "generated_utc": "2026-11-16T02:51:06.119014Z",
+    "request_path": "/api/v1/items/13/variables",
+    "variable_count": 57,
+    "exported_variable_count": 0,
+    "omitted_variable_count": 57,
+    "inspection_truncated": false,
+    "variables": [],
+    "interpretation": "Numeric source candidates are observations, not verified active-source IDs. No selected feedback is asserted."
+  },
+  {
+    "room_id": 13,
+    "generated_utc": "2026-11-16T02:51:58.232901Z",
+    "request_path": "/api/v1/items/13/variables",
+    "variable_count": 57,
+    "exported_variable_count": 0,
+    "omitted_variable_count": 57,
+    "inspection_truncated": false,
+    "variables": [],
+    "interpretation": "Numeric source candidates are observations, not verified active-source IDs. No selected feedback is asserted."
+  }
+]

@@ -1,0 +1,21 @@
+#SYMBOL_NAME "Control4 - Generic Device"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+
+// Safe module-binding test; commands and feedback have not been implemented.
+// Initialized_FB confirms only that Initialize returned; it does NOT mean
+// the Control4 device is online or controllable.
+DIGITAL_INPUT _skip_, _skip_;
+DIGITAL_OUTPUT _skip_, _skip_, Initialized_FB;
+INTEGER_PARAMETER Gateway_ID, Control4_Item_ID;
+
+Control4_Generic device;
+
+FUNCTION Main()
+{
+    WaitForInitializationComplete();
+    device.Initialize(Gateway_ID, Control4_Item_ID);
+    Initialized_FB = 1;
+}

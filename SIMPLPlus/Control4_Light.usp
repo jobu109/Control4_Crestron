@@ -1,0 +1,33 @@
+#SYMBOL_NAME "Control4 - Light"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+// Two parameters reserve two leading positions in each signal direction.
+DIGITAL_INPUT _skip_, _skip_, On_btn, Off_btn, Query, _skip_;
+ANALOG_INPUT Level_Set;
+DIGITAL_OUTPUT _skip_, _skip_, On_FB, Valid_FB, _skip_;
+ANALOG_OUTPUT Level_FB;
+// Composer Driver Information: use the light Proxy ID, not the Device ID.
+INTEGER_PARAMETER Gateway_ID, Proxy_ID;
+Control4_Light light;
+FUNCTION RegisterEvents()
+{
+    RegisterEvent(light, FeedbackChanged, OnFeedbackChanged);
+}
+eventhandler OnFeedbackChanged(Control4_Light sender, LightStatusEventArgs args)
+{
+    On_FB = args.On;
+    Level_FB = args.Level;
+    Valid_FB = args.Valid;
+}
+PUSH On_btn { light.On(); }
+PUSH Off_btn { light.Off(); }
+PUSH Query { light.Query(); }
+CHANGE Level_Set { if (Level_Set <= 100) light.SetLevel(Level_Set); }
+FUNCTION Main()
+{
+    RegisterEvents();
+    WaitForInitializationComplete();
+    light.Initialize(Gateway_ID, Proxy_ID);
+}

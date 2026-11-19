@@ -1,0 +1,42 @@
+{
+  "room_id": 13,
+  "kind": "service_presets",
+  "scope": "service_saved_presets",
+  "driver_id": 64,
+  "source_id": 65,
+  "revision": "2ef69e3e05d940dc9c89a2db4c7dfbb5",
+  "generated_utc": "2026-11-17T14:36:48.843066Z",
+  "items": [
+    {
+      "id": "172",
+      "name": "90's Music",
+      "label_available": true
+    },
+    {
+      "id": "168",
+      "name": "Classic Rock Favs",
+      "label_available": true
+    },
+    {
+      "id": "170",
+      "name": "Emma's Favs",
+      "label_available": true
+    },
+    {
+      "id": "169",
+      "name": "FAVS",
+      "label_available": true
+    },
+    {
+      "id": "171",
+      "name": "HEAVY",
+      "label_available": true
+    }
+  ],
+  "total": 5,
+  "source_total": 181,
+  "omitted": 0,
+  "unnamed": 0,
+  "truncated": false,
+  "selection_supported": true
+}

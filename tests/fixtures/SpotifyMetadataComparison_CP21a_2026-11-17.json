@@ -1,0 +1,4775 @@
+{
+  "generated_utc": "2026-11-17T21:37:51.3996440Z",
+  "room_state_inspections": [
+    {
+      "room_id": 13,
+      "generated_utc": "2026-11-17T21:36:19.7055960Z",
+      "request_path": "/api/v1/items/13/variables",
+      "variable_count": 57,
+      "exported_variable_count": 55,
+      "omitted_variable_count": 2,
+      "inspection_truncated": false,
+      "variables": [
+        {
+          "name": "CURRENT_SELECTED_DEVICE",
+          "value_type": "String",
+          "source_candidate": true,
+          "numeric_candidate": 65
+        },
+        {
+          "name": "CURRENT_AUDIO_DEVICE",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 65
+        },
+        {
+          "name": "CURRENT_VIDEO_DEVICE",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 2061
+        },
+        {
+          "name": "AUDIO_VOLUME_DEVICE",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 0
+        },
+        {
+          "name": "VIDEO_VOLUME_DEVICE",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 0
+        },
+        {
+          "name": "CURRENT_MEDIA",
+          "value_type": "Object",
+          "source_candidate": false
+        },
+        {
+          "name": "CURRENT_AUDIO_PATH",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "CURRENT_VIDEO_PATH",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "CURRENT_VIDEO_AUDIO_PATH",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "POWER_STATE",
+          "value_type": "Integer",
+          "source_candidate": false,
+          "measured_value": 1
+        },
+        {
+          "name": "CURRENT_VOLUME",
+          "value_type": "Integer",
+          "source_candidate": false,
+          "measured_value": 24
+        },
+        {
+          "name": "TEMPERATURE_ID",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "TEMPERATURE_CONTROL_ID",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "SECURITY_SYSTEM_ID",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "CURRENT_VOLUME_DEVICE_ID",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 340
+        },
+        {
+          "name": "HAS_DISCRETE_VOLUME",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "HAS_DISCRETE_MUTE",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "IS_MUTED",
+          "value_type": "Integer",
+          "source_candidate": false,
+          "measured_value": 0
+        },
+        {
+          "name": "IN_NAVIGATION",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "USE_DEFAULT_VOLUMES",
+          "value_type": "Boolean",
+          "source_candidate": false
+        },
+        {
+          "name": "DEFAULT_AUDIO_VOLUME",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "DEFAULT_VIDEO_VOLUME",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "VOLUME_IS_LINKED",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "MUTE_IS_LINKED",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "ROOMOFF_IS_LINKED",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "LINKED_ROOM_LIST",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "SELECTIONS_LINKED",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 0
+        },
+        {
+          "name": "CURRENT_LINKED_MEDIA_SCENE",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "ROOM_HIDDEN",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "MEDIA_SCENE_ACTIVE",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "LAST_DEVICE_GROUP",
+          "value_type": "String",
+          "source_candidate": true
+        },
+        {
+          "name": "AVAILABLE_CAMERAS",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "POOLS",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "SCENE_IS_DISCRETE_VOLUME",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "PLAYING_AUDIO_DEVICE",
+          "value_type": "String",
+          "source_candidate": true,
+          "numeric_candidate": 65
+        },
+        {
+          "name": "ANNOUNCEMENT_DISABLED",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "CURRENT_VIDEO_AUDIO_DEVICE",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 0
+        },
+        {
+          "name": "EQ_IS_HIDDEN",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_AUDIO_MODE",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_HAS_LOUDNESS_CONTROL",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_LOUDNESS_ON",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_HAS_TONE_CONTROL",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BASS_LEVEL",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_TREBLE_LEVEL",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_TONE_LOWER_LIMIT",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_TONE_UPPER_LIMIT",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_HAS_EQ_CONTROL",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BAND_COUNT",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BAND_LOWER_LIMIT",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BAND_UPPER_LIMIT",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BAND_FREQ_VALUES",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BAND_GAIN_VALUES",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_PRESET_LIST",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_SELECTED_PRESET",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "MW_MINIAPPNOPASSMODE",
+          "value_type": "Integer",
+          "source_candidate": false
+        }
+      ],
+      "first_entry_shape": {
+        "type": "Object",
+        "properties": [
+          {
+            "key": "id",
+            "type": "Integer"
+          },
+          {
+            "key": "varName",
+            "type": "String"
+          },
+          {
+            "key": "type",
+            "type": "String"
+          },
+          {
+            "key": "hidden",
+            "type": "Integer"
+          },
+          {
+            "key": "value",
+            "type": "String"
+          },
+          {
+            "key": "variableId",
+            "type": "Integer"
+          },
+          {
+            "key": "name",
+            "type": "String"
+          },
+          {
+            "key": "roomName",
+            "type": "String"
+          }
+        ],
+        "omitted_key_count": 0
+      },
+      "interpretation": "Numeric source candidates are observations, not verified active-source IDs. No selected feedback is asserted.",
+      "filtered_value_read_count": 0,
+      "filtered_value_reads_truncated": false
+    },
+    {
+      "room_id": 13,
+      "generated_utc": "2026-11-17T21:37:19.6086350Z",
+      "request_path": "/api/v1/items/13/variables",
+      "variable_count": 57,
+      "exported_variable_count": 55,
+      "omitted_variable_count": 2,
+      "inspection_truncated": false,
+      "variables": [
+        {
+          "name": "CURRENT_SELECTED_DEVICE",
+          "value_type": "String",
+          "source_candidate": true,
+          "numeric_candidate": 100002
+        },
+        {
+          "name": "CURRENT_AUDIO_DEVICE",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 100002
+        },
+        {
+          "name": "CURRENT_VIDEO_DEVICE",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 0
+        },
+        {
+          "name": "AUDIO_VOLUME_DEVICE",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 0
+        },
+        {
+          "name": "VIDEO_VOLUME_DEVICE",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 0
+        },
+        {
+          "name": "CURRENT_MEDIA",
+          "value_type": "Object",
+          "source_candidate": false
+        },
+        {
+          "name": "CURRENT_AUDIO_PATH",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "CURRENT_VIDEO_PATH",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "CURRENT_VIDEO_AUDIO_PATH",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "POWER_STATE",
+          "value_type": "Integer",
+          "source_candidate": false,
+          "measured_value": 1
+        },
+        {
+          "name": "CURRENT_VOLUME",
+          "value_type": "Integer",
+          "source_candidate": false,
+          "measured_value": 24
+        },
+        {
+          "name": "TEMPERATURE_ID",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "TEMPERATURE_CONTROL_ID",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "SECURITY_SYSTEM_ID",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "CURRENT_VOLUME_DEVICE_ID",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 340
+        },
+        {
+          "name": "HAS_DISCRETE_VOLUME",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "HAS_DISCRETE_MUTE",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "IS_MUTED",
+          "value_type": "Integer",
+          "source_candidate": false,
+          "measured_value": 0
+        },
+        {
+          "name": "IN_NAVIGATION",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "USE_DEFAULT_VOLUMES",
+          "value_type": "Boolean",
+          "source_candidate": false
+        },
+        {
+          "name": "DEFAULT_AUDIO_VOLUME",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "DEFAULT_VIDEO_VOLUME",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "VOLUME_IS_LINKED",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "MUTE_IS_LINKED",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "ROOMOFF_IS_LINKED",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "LINKED_ROOM_LIST",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "SELECTIONS_LINKED",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 0
+        },
+        {
+          "name": "CURRENT_LINKED_MEDIA_SCENE",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "ROOM_HIDDEN",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "MEDIA_SCENE_ACTIVE",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "LAST_DEVICE_GROUP",
+          "value_type": "String",
+          "source_candidate": true
+        },
+        {
+          "name": "AVAILABLE_CAMERAS",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "POOLS",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "SCENE_IS_DISCRETE_VOLUME",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "PLAYING_AUDIO_DEVICE",
+          "value_type": "String",
+          "source_candidate": true,
+          "numeric_candidate": 65
+        },
+        {
+          "name": "ANNOUNCEMENT_DISABLED",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "CURRENT_VIDEO_AUDIO_DEVICE",
+          "value_type": "Integer",
+          "source_candidate": true,
+          "numeric_candidate": 0
+        },
+        {
+          "name": "EQ_IS_HIDDEN",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_AUDIO_MODE",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_HAS_LOUDNESS_CONTROL",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_LOUDNESS_ON",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_HAS_TONE_CONTROL",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BASS_LEVEL",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_TREBLE_LEVEL",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_TONE_LOWER_LIMIT",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_TONE_UPPER_LIMIT",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_HAS_EQ_CONTROL",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BAND_COUNT",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BAND_LOWER_LIMIT",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BAND_UPPER_LIMIT",
+          "value_type": "Integer",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BAND_FREQ_VALUES",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_BAND_GAIN_VALUES",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_PRESET_LIST",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "EQ_SELECTED_PRESET",
+          "value_type": "String",
+          "source_candidate": false
+        },
+        {
+          "name": "MW_MINIAPPNOPASSMODE",
+          "value_type": "Integer",
+          "source_candidate": false
+        }
+      ],
+      "first_entry_shape": {
+        "type": "Object",
+        "properties": [
+          {
+            "key": "id",
+            "type": "Integer"
+          },
+          {
+            "key": "varName",
+            "type": "String"
+          },
+          {
+            "key": "type",
+            "type": "String"
+          },
+          {
+            "key": "hidden",
+            "type": "Integer"
+          },
+          {
+            "key": "value",
+            "type": "String"
+          },
+          {
+            "key": "variableId",
+            "type": "Integer"
+          },
+          {
+            "key": "name",
+            "type": "String"
+          },
+          {
+            "key": "roomName",
+            "type": "String"
+          }
+        ],
+        "omitted_key_count": 0
+      },
+      "interpretation": "Numeric source candidates are observations, not verified active-source IDs. No selected feedback is asserted.",
+      "filtered_value_read_count": 0,
+      "filtered_value_reads_truncated": false
+    }
+  ],
+  "room_now_playing_inspections": [
+    {
+      "room_id": 13,
+      "source_id": 65,
+      "generated_utc": "2026-11-17T21:36:29.5457340Z",
+      "capture_seconds": 60,
+      "variables": [
+        {
+          "type": "Array",
+          "entries": [
+            {
+              "type": "Object",
+              "variable_name": "CURRENT_SELECTED_DEVICE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "CURRENT_AUDIO_DEVICE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "CURRENT_VIDEO_DEVICE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "AUDIO_VOLUME_DEVICE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "VIDEO_VOLUME_DEVICE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "CURRENT_MEDIA",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Object",
+                  "fields": {
+                    "mediainfo": {
+                      "type": "Object",
+                      "fields": {
+                        "mediaid": {
+                          "type": "Integer"
+                        },
+                        "mediatype": {
+                          "type": "String"
+                        }
+                      },
+                      "omitted": 0
+                    }
+                  },
+                  "omitted": 0
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "CURRENT_AUDIO_PATH",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String",
+                  "content_format": "xml_outline_only",
+                  "xml_tags": [
+                    "devices",
+                    "device",
+                    "id",
+                    "provider_binding_id",
+                    "consumer_binding_id"
+                  ]
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "CURRENT_VIDEO_PATH",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String",
+                  "content_format": "xml_outline_only",
+                  "xml_tags": [
+                    "devices",
+                    "device",
+                    "id",
+                    "provider_binding_id",
+                    "consumer_binding_id"
+                  ]
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "CURRENT_VIDEO_AUDIO_PATH",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "POWER_STATE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "CURRENT_VOLUME",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "TEMPERATURE_ID",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "TEMPERATURE_CONTROL_ID",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "SECURITY_SYSTEM_ID",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "CURRENT_VOLUME_DEVICE_ID",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "HAS_DISCRETE_VOLUME",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "HAS_DISCRETE_MUTE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "IS_MUTED",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "IN_NAVIGATION",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "USE_DEFAULT_VOLUMES",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Boolean"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "DEFAULT_AUDIO_VOLUME",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "DEFAULT_VIDEO_VOLUME",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "VOLUME_IS_LINKED",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "MUTE_IS_LINKED",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "ROOMOFF_IS_LINKED",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "LINKED_ROOM_LIST",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "SELECTIONS_LINKED",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "CURRENT_LINKED_MEDIA_SCENE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "ROOM_HIDDEN",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "MEDIA_SCENE_ACTIVE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Object",
+                  "fields": {
+                    "mediainfo": {
+                      "type": "Object",
+                      "fields": {
+                        "mediatype": {
+                          "type": "String"
+                        },
+                        "artist": {
+                          "type": "String",
+                          "display_value": "Avatar"
+                        },
+                        "album": {
+                          "type": "String",
+                          "display_value": "Make It Rain / On the Other Side of Tonight"
+                        },
+                        "title": {
+                          "type": "String",
+                          "display_value": "On the Other Side of Tonight"
+                        },
+                        "genre": {
+                          "type": "String"
+                        },
+                        "img": {
+                          "type": "String"
+                        },
+                        "deviceid": {
+                          "type": "Integer"
+                        }
+                      },
+                      "omitted": 0
+                    }
+                  },
+                  "omitted": 0
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "LAST_DEVICE_GROUP",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "AVAILABLE_CAMERAS",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String",
+                  "content_format": "xml_outline_only",
+                  "xml_tags": [
+                    "Cameras"
+                  ]
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "POOLS",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "SCENE_IS_DISCRETE_VOLUME",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "PLAYING_AUDIO_DEVICE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "ANNOUNCEMENT_DISABLED",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "CURRENT_VIDEO_AUDIO_DEVICE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_IS_HIDDEN",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_AUDIO_MODE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_HAS_LOUDNESS_CONTROL",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_LOUDNESS_ON",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_HAS_TONE_CONTROL",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_BASS_LEVEL",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_TREBLE_LEVEL",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_TONE_LOWER_LIMIT",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_TONE_UPPER_LIMIT",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_HAS_EQ_CONTROL",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_BAND_COUNT",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_BAND_LOWER_LIMIT",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_BAND_UPPER_LIMIT",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_BAND_FREQ_VALUES",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_BAND_GAIN_VALUES",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_PRESET_LIST",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "EQ_SELECTED_PRESET",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Object",
+                  "fields": {
+                    "wallmediainfo": {
+                      "type": "Object",
+                      "fields": {
+                        "notifyDevId": {
+                          "type": "Integer"
+                        },
+                        "mediainfo": {
+                          "type": "Array",
+                          "entries": [
+                            {
+                              "type": "Object",
+                              "fields": {
+                                "mediatype": {
+                                  "type": "String"
+                                },
+                                "artist": {
+                                  "type": "String",
+                                  "display_value": "Avatar"
+                                },
+                                "album": {
+                                  "type": "String",
+                                  "display_value": "Make It Rain / On the Other Side of Tonight"
+                                },
+                                "title": {
+                                  "type": "String",
+                                  "display_value": "On the Other Side of Tonight"
+                                },
+                                "genre": {
+                                  "type": "String"
+                                },
+                                "img": {
+                                  "type": "String"
+                                },
+                                "deviceid": {
+                                  "type": "Integer"
+                                }
+                              },
+                              "omitted": 0
+                            },
+                            {
+                              "type": "Object",
+                              "fields": {
+                                "mediatype": {
+                                  "type": "String"
+                                },
+                                "artist": {
+                                  "type": "String",
+                                  "display_value": "XXXTENTACION"
+                                },
+                                "album": {
+                                  "type": "String",
+                                  "display_value": "? (Deluxe)"
+                                },
+                                "title": {
+                                  "type": "String",
+                                  "display_value": "NUMB"
+                                },
+                                "img": {
+                                  "type": "String"
+                                },
+                                "deviceid": {
+                                  "type": "Integer"
+                                }
+                              },
+                              "omitted": 0
+                            },
+                            {
+                              "type": "Object",
+                              "fields": {
+                                "deviceid": {
+                                  "type": "Integer"
+                                },
+                                "queueid": {
+                                  "type": "Integer"
+                                },
+                                "mediaid": {
+                                  "type": "Integer"
+                                },
+                                "mediatype": {
+                                  "type": "String"
+                                },
+                                "endpoints": {
+                                  "type": "Object",
+                                  "fields": {
+                                    "endpoint": {
+                                      "type": "Array",
+                                      "entries": [
+                                        {
+                                          "type": "Integer"
+                                        }
+                                      ],
+                                      "omitted": 0
+                                    }
+                                  },
+                                  "omitted": 0
+                                }
+                              },
+                              "omitted": 0
+                            },
+                            {
+                              "type": "Object",
+                              "fields": {
+                                "deviceid": {
+                                  "type": "Integer"
+                                },
+                                "queueid": {
+                                  "type": "Integer"
+                                },
+                                "streamid": {
+                                  "type": "Integer"
+                                },
+                                "source": {
+                                  "type": "Integer"
+                                },
+                                "mediatype": {
+                                  "type": "String"
+                                },
+                                "mediatypeV2": {
+                                  "type": "String"
+                                },
+                                "medSrcDev": {
+                                  "type": "Integer"
+                                },
+                                "queueInfo": {
+                                  "type": "Integer"
+                                },
+                                "streamStatus": {
+                                  "type": "String"
+                                },
+                                "stationid": {
+                                  "type": "String"
+                                },
+                                "album": {
+                                  "type": "String",
+                                  "display_value": "Make Me"
+                                },
+                                "artist": {
+                                  "type": "String",
+                                  "display_value": "Braeker"
+                                },
+                                "title": {
+                                  "type": "String",
+                                  "display_value": "Make Me"
+                                },
+                                "channel": {
+                                  "type": "String"
+                                },
+                                "genre": {
+                                  "type": "String"
+                                },
+                                "meta": {
+                                  "type": "Object",
+                                  "fields": {
+                                    "audioFormat": {
+                                      "type": "String"
+                                    },
+                                    "sampleRate": {
+                                      "type": "String"
+                                    },
+                                    "bitDepth": {
+                                      "type": "Integer"
+                                    },
+                                    "channels": {
+                                      "type": "Integer"
+                                    },
+                                    "bitRate": {
+                                      "type": "Integer"
+                                    },
+                                    "audioQuality": {
+                                      "type": "String"
+                                    }
+                                  },
+                                  "omitted": 0
+                                },
+                                "img": {
+                                  "type": "String"
+                                },
+                                "notifyDevId": {
+                                  "type": "Integer"
+                                }
+                              },
+                              "omitted": 0
+                            }
+                          ],
+                          "omitted": 0
+                        }
+                      },
+                      "omitted": 0
+                    }
+                  },
+                  "omitted": 0
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "MW_MINIAPPNOPASSMODE",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "Integer"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            }
+          ],
+          "omitted": 0,
+          "item_id": 13
+        },
+        {
+          "type": "Array",
+          "entries": [
+            {
+              "type": "Object",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "State",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "Active",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            }
+          ],
+          "omitted": 0,
+          "item_id": 65
+        },
+        {
+          "type": "Array",
+          "entries": [
+            {
+              "type": "Object",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "State",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            },
+            {
+              "type": "Object",
+              "variable_name": "Active",
+              "fields": {
+                "id": {
+                  "type": "Integer"
+                },
+                "varName": {
+                  "type": "String"
+                },
+                "type": {
+                  "type": "String"
+                },
+                "hidden": {
+                  "type": "Integer"
+                },
+                "value": {
+                  "type": "String"
+                },
+                "variableId": {
+                  "type": "Integer"
+                },
+                "name": {
+                  "type": "String"
+                },
+                "roomName": {
+                  "type": "String"
+                }
+              },
+              "omitted": 0
+            }
+          ],
+          "omitted": 0,
+          "item_id": 64
+        }
+      ],
+      "events": [
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:36:40.2264340Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "Items": {
+                        "type": "String"
+                      },
+                      "QueueId": {
+                        "type": "Integer"
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:36:40.4406640Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "NowPlayingIndex": {
+                        "type": "Integer"
+                      },
+                      "List": {
+                        "type": "Object",
+                        "fields": {
+                          "item": {
+                            "type": "Array",
+                            "entries": [
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "isHeader": {
+                                    "type": "Boolean"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "The Void Within"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "As I Lay Dying"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "Make Me"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "Braeker"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "current": {
+                                    "type": "Boolean"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "Lonely God (Deluxe Edition)"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "Fit For A King"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              }
+                            ],
+                            "omitted": 0
+                          }
+                        },
+                        "omitted": 0
+                      },
+                      "NowPlaying": {
+                        "type": "Object",
+                        "fields": {
+                          "can_shuffle": {
+                            "type": "Boolean"
+                          },
+                          "can_repeat": {
+                            "type": "Boolean"
+                          },
+                          "hide_instructions": {
+                            "type": "Boolean"
+                          },
+                          "shufflemode": {
+                            "type": "Boolean"
+                          },
+                          "repeatmode": {
+                            "type": "String"
+                          },
+                          "preset_limit_reached": {
+                            "type": "Boolean"
+                          },
+                          "can_save_preset": {
+                            "type": "Boolean"
+                          }
+                        },
+                        "omitted": 0
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:36:42.6899220Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "Items": {
+                        "type": "String"
+                      },
+                      "QueueId": {
+                        "type": "Integer"
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:36:42.8902790Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "Items": {
+                        "type": "String"
+                      },
+                      "QueueId": {
+                        "type": "Integer"
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:36:46.4530380Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "RESPONSE": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "SEQ": {
+                    "type": "Integer"
+                  },
+                  "DATA": {
+                    "type": "Object",
+                    "fields": {
+                      "Tabs": {
+                        "type": "Object",
+                        "fields": {
+                          "Tab": {
+                            "type": "Array",
+                            "entries": [
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "Id": {
+                                    "type": "String"
+                                  },
+                                  "IconId": {
+                                    "type": "String"
+                                  },
+                                  "ScreenId": {
+                                    "type": "String"
+                                  },
+                                  "Name": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "Id": {
+                                    "type": "String"
+                                  },
+                                  "ScreenId": {
+                                    "type": "String"
+                                  },
+                                  "Name": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "Id": {
+                                    "type": "String"
+                                  },
+                                  "ScreenId": {
+                                    "type": "String"
+                                  },
+                                  "Name": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              }
+                            ],
+                            "omitted": 0
+                          }
+                        },
+                        "omitted": 0
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:36:46.4548660Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "RESPONSE": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "SEQ": {
+                    "type": "Integer"
+                  },
+                  "DATA": {
+                    "type": "Object",
+                    "fields": {
+                      "List": {
+                        "type": "Object",
+                        "fields": {
+                          "item": {
+                            "type": "Array",
+                            "entries": [
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "isHeader": {
+                                    "type": "Boolean"
+                                  },
+                                  "title": {
+                                    "type": "String",
+                                    "display_value": "Presets"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "subtitle": {
+                                    "type": "String"
+                                  },
+                                  "actions_list": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "title": {
+                                    "type": "String",
+                                    "display_value": "90's Music"
+                                  },
+                                  "blob": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "subtitle": {
+                                    "type": "String"
+                                  },
+                                  "actions_list": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "title": {
+                                    "type": "String",
+                                    "display_value": "Classic Rock Favs"
+                                  },
+                                  "blob": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "subtitle": {
+                                    "type": "String"
+                                  },
+                                  "actions_list": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "title": {
+                                    "type": "String",
+                                    "display_value": "Emma's Favs"
+                                  },
+                                  "blob": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "subtitle": {
+                                    "type": "String"
+                                  },
+                                  "actions_list": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "title": {
+                                    "type": "String",
+                                    "display_value": "FAVS"
+                                  },
+                                  "blob": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "subtitle": {
+                                    "type": "String"
+                                  },
+                                  "actions_list": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "title": {
+                                    "type": "String",
+                                    "display_value": "HEAVY (now playing)"
+                                  },
+                                  "blob": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              }
+                            ],
+                            "omitted": 0
+                          }
+                        },
+                        "omitted": 0
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:36:48.3646780Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "RESPONSE": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "SEQ": {
+                    "type": "Integer"
+                  },
+                  "DATA": {
+                    "type": "Object",
+                    "fields": {
+                      "NextScreen": {
+                        "type": "String"
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:36:48.5736060Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "NowPlayingIndex": {
+                        "type": "Integer"
+                      },
+                      "List": {
+                        "type": "Object",
+                        "fields": {
+                          "item": {
+                            "type": "Array",
+                            "entries": [
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "isHeader": {
+                                    "type": "Boolean"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "The Void Within"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "As I Lay Dying"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "current": {
+                                    "type": "Boolean"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "Make Me"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "Braeker"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              }
+                            ],
+                            "omitted": 0
+                          }
+                        },
+                        "omitted": 0
+                      },
+                      "NowPlaying": {
+                        "type": "Object",
+                        "fields": {
+                          "can_shuffle": {
+                            "type": "Boolean"
+                          },
+                          "can_repeat": {
+                            "type": "Boolean"
+                          },
+                          "hide_instructions": {
+                            "type": "Boolean"
+                          },
+                          "shufflemode": {
+                            "type": "Boolean"
+                          },
+                          "repeatmode": {
+                            "type": "String"
+                          },
+                          "preset_limit_reached": {
+                            "type": "Boolean"
+                          },
+                          "can_save_preset": {
+                            "type": "Boolean"
+                          }
+                        },
+                        "omitted": 0
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:36:48.5787510Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "Items": {
+                        "type": "String"
+                      },
+                      "QueueId": {
+                        "type": "Integer"
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:36:48.5795650Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "NowPlayingIndex": {
+                        "type": "Integer"
+                      },
+                      "List": {
+                        "type": "Object",
+                        "fields": {
+                          "item": {
+                            "type": "Array",
+                            "entries": [
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "isHeader": {
+                                    "type": "Boolean"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "The Void Within"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "As I Lay Dying"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "current": {
+                                    "type": "Boolean"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "Make Me"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "Braeker"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              }
+                            ],
+                            "omitted": 0
+                          }
+                        },
+                        "omitted": 0
+                      },
+                      "NowPlaying": {
+                        "type": "Object",
+                        "fields": {
+                          "can_shuffle": {
+                            "type": "Boolean"
+                          },
+                          "can_repeat": {
+                            "type": "Boolean"
+                          },
+                          "hide_instructions": {
+                            "type": "Boolean"
+                          },
+                          "shufflemode": {
+                            "type": "Boolean"
+                          },
+                          "repeatmode": {
+                            "type": "String"
+                          },
+                          "preset_limit_reached": {
+                            "type": "Boolean"
+                          },
+                          "can_save_preset": {
+                            "type": "Boolean"
+                          }
+                        },
+                        "omitted": 0
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:37:08.0580890Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "Items": {
+                        "type": "String"
+                      },
+                      "QueueId": {
+                        "type": "Integer"
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:37:09.0344200Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "RESPONSE": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "SEQ": {
+                    "type": "Integer"
+                  },
+                  "DATA": {
+                    "type": "Object",
+                    "fields": {
+                      "NextScreen": {
+                        "type": "String"
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:37:09.2736560Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "NowPlayingIndex": {
+                        "type": "Integer"
+                      },
+                      "List": {
+                        "type": "Object",
+                        "fields": {
+                          "item": {
+                            "type": "Array",
+                            "entries": [
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "isHeader": {
+                                    "type": "Boolean"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "Make Me"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "Braeker"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "current": {
+                                    "type": "Boolean"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "The Void Within"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "As I Lay Dying"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              }
+                            ],
+                            "omitted": 0
+                          }
+                        },
+                        "omitted": 0
+                      },
+                      "NowPlaying": {
+                        "type": "Object",
+                        "fields": {
+                          "can_shuffle": {
+                            "type": "Boolean"
+                          },
+                          "can_repeat": {
+                            "type": "Boolean"
+                          },
+                          "hide_instructions": {
+                            "type": "Boolean"
+                          },
+                          "shufflemode": {
+                            "type": "Boolean"
+                          },
+                          "repeatmode": {
+                            "type": "String"
+                          },
+                          "preset_limit_reached": {
+                            "type": "Boolean"
+                          },
+                          "can_save_preset": {
+                            "type": "Boolean"
+                          }
+                        },
+                        "omitted": 0
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:37:09.2786220Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "NowPlayingIndex": {
+                        "type": "Integer"
+                      },
+                      "List": {
+                        "type": "Object",
+                        "fields": {
+                          "item": {
+                            "type": "Array",
+                            "entries": [
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "isHeader": {
+                                    "type": "Boolean"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "Make Me"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "Braeker"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "current": {
+                                    "type": "Boolean"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "The Void Within"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "As I Lay Dying"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              }
+                            ],
+                            "omitted": 0
+                          }
+                        },
+                        "omitted": 0
+                      },
+                      "NowPlaying": {
+                        "type": "Object",
+                        "fields": {
+                          "can_shuffle": {
+                            "type": "Boolean"
+                          },
+                          "can_repeat": {
+                            "type": "Boolean"
+                          },
+                          "hide_instructions": {
+                            "type": "Boolean"
+                          },
+                          "shufflemode": {
+                            "type": "Boolean"
+                          },
+                          "repeatmode": {
+                            "type": "String"
+                          },
+                          "preset_limit_reached": {
+                            "type": "Boolean"
+                          },
+                          "can_save_preset": {
+                            "type": "Boolean"
+                          }
+                        },
+                        "omitted": 0
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:37:09.3440850Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "Items": {
+                        "type": "String"
+                      },
+                      "QueueId": {
+                        "type": "Integer"
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        },
+        {
+          "item_id": 65,
+          "received_utc": "2026-11-17T21:37:09.5376210Z",
+          "event_type": "OnDataToUI",
+          "data": {
+            "type": "Object",
+            "fields": {
+              "EVENT": {
+                "type": "Object",
+                "fields": {
+                  "NAVID": {
+                    "type": "String"
+                  },
+                  "NAME": {
+                    "type": "String"
+                  },
+                  "ARGS": {
+                    "type": "Object",
+                    "fields": {
+                      "NowPlayingIndex": {
+                        "type": "Integer"
+                      },
+                      "List": {
+                        "type": "Object",
+                        "fields": {
+                          "item": {
+                            "type": "Array",
+                            "entries": [
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "isHeader": {
+                                    "type": "Boolean"
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "Make Me"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "Braeker"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "current": {
+                                    "type": "Boolean"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  }
+                                },
+                                "omitted": 0
+                              },
+                              {
+                                "type": "Object",
+                                "fields": {
+                                  "album": {
+                                    "type": "String",
+                                    "display_value": "The Void Within"
+                                  },
+                                  "album_cover_url": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "album_uri": {
+                                    "type": "String"
+                                  },
+                                  "artist": {
+                                    "type": "String",
+                                    "display_value": "As I Lay Dying"
+                                  },
+                                  "duration": {
+                                    "type": "String"
+                                  },
+                                  "bitrate": {
+                                    "type": "Integer"
+                                  },
+                                  "duration_ms": {
+                                    "type": "Integer"
+                                  },
+                                  "original_track_uri": {
+                                    "type": "String"
+                                  },
+                                  "playback_id": {
+                                    "type": "String"
+                                  },
+                                  "playback_source": {
+                                    "type": "String"
+                                  },
+                                  "playback_source_uri": {
+                                    "type": "String"
+                                  },
+                                  "track": {
+                                    "type": "String"
+                                  },
+                                  "default_action": {
+                                    "type": "String"
+                                  },
+                                  "idInQ": {
+                                    "type": "Integer"
+                                  },
+                                  "artist_uri": {
+                                    "type": "String",
+                                    "artwork_reference_present": true
+                                  },
+                                  "track_uri": {
+                                    "type": "String"
+                                  }
+                                },
+                                "omitted": 0
+                              }
+                            ],
+                            "omitted": 0
+                          }
+                        },
+                        "omitted": 0
+                      },
+                      "NowPlaying": {
+                        "type": "Object",
+                        "fields": {
+                          "can_shuffle": {
+                            "type": "Boolean"
+                          },
+                          "can_repeat": {
+                            "type": "Boolean"
+                          },
+                          "hide_instructions": {
+                            "type": "Boolean"
+                          },
+                          "shufflemode": {
+                            "type": "Boolean"
+                          },
+                          "repeatmode": {
+                            "type": "String"
+                          },
+                          "preset_limit_reached": {
+                            "type": "Boolean"
+                          },
+                          "can_save_preset": {
+                            "type": "Boolean"
+                          }
+                        },
+                        "omitted": 0
+                      }
+                    },
+                    "omitted": 0
+                  }
+                },
+                "omitted": 0
+              }
+            },
+            "omitted": 0
+          }
+        }
+      ],
+      "dropped_events": 0,
+      "driver_id": 64
+    }
+  ]
+}

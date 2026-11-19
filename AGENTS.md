@@ -1,0 +1,14 @@
+# Package development requirements
+
+- Target Crestron 4-Series only (RMC4). Compile SIMPL+ modules using the 4-Series-only target. Do not select the combined 3-Series/4-Series target or xGen.
+- For every individual SIMPL+ parameter, reserve one leading `_skip_` on both the input and output signal lists, before any real signal. Count each parameter name, including names sharing a declaration. Add a DIGITAL_INPUT or DIGITAL_OUTPUT declaration containing only the skips when that direction has no real signals. Keep the leading skip counts synchronized when parameters change.
+- Within each input/output direction, place one `_skip_` separator at every signal-type transition (digital, analog, serial). Append it to the preceding type's last declaration, before the next type begins. These separators are additional to the leading parameter skips; do not add separators merely because declarations switch between input and output directions.
+- Preserve the existing .NET Framework 4.7.2 class-library architecture and SDK configuration unless an isolated compatibility change is explicitly authorized.
+- Authentication is account-only. Do not reintroduce manual Director token inputs or public token injection setters.
+- The user selected automatic acceptance of local controller certificates for both REST and WebSocket. Do not require a hardcoded fingerprint, manual certificate entry, or library recompilation for certificate changes. Keep this policy confined to local controller requests; cloud authentication retains normal certificate validation.
+- Read CONTROL4_CRESTRON_VS2026_HANDOFF.md before changing the package. Distinguish local build success from SIMPL+ compilation and RMC4 runtime verification.
+- For future SIMPL+ changes, update the original files in this package's SIMPLPlus folder and also copy the changed files into `C:\Users\Public\Documents\Crestron\SIMPL\Usrsplus`. Keep generated signatures and the matching CLZ synchronized when applicable, preserving 4-Series-only compilation. The user explicitly authorized this installed-folder synchronization; back up replaced files and use the required filesystem escalation when writing outside the workspace.
+
+- Preserve CRLF line endings in SIMPL+ .usp sources. This compiler can report success while emitting blank/incomplete .ush interfaces from LF-only source. After compilation run tests/SimplSignatureChecks.ps1 to verify every declared signal/parameter appears in the generated signature; zero compiler errors alone is insufficient.
+
+- UI join numbering: within each digital/analog/serial type, use different input and output join numbers for unrelated functions. Reuse an opposite-direction join only for the same service/function (for example Volume_Set and Volume_FB). Keep allocations compact.

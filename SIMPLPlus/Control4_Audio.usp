@@ -1,0 +1,53 @@
+#SYMBOL_NAME "Control4 - Audio Zone"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+
+// Room controls; Watch/Listen endpoint events trigger measured room REST reads.
+// Five parameters reserve five leading positions in each direction.
+DIGITAL_INPUT _skip_, _skip_, _skip_, _skip_, _skip_, Query, Mute_On_btn, Mute_Off_btn, Room_Off_btn, Select_Audio_Source_btn, Select_Video_Source_btn, _skip_;
+ANALOG_INPUT Volume_Set, _skip_;
+STRING_INPUT Source_ID$[16];
+DIGITAL_OUTPUT _skip_, _skip_, _skip_, _skip_, _skip_, Initialized_FB, Valid_FB, Power_FB, Power_Valid_FB, Mute_FB, Mute_Valid_FB, Volume_Valid_FB, _skip_;
+ANALOG_OUTPUT Volume_FB, _skip_;
+STRING_OUTPUT Diagnostic$;
+INTEGER_PARAMETER Gateway_ID, Control4_Room_ID, Watch_Feedback_ID, Listen_Feedback_ID, Listen_Output_ID;
+
+Control4_Audio audio;
+
+eventhandler OnFeedbackChanged(Control4_Audio sender, AudioStatusEventArgs args)
+{
+    Power_FB = args.Power;
+    Power_Valid_FB = args.PowerValid;
+    Mute_FB = args.Muted;
+    Mute_Valid_FB = args.MuteValid;
+    Volume_FB = args.Volume;
+    Volume_Valid_FB = args.VolumeValid;
+    Valid_FB = args.Valid;
+}
+eventhandler OnDiagnosticReceived(Control4_Audio sender, GatewayMessageEventArgs args)
+{
+    Diagnostic$ = args.Message;
+}
+PUSH Query
+{
+    MakeString(Diagnostic$, "Audio Query received; gateway=%u room=%u", Gateway_ID, Control4_Room_ID);
+    audio.Query();
+}
+PUSH Mute_On_btn { audio.MuteOn(); }
+PUSH Mute_Off_btn { audio.MuteOff(); }
+PUSH Room_Off_btn { audio.RoomOff(); }
+PUSH Select_Audio_Source_btn { audio.SelectAudioSource(Source_ID$); }
+PUSH Select_Video_Source_btn { audio.SelectVideoSource(Source_ID$); }
+CHANGE Volume_Set { audio.SetVolume(Volume_Set); }
+
+FUNCTION Main()
+{
+    RegisterEvent(audio, FeedbackChanged, OnFeedbackChanged);
+    RegisterEvent(audio, DiagnosticReceived, OnDiagnosticReceived);
+    WaitForInitializationComplete();
+    Initialized_FB = audio.Initialize(Gateway_ID, Control4_Room_ID, Watch_Feedback_ID, Listen_Feedback_ID, Listen_Output_ID);
+    if (Initialized_FB)
+        MakeString(Diagnostic$, "Audio ready; room=%u watch=%u listen=%u output=%u", Control4_Room_ID, Watch_Feedback_ID, Listen_Feedback_ID, Listen_Output_ID);
+}

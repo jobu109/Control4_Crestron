@@ -1,0 +1,1019 @@
+[
+  {
+    "room_id": 13,
+    "generated_utc": "2026-11-16T03:05:52.941746Z",
+    "request_path": "/api/v1/items/13/variables",
+    "variable_count": 57,
+    "exported_variable_count": 55,
+    "omitted_variable_count": 2,
+    "inspection_truncated": false,
+    "variables": [
+      {
+        "name": "CURRENT_SELECTED_DEVICE",
+        "value_type": "String",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "CURRENT_AUDIO_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "CURRENT_VIDEO_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "AUDIO_VOLUME_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "VIDEO_VOLUME_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "CURRENT_MEDIA",
+        "value_type": "Object",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_AUDIO_PATH",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VIDEO_PATH",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VIDEO_AUDIO_PATH",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "POWER_STATE",
+        "value_type": "Integer",
+        "source_candidate": false,
+        "measured_value": 0
+      },
+      {
+        "name": "CURRENT_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false,
+        "measured_value": 21
+      },
+      {
+        "name": "TEMPERATURE_ID",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "TEMPERATURE_CONTROL_ID",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "SECURITY_SYSTEM_ID",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VOLUME_DEVICE_ID",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "HAS_DISCRETE_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "HAS_DISCRETE_MUTE",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "IS_MUTED",
+        "value_type": "Integer",
+        "source_candidate": false,
+        "measured_value": 0
+      },
+      {
+        "name": "IN_NAVIGATION",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "USE_DEFAULT_VOLUMES",
+        "value_type": "Boolean",
+        "source_candidate": false
+      },
+      {
+        "name": "DEFAULT_AUDIO_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "DEFAULT_VIDEO_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "VOLUME_IS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "MUTE_IS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "ROOMOFF_IS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "LINKED_ROOM_LIST",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "SELECTIONS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "CURRENT_LINKED_MEDIA_SCENE",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "ROOM_HIDDEN",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "MEDIA_SCENE_ACTIVE",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "LAST_DEVICE_GROUP",
+        "value_type": "String",
+        "source_candidate": true
+      },
+      {
+        "name": "AVAILABLE_CAMERAS",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "POOLS",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "SCENE_IS_DISCRETE_VOLUME",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "PLAYING_AUDIO_DEVICE",
+        "value_type": "String",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "ANNOUNCEMENT_DISABLED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VIDEO_AUDIO_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "EQ_IS_HIDDEN",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_AUDIO_MODE",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_HAS_LOUDNESS_CONTROL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_LOUDNESS_ON",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_HAS_TONE_CONTROL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BASS_LEVEL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_TREBLE_LEVEL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_TONE_LOWER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_TONE_UPPER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_HAS_EQ_CONTROL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_COUNT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_LOWER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_UPPER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_FREQ_VALUES",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_GAIN_VALUES",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_PRESET_LIST",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_SELECTED_PRESET",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "MW_MINIAPPNOPASSMODE",
+        "value_type": "Integer",
+        "source_candidate": false
+      }
+    ],
+    "first_entry_shape": {
+      "type": "Object",
+      "properties": [
+        {
+          "key": "id",
+          "type": "Integer"
+        },
+        {
+          "key": "varName",
+          "type": "String"
+        },
+        {
+          "key": "type",
+          "type": "String"
+        },
+        {
+          "key": "hidden",
+          "type": "Integer"
+        },
+        {
+          "key": "value",
+          "type": "String"
+        },
+        {
+          "key": "variableId",
+          "type": "Integer"
+        },
+        {
+          "key": "name",
+          "type": "String"
+        },
+        {
+          "key": "roomName",
+          "type": "String"
+        }
+      ],
+      "omitted_key_count": 0
+    },
+    "interpretation": "Numeric source candidates are observations, not verified active-source IDs. No selected feedback is asserted.",
+    "filtered_value_read_count": 0,
+    "filtered_value_reads_truncated": false
+  },
+  {
+    "room_id": 13,
+    "generated_utc": "2026-11-16T03:06:21.406478Z",
+    "request_path": "/api/v1/items/13/variables",
+    "variable_count": 57,
+    "exported_variable_count": 55,
+    "omitted_variable_count": 2,
+    "inspection_truncated": false,
+    "variables": [
+      {
+        "name": "CURRENT_SELECTED_DEVICE",
+        "value_type": "String",
+        "source_candidate": true,
+        "numeric_candidate": 100002
+      },
+      {
+        "name": "CURRENT_AUDIO_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 100002
+      },
+      {
+        "name": "CURRENT_VIDEO_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "AUDIO_VOLUME_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "VIDEO_VOLUME_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "CURRENT_MEDIA",
+        "value_type": "Object",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_AUDIO_PATH",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VIDEO_PATH",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VIDEO_AUDIO_PATH",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "POWER_STATE",
+        "value_type": "Integer",
+        "source_candidate": false,
+        "measured_value": 1
+      },
+      {
+        "name": "CURRENT_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false,
+        "measured_value": 21
+      },
+      {
+        "name": "TEMPERATURE_ID",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "TEMPERATURE_CONTROL_ID",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "SECURITY_SYSTEM_ID",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VOLUME_DEVICE_ID",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 340
+      },
+      {
+        "name": "HAS_DISCRETE_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "HAS_DISCRETE_MUTE",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "IS_MUTED",
+        "value_type": "Integer",
+        "source_candidate": false,
+        "measured_value": 1
+      },
+      {
+        "name": "IN_NAVIGATION",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "USE_DEFAULT_VOLUMES",
+        "value_type": "Boolean",
+        "source_candidate": false
+      },
+      {
+        "name": "DEFAULT_AUDIO_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "DEFAULT_VIDEO_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "VOLUME_IS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "MUTE_IS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "ROOMOFF_IS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "LINKED_ROOM_LIST",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "SELECTIONS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "CURRENT_LINKED_MEDIA_SCENE",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "ROOM_HIDDEN",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "MEDIA_SCENE_ACTIVE",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "LAST_DEVICE_GROUP",
+        "value_type": "String",
+        "source_candidate": true
+      },
+      {
+        "name": "AVAILABLE_CAMERAS",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "POOLS",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "SCENE_IS_DISCRETE_VOLUME",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "PLAYING_AUDIO_DEVICE",
+        "value_type": "String",
+        "source_candidate": true,
+        "numeric_candidate": 65
+      },
+      {
+        "name": "ANNOUNCEMENT_DISABLED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VIDEO_AUDIO_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "EQ_IS_HIDDEN",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_AUDIO_MODE",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_HAS_LOUDNESS_CONTROL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_LOUDNESS_ON",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_HAS_TONE_CONTROL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BASS_LEVEL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_TREBLE_LEVEL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_TONE_LOWER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_TONE_UPPER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_HAS_EQ_CONTROL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_COUNT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_LOWER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_UPPER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_FREQ_VALUES",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_GAIN_VALUES",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_PRESET_LIST",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_SELECTED_PRESET",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "MW_MINIAPPNOPASSMODE",
+        "value_type": "Integer",
+        "source_candidate": false
+      }
+    ],
+    "first_entry_shape": {
+      "type": "Object",
+      "properties": [
+        {
+          "key": "id",
+          "type": "Integer"
+        },
+        {
+          "key": "varName",
+          "type": "String"
+        },
+        {
+          "key": "type",
+          "type": "String"
+        },
+        {
+          "key": "hidden",
+          "type": "Integer"
+        },
+        {
+          "key": "value",
+          "type": "String"
+        },
+        {
+          "key": "variableId",
+          "type": "Integer"
+        },
+        {
+          "key": "name",
+          "type": "String"
+        },
+        {
+          "key": "roomName",
+          "type": "String"
+        }
+      ],
+      "omitted_key_count": 0
+    },
+    "interpretation": "Numeric source candidates are observations, not verified active-source IDs. No selected feedback is asserted.",
+    "filtered_value_read_count": 0,
+    "filtered_value_reads_truncated": false
+  },
+  {
+    "room_id": 13,
+    "generated_utc": "2026-11-16T03:06:40.200483Z",
+    "request_path": "/api/v1/items/13/variables",
+    "variable_count": 57,
+    "exported_variable_count": 55,
+    "omitted_variable_count": 2,
+    "inspection_truncated": false,
+    "variables": [
+      {
+        "name": "CURRENT_SELECTED_DEVICE",
+        "value_type": "String",
+        "source_candidate": true,
+        "numeric_candidate": 2061
+      },
+      {
+        "name": "CURRENT_AUDIO_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "CURRENT_VIDEO_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 2061
+      },
+      {
+        "name": "AUDIO_VOLUME_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "VIDEO_VOLUME_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "CURRENT_MEDIA",
+        "value_type": "Object",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_AUDIO_PATH",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VIDEO_PATH",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VIDEO_AUDIO_PATH",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "POWER_STATE",
+        "value_type": "Integer",
+        "source_candidate": false,
+        "measured_value": 1
+      },
+      {
+        "name": "CURRENT_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false,
+        "measured_value": 21
+      },
+      {
+        "name": "TEMPERATURE_ID",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "TEMPERATURE_CONTROL_ID",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "SECURITY_SYSTEM_ID",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VOLUME_DEVICE_ID",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 682
+      },
+      {
+        "name": "HAS_DISCRETE_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "HAS_DISCRETE_MUTE",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "IS_MUTED",
+        "value_type": "Integer",
+        "source_candidate": false,
+        "measured_value": 0
+      },
+      {
+        "name": "IN_NAVIGATION",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "USE_DEFAULT_VOLUMES",
+        "value_type": "Boolean",
+        "source_candidate": false
+      },
+      {
+        "name": "DEFAULT_AUDIO_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "DEFAULT_VIDEO_VOLUME",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "VOLUME_IS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "MUTE_IS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "ROOMOFF_IS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "LINKED_ROOM_LIST",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "SELECTIONS_LINKED",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "CURRENT_LINKED_MEDIA_SCENE",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "ROOM_HIDDEN",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "MEDIA_SCENE_ACTIVE",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "LAST_DEVICE_GROUP",
+        "value_type": "String",
+        "source_candidate": true
+      },
+      {
+        "name": "AVAILABLE_CAMERAS",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "POOLS",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "SCENE_IS_DISCRETE_VOLUME",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "PLAYING_AUDIO_DEVICE",
+        "value_type": "String",
+        "source_candidate": true,
+        "numeric_candidate": 0
+      },
+      {
+        "name": "ANNOUNCEMENT_DISABLED",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "CURRENT_VIDEO_AUDIO_DEVICE",
+        "value_type": "Integer",
+        "source_candidate": true,
+        "numeric_candidate": 2061
+      },
+      {
+        "name": "EQ_IS_HIDDEN",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_AUDIO_MODE",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_HAS_LOUDNESS_CONTROL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_LOUDNESS_ON",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_HAS_TONE_CONTROL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BASS_LEVEL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_TREBLE_LEVEL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_TONE_LOWER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_TONE_UPPER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_HAS_EQ_CONTROL",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_COUNT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_LOWER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_UPPER_LIMIT",
+        "value_type": "Integer",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_FREQ_VALUES",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_BAND_GAIN_VALUES",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_PRESET_LIST",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "EQ_SELECTED_PRESET",
+        "value_type": "String",
+        "source_candidate": false
+      },
+      {
+        "name": "MW_MINIAPPNOPASSMODE",
+        "value_type": "Integer",
+        "source_candidate": false
+      }
+    ],
+    "first_entry_shape": {
+      "type": "Object",
+      "properties": [
+        {
+          "key": "id",
+          "type": "Integer"
+        },
+        {
+          "key": "varName",
+          "type": "String"
+        },
+        {
+          "key": "type",
+          "type": "String"
+        },
+        {
+          "key": "hidden",
+          "type": "Integer"
+        },
+        {
+          "key": "value",
+          "type": "String"
+        },
+        {
+          "key": "variableId",
+          "type": "Integer"
+        },
+        {
+          "key": "name",
+          "type": "String"
+        },
+        {
+          "key": "roomName",
+          "type": "String"
+        }
+      ],
+      "omitted_key_count": 0
+    },
+    "interpretation": "Numeric source candidates are observations, not verified active-source IDs. No selected feedback is asserted.",
+    "filtered_value_read_count": 0,
+    "filtered_value_reads_truncated": false
+  }
+]

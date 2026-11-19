@@ -1,0 +1,28 @@
+#SYMBOL_NAME "Control4 - Live Room Discovery"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+
+// Four parameter positions and a signal transition for the serial diagnostic.
+DIGITAL_INPUT _skip_, _skip_, _skip_, _skip_, Refresh;
+DIGITAL_OUTPUT _skip_, _skip_, _skip_, _skip_, _skip_;
+STRING_OUTPUT Diagnostic$;
+INTEGER_PARAMETER Gateway_ID, Discovery_Port;
+STRING_PARAMETER Director_IP$[64], Discovery_Key$[64];
+
+Control4_Live_Room_Devices discovery;
+
+eventhandler OnDiagnostic(Control4_Live_Room_Devices sender, GatewayMessageEventArgs args)
+{
+    Diagnostic$ = args.Message;
+}
+
+PUSH Refresh { discovery.Refresh(); }
+
+FUNCTION Main()
+{
+    RegisterEvent(discovery, DiagnosticReceived, OnDiagnostic);
+    WaitForInitializationComplete();
+    discovery.Initialize(Gateway_ID, Director_IP$, Discovery_Port, Discovery_Key$);
+}

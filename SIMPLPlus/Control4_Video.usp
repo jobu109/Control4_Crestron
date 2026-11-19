@@ -1,0 +1,35 @@
+#SYMBOL_NAME "Control4 - Video Zone"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+
+// Five parameter skips in both directions. Power is measured room POWER_STATE.
+DIGITAL_INPUT _skip_, _skip_, _skip_, _skip_, _skip_, Query, Select_Source_btn, Room_Off_btn, _skip_;
+STRING_INPUT Source_ID$[16];
+DIGITAL_OUTPUT _skip_, _skip_, _skip_, _skip_, _skip_, Initialized_FB, Power_FB, Power_Valid_FB, _skip_;
+STRING_OUTPUT Diagnostic$;
+INTEGER_PARAMETER Gateway_ID, Control4_Room_ID, Watch_Feedback_ID, Listen_Feedback_ID, Listen_Output_ID;
+
+Control4_Video video;
+
+eventhandler OnFeedbackChanged(Control4_Video sender, AudioStatusEventArgs args)
+{
+    Power_FB = args.Power;
+    Power_Valid_FB = args.PowerValid;
+}
+eventhandler OnDiagnosticReceived(Control4_Video sender, GatewayMessageEventArgs args)
+{
+    Diagnostic$ = args.Message;
+}
+PUSH Query { video.Query(); }
+PUSH Select_Source_btn { video.SelectSource(Source_ID$); }
+PUSH Room_Off_btn { video.RoomOff(); }
+
+FUNCTION Main()
+{
+    RegisterEvent(video, FeedbackChanged, OnFeedbackChanged);
+    RegisterEvent(video, DiagnosticReceived, OnDiagnosticReceived);
+    WaitForInitializationComplete();
+    Initialized_FB = video.Initialize(Gateway_ID, Control4_Room_ID, Watch_Feedback_ID, Listen_Feedback_ID, Listen_Output_ID);
+}

@@ -1,0 +1,75 @@
+#SYMBOL_NAME "Control4 - Gateway"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Control4Gateway"
+
+// Four parameters reserve four leading positions in each signal direction.
+DIGITAL_INPUT _skip_, _skip_, _skip_, _skip_, Authenticate, Connect, Disconnect, Export_Inventory, Export_Media_Capabilities, Export_Media_Commands, Capture_Audio_Feedback, Export_Setup_Report;
+DIGITAL_OUTPUT _skip_, _skip_, _skip_, _skip_, Connected_FB, Busy_FB, _skip_;
+STRING_OUTPUT Diagnostic$;
+STRING_OUTPUT Inventory_File$;
+STRING_OUTPUT Media_Capabilities_File$;
+STRING_OUTPUT Media_Commands_File$;
+STRING_OUTPUT Setup_Report_File$, Setup_JSON_File$;
+STRING_PARAMETER IP_Address$[64], Account_Username$[128], Account_Password$[256];
+INTEGER_PARAMETER Gateway_ID;
+
+Control4_Gateway gateway;
+
+FUNCTION RegisterEvents()
+{
+    RegisterEvent(gateway, NetworkStatusChanged, OnNetworkStatusChanged);
+    RegisterEvent(gateway, DiagnosticReceived, OnDiagnosticReceived);
+    RegisterEvent(gateway, InventoryExported, OnInventoryExported);
+    RegisterEvent(gateway, SetupReportExported, OnSetupReportExported);
+    RegisterEvent(gateway, SetupJsonExported, OnSetupJsonExported);
+    RegisterEvent(gateway, MediaCapabilitiesExported, OnMediaCapabilitiesExported);
+    RegisterEvent(gateway, MediaCommandsExported, OnMediaCommandsExported);
+}
+eventhandler OnNetworkStatusChanged(Control4_Gateway sender, GatewayStatusEventArgs args)
+{
+    Connected_FB = args.Connected;
+    Busy_FB = args.Busy;
+}
+eventhandler OnDiagnosticReceived(Control4_Gateway sender, GatewayMessageEventArgs args)
+{
+    Diagnostic$ = args.Message;
+}
+PUSH Authenticate { gateway.Authenticate(); }
+PUSH Connect { gateway.Connect(); }
+PUSH Disconnect { gateway.Disconnect(); }
+PUSH Export_Setup_Report { gateway.ExportSetupReport(); }
+PUSH Export_Inventory { gateway.ExportInventory(); }
+PUSH Export_Media_Capabilities { gateway.ExportMediaCapabilities(); }
+PUSH Export_Media_Commands { gateway.ExportMediaCommands(); }
+PUSH Capture_Audio_Feedback { gateway.CaptureAudioFeedback(); }
+eventhandler OnMediaCommandsExported(Control4_Gateway sender, GatewayMessageEventArgs args)
+{
+    Media_Commands_File$ = args.Message;
+}
+eventhandler OnMediaCapabilitiesExported(Control4_Gateway sender, GatewayMessageEventArgs args)
+{
+    Media_Capabilities_File$ = args.Message;
+}
+eventhandler OnInventoryExported(Control4_Gateway sender, GatewayMessageEventArgs args)
+{
+    Inventory_File$ = args.Message;
+}
+eventhandler OnSetupReportExported(Control4_Gateway sender, GatewayMessageEventArgs args)
+{
+    Setup_Report_File$ = args.Message;
+}
+eventhandler OnSetupJsonExported(Control4_Gateway sender, GatewayMessageEventArgs args)
+{
+    Setup_JSON_File$ = args.Message;
+}
+FUNCTION Main()
+{
+    RegisterEvents();
+    WaitForInitializationComplete();
+    gateway.Initialize(Gateway_ID, IP_Address$);
+    gateway.SetAccountCredentials(Account_Username$, Account_Password$);
+    // No automatic network activity at startup.
+}
+

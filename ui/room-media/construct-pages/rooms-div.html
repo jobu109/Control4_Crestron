@@ -1,0 +1,103 @@
+<style>/* Fixed panel viewport. Only station/metadata regions may scroll. */
+html,body{margin:0;width:100%;height:100%;}
+[data-c4-page]{box-sizing:border-box;width:100%;height:100%;min-height:0!important;overflow:hidden!important;}
+[data-c4-page].rm,[data-c4-page]>.c4-static{box-sizing:border-box;min-height:0!important;height:100%;padding:20px!important;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;gap:14px;overflow:hidden!important;}
+[data-c4-page].rm .rm-header{margin:0;}
+[data-c4-page].rm .rm-body{min-height:0;gap:22px;}
+[data-c4-page].rm .rm-browser{min-height:0;display:flex;flex-direction:column;padding:20px;}
+[data-c4-page].rm .rm-list{height:auto;min-height:0;flex:1;overflow:auto;}
+[data-c4-page].rm .rm-station{min-height:48px;}
+[data-c4-page].rm .rm-page{margin-top:10px;padding-top:10px;flex:none;}
+[data-c4-page].rm .rm-search{margin:14px 0 10px;flex:none;}
+[data-c4-page].rm .rm-now{min-height:0;overflow:auto;}
+[data-c4-page].rm .rm-art{height:250px;flex:none;}
+[data-c4-page].rm .rm-now h2{font-size:22px;margin-top:16px;}
+[data-c4-page].rm .rm-footer{margin:0;padding:12px 18px;}
+[data-c4-page].rm .rm-preview{margin:0;}
+[data-c4-page].rm .rm-watch{margin-top:16px;gap:10px;}
+/* Inline baseline markup is retained for Construct's editor canvas. */
+[data-c4-page]>.c4-static>div{margin-top:0!important;margin-bottom:0!important;min-height:0;}
+[data-c4-page]>.c4-static>div:nth-child(2){overflow:hidden;flex-wrap:nowrap!important;height:100%;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div{height:100%;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2){min-height:0;display:flex;flex-direction:column;padding:18px!important;overflow:hidden;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2)>div{flex-shrink:0;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2)>div:nth-child(3){padding:12px!important;margin:12px 0 6px!important;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2)>div:nth-child(n+4):nth-last-child(n+2){flex:1;min-height:36px;padding:8px 10px!important;white-space:nowrap;overflow:hidden;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2)>div:last-child{margin-top:10px!important;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3){min-height:0;overflow:auto;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3)>div:nth-child(2){height:250px!important;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3)>div:nth-child(3){font-size:22px!important;margin-top:14px!important;}
+[data-c4-page="rooms"].rm{display:block;overflow:auto!important;}
+@media(max-width:1000px){
+ [data-c4-page].rm .rm-body{overflow:auto;align-content:start;}
+ [data-c4-page].rm .rm-browser{min-height:470px;}
+ [data-c4-page].rm .rm-now{overflow:visible;}
+}
+
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3)>div:nth-child(2)>div:nth-child(2){font-size:30px!important;margin-top:18px!important;}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3)>div:nth-child(2)>div:last-child{margin-top:12px!important;}
+
+[data-c4-page].rm .rm-sources{min-height:0;overflow:auto;}
+
+[data-c4-page].rm .rm-now h2{margin-top:12px;margin-bottom:4px}
+[data-c4-page].rm .rm-album{min-height:18px;margin-top:4px}
+[data-c4-page].rm .rm-playing-from{margin-top:6px}
+[data-c4-page].rm .rm-playing-from:empty{display:none}
+[data-c4-page].rm .rm-transport{margin:14px 0 8px}
+[data-c4-page].rm .rm-meta-note{margin-top:8px}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(2){flex:0.85 1 280px!important;min-width:280px!important}
+[data-c4-page]>.c4-static>div:nth-child(2)>div:nth-child(3){flex:1.15 1 400px!important;max-width:none!important;min-width:400px!important}
+</style><div data-c4-page="rooms" class="rm" style="box-sizing:border-box;width:100%;min-height:780px;padding:32px;background:#101416;color:#f4f5f6;font:16px Segoe UI,Arial,sans-serif;">
+<header><div style="font-size:12px;letter-spacing:3px;color:#99a6ab;">HOME / ENTERTAINMENT</div><h1>Choose a room</h1><p data-startup-status style="color:#99a6ab;">Only configured rooms appear here.</p></header>
+<div data-room-buttons style="max-width:420px;margin-top:32px;"><button disabled style="width:100%;text-align:left;padding:24px;color:white;background:#26463e;border:1px solid #46776b;border-radius:16px;font:inherit;">Living Room</button></div>
+<p style="margin-top:30px;color:#99a6ab;">Select a room, then open Listen or Watch using the project navigation.</p>
+</div><script>
+(function(global){
+  // The installed Construct editor places scripted Divs in a non-interactive
+  // *_iframe (pointer-events:none). Its canvas does not expose build assets.
+  // Keep visible baseline HTML here; do not treat the canvas as a live client.
+  var editorCanvas=false;
+  try {
+    var frame=global.frameElement;
+    editorCanvas=!!(frame && /_iframe$/.test(frame.id) && frame.style.pointerEvents==='none');
+  } catch (_) {}
+  if(editorCanvas){
+    document.querySelectorAll('[data-startup-status]').forEach(function(note){note.textContent='Layout preview · Construct editor';});
+    return;
+  }
+  // Project output paths. Adjust if your Construct output uses another location.
+  var paths={css:['app/project/assets/css/room-shared.css','assets/css/room-shared.css','room-shared.css'],js:['app/project/assets/javascript/room-shared.js','assets/javascript/room-shared.js','room-shared.js']};
+  function load(tag,urls,index){
+    return new Promise(function(resolve,reject){
+      var element=document.createElement(tag);
+      if(tag==='link'){element.rel='stylesheet';element.href=urls[index];}else{element.src=urls[index];element.async=false;}
+      element.onload=resolve;
+      element.onerror=function(){element.remove();if(index+1<urls.length)load(tag,urls,index+1).then(resolve,reject);else reject(Error('Room media shared asset missing: '+urls.join(' or ')));};
+      document.head.appendChild(element);
+    });
+  }
+  // Construct's built index loads the shared implementation in the host.
+  // Reuse it across srcdoc Divs; each frame still needs its own stylesheet.
+  var host=null;
+  try { if(global.parent!==global && global.parent.RoomMediaPages)host=global.parent; } catch (_) {}
+  if(host){
+    load('link',paths.css,0).then(function(){
+      var root=document.querySelector('[data-c4-page]');
+      if(!root)return;
+      host.RoomMediaPages.attach(root);
+      global.addEventListener('pagehide',function(){host.RoomMediaPages.detach(root);},{once:true});
+    }).catch(function(error){
+      document.querySelectorAll('[data-startup-status]').forEach(function(note){note.textContent='Layout preview: shared CSS could not load. Check Construct output paths.';});
+      console.error(error);
+    });
+    return;
+  }
+  if(!global.__roomMediaLoadPromise){
+    global.__roomMediaLoadPromise=Promise.all([load('link',paths.css,0),load('script',paths.js,0)]).catch(function(error){global.__roomMediaLoadPromise=null;throw error;});
+  }
+  global.__roomMediaLoadPromise.then(function(){global.RoomMediaPages.start();}).catch(function(error){
+    document.querySelectorAll('[data-startup-status]').forEach(function(note){note.textContent='Layout preview: shared assets could not load. Check Construct output paths.';});
+    console.error(error);
+  });
+})(window);
+</script>
