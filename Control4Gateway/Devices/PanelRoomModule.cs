@@ -14,6 +14,20 @@ namespace Control4Crestron
         private readonly HashSet<ushort> _rooms = new HashSet<ushort>();
         private readonly List<ushort> _roomOrder = new List<ushort>();
         private readonly UiSerialFrames _roomWire = new UiSerialFrames();
+        private readonly UiSerialFrames _actionsWire = new UiSerialFrames();
+        private readonly UiSerialFrames _audioSessionsWire = new UiSerialFrames();
+        private int _audioSessionsRequest;
+        private bool _audioSessionsReady;
+        private JObject _audioSessions;
+        private int _audioSessionsGeneration;
+        private string _audioSessionsRevision;
+        private string _audioSessionsContent;
+        private GatewayCore _audioSessionsGateway;
+        private System.Threading.Timer _audioSessionsTimer;
+        private bool _audioSessionsReading, _audioSessionsDirty;
+        private GatewayCore.PanelAction[] _actions = new GatewayCore.PanelAction[0];
+        private int _actionRequest, _actionGeneration;
+        private string _actionRevision;
         private volatile Session _session;
         public event EventHandler<PanelRoomPacket> PacketReady;
 
@@ -38,6 +52,9 @@ namespace Control4Crestron
                 Close();
                 _rooms.Clear();
                 _roomOrder.Clear();
+                _actionRequest++;
+                _actionRevision = null;
+                CloseAudioSessions();
                 _gateway = gatewayId;
                 foreach (string entry in (roomIds ?? "").Split(','))
                 {
@@ -46,6 +63,164 @@ namespace Control4Crestron
                         if (_rooms.Add(id)) _roomOrder.Add(id);
                 }
             }
+        }
+
+        private void OpenAudioSessions()
+        {
+            if (_audioSessionsGateway == null)
+            {
+                _audioSessionsGateway = GatewayRegistry.Get(_gateway);
+                _audioSessionsTimer = new System.Threading.Timer(RefreshAudioSessions, null,
+                    System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
+                _audioSessionsGateway.AudioSessionReadbackHint += RequestAudioSessionRefresh;
+            }
+            ReadAudioSessions();
+        }
+
+        private void CloseAudioSessions()
+        {
+            _audioSessionsRequest++;
+            _audioSessionsReady = false;
+            _audioSessionsReading = false;
+            _audioSessionsDirty = false;
+            _audioSessionsContent = null;
+            if (_audioSessionsGateway != null)
+                _audioSessionsGateway.AudioSessionReadbackHint -= RequestAudioSessionRefresh;
+            _audioSessionsGateway = null;
+            if (_audioSessionsTimer != null) _audioSessionsTimer.Dispose();
+            _audioSessionsTimer = null;
+        }
+
+        private void RequestAudioSessionRefresh()
+        {
+            // Director receive stays independent of SIMPL/panel request processing.
+            System.Threading.ThreadPool.QueueUserWorkItem(delegate
+            {
+                lock (_requests)
+                    if (_audioSessionsTimer != null)
+                        _audioSessionsTimer.Change(500, System.Threading.Timeout.Infinite);
+            });
+        }
+
+        private void RefreshAudioSessions(object state)
+        {
+            lock (_requests)
+            {
+                if (_audioSessionsGateway == null) return;
+                if (_audioSessionsReading) { _audioSessionsDirty = true; return; }
+                ReadAudioSessions(false);
+            }
+        }
+
+        private void ReadAudioSessions(bool force = true)
+        {
+            int request = ++_audioSessionsRequest;
+            if (force) _audioSessionsReady = false;
+            _audioSessionsReading = true;
+            GatewayRegistry.Get(_gateway).ReadPanelAudioSessions(_roomOrder.ToArray(), (generation, result) =>
+            {
+                lock (_requests)
+                {
+                    if (request != _audioSessionsRequest) return;
+                    _audioSessionsReading = false;
+                    string content = result.ToString(Formatting.None);
+                    if (force || !_audioSessionsReady || _audioSessionsGeneration != generation ||
+                        !String.Equals(content, _audioSessionsContent, StringComparison.Ordinal))
+                    {
+                        _audioSessionsContent = content;
+                        _audioSessions = result;
+                        _audioSessionsGeneration = generation;
+                        _audioSessionsRevision = Guid.NewGuid().ToString("N").Substring(0, 16);
+                        result["revision"] = _audioSessionsRevision;
+                        _audioSessionsWire.Set(0, "audio_sessions", result.ToString(Formatting.None));
+                        _audioSessionsReady = true;
+                        PublishAudioSessions(1);
+                    }
+                    if (_audioSessionsDirty && _audioSessionsTimer != null)
+                    {
+                        _audioSessionsDirty = false;
+                        _audioSessionsTimer.Change(500, System.Threading.Timeout.Infinite);
+                    }
+                }
+            });
+        }
+
+        private void ControlAudioSessionRoom(string op, JObject body)
+        {
+            ushort room, value;
+            int queue;
+            if (!_audioSessionsReady || body["revision"] == null || body["revision"].Type != JTokenType.String ||
+                body["revision"].ToString() != _audioSessionsRevision || !Number(body["room_id"], 1, UInt16.MaxValue, out room) ||
+                !_rooms.Contains(room) || body["queue_id"] == null || body["queue_id"].Type != JTokenType.Integer ||
+                !Int32.TryParse(body["queue_id"].ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out queue) ||
+                !GatewayCore.PanelAudioSessionContains(_audioSessions, queue, room) ||
+                !Number(body["value"], 0, op == "audio_session_volume" ? (ushort)100 : (ushort)1, out value)) return;
+
+            string operation = op == "audio_session_volume" ? "SetVolume" : value == 1 ? "MuteOn" : "MuteOff";
+            int request = _audioSessionsRequest;
+            GatewayRegistry.Get(_gateway).ControlPanelAudioSessionRoom(room, queue, _audioSessionsGeneration, operation, value, () =>
+            {
+                lock (_requests)
+                    if (request == _audioSessionsRequest) ReadAudioSessions();
+            });
+        }
+
+        private void ChangeAudioSessionMembership(bool add, JObject body)
+        {
+            ushort room, owner;
+            int queue;
+            if (!_audioSessionsReady || body["revision"] == null || body["revision"].Type != JTokenType.String ||
+                body["revision"].ToString() != _audioSessionsRevision || !Number(body["room_id"], 1, UInt16.MaxValue, out room) ||
+                !_rooms.Contains(room) || body["queue_id"] == null || body["queue_id"].Type != JTokenType.Integer ||
+                !Int32.TryParse(body["queue_id"].ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out queue) ||
+                !GatewayCore.CanChangePanelAudioMembership(_audioSessions, queue, room, add, out owner) ||
+                !_rooms.Contains(owner)) return;
+
+            int request = _audioSessionsRequest;
+            _audioSessionsReady = false;
+            _audioSessionsReading = true;
+            GatewayRegistry.Get(_gateway).ChangePanelAudioMembership(room, owner, queue, _audioSessionsGeneration, add, () =>
+            {
+                lock (_requests)
+                    if (request == _audioSessionsRequest) ReadAudioSessions();
+            });
+        }
+
+        private void PublishAudioSessions(ushort page)
+        {
+            if (!_audioSessionsReady || page > _audioSessionsWire.Count) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = _audioSessionsWire.Read(ref page) });
+        }
+
+        private void DiscoverActions()
+        {
+            int request = ++_actionRequest;
+            _actionRevision = null;
+            _actions = new GatewayCore.PanelAction[0];
+            GatewayRegistry.Get(_gateway).DiscoverPanelActions((generation, actions) =>
+            {
+                lock (_requests)
+                {
+                    if (request != _actionRequest) return;
+                    _actions = actions;
+                    _actionGeneration = generation;
+                    _actionRevision = Guid.NewGuid().ToString("N").Substring(0, 16);
+                    var items = new JArray();
+                    for (int i = 0; i < actions.Length; i++)
+                        items.Add(new JObject { ["slot"] = i + 1, ["kind"] = actions[i].Kind, ["name"] = actions[i].Name });
+                    _actionsWire.Set(0, "scenes", new JObject { ["room_id"] = 0,
+                        ["revision"] = _actionRevision, ["actions"] = items }.ToString(Formatting.None));
+                    PublishActions(1);
+                }
+            });
+        }
+
+        private void PublishActions(ushort page)
+        {
+            if (_actionRevision == null || page > _actionsWire.Count) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = _actionsWire.Read(ref page) });
         }
 
         private void Close()
@@ -232,6 +407,31 @@ namespace Control4Crestron
             lock (_requests)
             {
                 if (_gateway == 0) return;
+                if (op == "audio_sessions") { OpenAudioSessions(); return; }
+                if (op == "audio_sessions_close") { CloseAudioSessions(); return; }
+                if (op == "audio_session_add" || op == "audio_session_remove")
+                { ChangeAudioSessionMembership(op == "audio_session_add", body); return; }
+                if (op == "audio_session_volume" || op == "audio_session_mute")
+                { ControlAudioSessionRoom(op, body); return; }
+                if (op == "audio_sessions_page")
+                {
+                    if (Number(body["value"], 1, UInt16.MaxValue, out number)) PublishAudioSessions(number);
+                    return;
+                }
+                if (op == "scenes") { DiscoverActions(); return; }
+                if (op == "scenes_page")
+                {
+                    if (Number(body["value"], 1, UInt16.MaxValue, out number)) PublishActions(number);
+                    return;
+                }
+                if (op == "scene_activate")
+                {
+                    if (_actionRevision != null && body["revision"] != null &&
+                        body["revision"].Type == JTokenType.String && body["revision"].ToString() == _actionRevision &&
+                        Number(body["slot"], 1, (ushort)_actions.Length, out number))
+                        GatewayRegistry.Get(_gateway).RunPanelAction(_actions[number - 1], _actionGeneration);
+                    return;
+                }
                 if (op == "rooms") { PublishRooms(1, true); return; }
                 if (op == "rooms_page")
                 {

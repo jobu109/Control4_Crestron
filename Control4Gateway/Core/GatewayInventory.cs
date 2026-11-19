@@ -190,6 +190,8 @@ namespace Control4Crestron
                         }
                         JObject report = BuildSetupReport(inventory, ui, mappings, _instance);
                         inventory["setup_report"] = report;
+                        inventory["media_sessions_probe"] = InspectMediaSessions(all, host, token, gen);
+                        inventory["media_sessions_events"] = RotateMediaSessionCapture(gen);
                         inventory["live_room_item_detail_probe"] = ProbeRoomItems(host, token, gen);
                         inventory["light_feedback_probe"] = ProbeLightFeedback(host, token, gen);
                         string reportBase = "/user/Control4Gateway_" + _instance + "_setup";
@@ -231,7 +233,616 @@ namespace Control4Crestron
             });
         }
 
-        // Diagnostic fixtures verified in Composer. These IDs are never used for routing.
+        private readonly JArray _mediaSessionEvents = new JArray();
+        private int _mediaSessionCaptureGeneration = -1;
+        private DateTime _mediaSessionCaptureUntil;
+        private int _mediaSessionCaptureAgent, _mediaSessionCaptureDigitalMedia;
+        private int _mediaSessionCaptureOmitted;
+
+        private JObject RotateMediaSessionCapture(int generation)
+        {
+            lock (_sync)
+            {
+                bool previous = _mediaSessionCaptureGeneration == generation;
+                var report = new JObject { ["had_capture"] = previous,
+                    ["events"] = previous ? _mediaSessionEvents.DeepClone() : new JArray(),
+                    ["omitted"] = previous ? _mediaSessionCaptureOmitted : 0 };
+                _mediaSessionEvents.Clear();
+                _mediaSessionCaptureOmitted = 0;
+                _mediaSessionCaptureGeneration = generation;
+                _mediaSessionCaptureUntil = DateTime.UtcNow.AddMinutes(5);
+                return report;
+            }
+        }
+
+        private void CaptureMediaSessionEvent(JToken message, int generation)
+        {
+            var obj = message as JObject;
+            if (obj == null) return;
+            lock (_sync)
+            {
+                if (_generation != generation || _mediaSessionCaptureGeneration != generation ||
+                    DateTime.UtcNow > _mediaSessionCaptureUntil) return;
+                string name = ScalarText(obj["evtName"]);
+                string device = ScalarText(obj["iddevice"]);
+                int id;
+                if (name == null || !System.Text.RegularExpressions.Regex.IsMatch(name, "^[A-Za-z0-9_]{1,64}$") ||
+                    SensitiveMediaKey(name)) return;
+                bool agent = Int32.TryParse(device, NumberStyles.None, CultureInfo.InvariantCulture, out id) &&
+                    id > 0 && (id == _mediaSessionCaptureAgent || id == _mediaSessionCaptureDigitalMedia);
+                var data = obj["data"];
+                int budget = 96;
+                if (!agent && !HasMediaSessionMarker(name) && !ContainsMediaSessionMarker(data, 0, ref budget)) return;
+                if (_mediaSessionEvents.Count >= 60) { _mediaSessionCaptureOmitted++; return; }
+                budget = 72;
+                _mediaSessionEvents.Add(new JObject { ["iddevice"] = id, ["event"] = name,
+                    ["received_utc"] = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
+                    ["data"] = NowPlayingShape(data, "", 0, ref budget) });
+            }
+        }
+
+        private static bool HasMediaSessionMarker(string name)
+        {
+            name = name.Replace("_", "").ToLowerInvariant();
+            return name.Contains("session") || name.Contains("group") || name.Contains("zone") ||
+                name.Contains("queue") || name.Contains("roommap");
+        }
+
+        private static bool ContainsMediaSessionMarker(JToken token, int depth, ref int budget)
+        {
+            if (depth > 5 || --budget < 0) return false;
+            var obj = token as JObject;
+            if (obj != null)
+            {
+                foreach (var field in obj.Properties())
+                    if (HasMediaSessionMarker(field.Name) || ContainsMediaSessionMarker(field.Value, depth + 1, ref budget))
+                        return true;
+            }
+            else if (token is JArray)
+                foreach (var item in (JArray)token)
+                    if (ContainsMediaSessionMarker(item, depth + 1, ref budget)) return true;
+            return false;
+        }
+
+        private JArray InspectMediaSessions(JArray inventory, string host, string token, int generation)
+        {
+            var report = new JArray();
+            foreach (JObject item in inventory)
+            {
+                if (!CurrentGeneration(generation)) break;
+                string name = ScalarText(item["name"]);
+                string type = ScalarText(item["type"]);
+                bool sessionAgent = type == "9" && String.Equals(name, "Media Sessions", StringComparison.OrdinalIgnoreCase);
+                bool digitalMedia = type == "7" && String.Equals(name, "Digital Media", StringComparison.OrdinalIgnoreCase);
+                if (!sessionAgent && !digitalMedia) continue;
+                int id;
+                if (!Int32.TryParse(ScalarText(item["item_id"]), NumberStyles.None, CultureInfo.InvariantCulture, out id) || id <= 0)
+                    continue;
+                lock (_sync)
+                {
+                    if (_generation != generation) break;
+                    if (sessionAgent) _mediaSessionCaptureAgent = id;
+                    if (digitalMedia) _mediaSessionCaptureDigitalMedia = id;
+                }
+                var agent = new JObject { ["item_id"] = id, ["name"] = name };
+                report.Add(agent);
+                string path = "/api/v1/items/" + id.ToString(CultureInfo.InvariantCulture);
+                foreach (string resource in new[] { "commands", "variables" })
+                {
+                    if (!CurrentGeneration(generation)) break;
+                    try
+                    {
+                        string response = ReadWithTimeoutRetry(host, token, path + "/" + resource, generation);
+                        if (resource == "commands")
+                            agent[resource] = BuildCommandMetadataReport(response, 200, id);
+                        else
+                        {
+                            agent[resource] = InspectNowPlayingVariables(response);
+                            if (digitalMedia) agent["session_values"] = DigitalMediaSessionValues(response);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        InvalidateRejectedToken(ex);
+                        agent[resource + "_error"] = FailureKind(ex);
+                        lock (_sync) if (!_online) break;
+                    }
+                }
+                if (report.Count >= 4) break;
+            }
+            return report;
+        }
+
+        internal void ReadPanelAudioSessions(ushort[] scope, Action<int, JObject> completed)
+        {
+            int generation;
+            lock (_sync) generation = _generation;
+            Queue(delegate
+            {
+                JObject result = new JObject { ["room_id"] = 0, ["available"] = false };
+                try
+                {
+                    string host, token;
+                    if (GetConnection(out host, out token) && CurrentGeneration(generation))
+                        result = FetchPanelAudioSessions(host, token, generation, scope, true);
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Whole house audio read failed: " + FailureKind(ex));
+                }
+                if (CurrentGeneration(generation)) completed(generation, result);
+            });
+        }
+
+        private JObject FetchPanelAudioSessions(string host, string token, int generation, ushort[] scope, bool readLevels)
+        {
+            int digitalMedia;
+            string variables = ReadDigitalMediaVariables(host, token, generation, out digitalMedia);
+            var result = variables == null ? new JObject { ["room_id"] = 0, ["available"] = false }
+                : BuildPanelAudioSessions(variables, scope);
+            if (!readLevels || (bool?)result["available"] != true) return result;
+            var active = new System.Collections.Generic.HashSet<ushort>();
+            foreach (var session in (JArray)result["sessions"])
+                foreach (var member in (JArray)session["room_ids"]) active.Add((ushort)(int)member);
+            foreach (JObject room in (JArray)result["rooms"])
+            {
+                if (!CurrentGeneration(generation)) break;
+                ushort id = (ushort)(int)room["id"];
+                room["name"] = PanelRoomName(id);
+                if (!active.Contains(id)) continue;
+                string roomPath = "/api/v1/items/" + id.ToString(CultureInfo.InvariantCulture) + "/variables?varnames=";
+                try
+                {
+                    ushort value;
+                    if (TryAudioVariable(ReadWithTimeoutRetry(host, token, roomPath + "CURRENT_VOLUME", generation),
+                        "CURRENT_VOLUME", out value)) room["volume"] = value;
+                    if (TryAudioVariable(ReadWithTimeoutRetry(host, token, roomPath + "IS_MUTED", generation),
+                        "IS_MUTED", out value)) room["muted"] = value != 0;
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Whole house audio room " + id + " read failed: " + FailureKind(ex));
+                    lock (_sync) if (!_online) break;
+                }
+            }
+            return result;
+        }
+
+        private string ReadDigitalMediaVariables(string host, string token, int generation, out int digitalMedia)
+        {
+            var inventory = InventoryItems(ReadWithTimeoutRetry(host, token, "/api/v1/items", generation));
+            digitalMedia = 0;
+            foreach (var item in inventory)
+            {
+                int id;
+                if (ScalarText(item["type"]) != "7" || ScalarText(item["name"]) != "Digital Media" ||
+                    !Int32.TryParse(ScalarText(item["item_id"]), out id) || id <= 0) continue;
+                if (digitalMedia != 0) throw new InvalidDataException("Ambiguous Digital Media item");
+                digitalMedia = id;
+            }
+            if (digitalMedia == 0 || !CurrentGeneration(generation))
+                return null;
+            string path = "/api/v1/items/" + digitalMedia.ToString(CultureInfo.InvariantCulture) + "/variables";
+            return ReadWithTimeoutRetry(host, token, path, generation);
+        }
+
+        internal static bool CanChangePanelAudioMembership(JObject snapshot, int queue, ushort room,
+            bool add, out ushort owner)
+        {
+            owner = 0;
+            var sessions = snapshot == null ? null : snapshot["sessions"] as JArray;
+            var rooms = snapshot == null ? null : snapshot["rooms"] as JArray;
+            if (sessions == null || rooms == null || room == 0) return false;
+            bool eligible = false;
+            foreach (var entry in rooms)
+                if ((int?)entry["id"] == room) { eligible = true; break; }
+            if (!eligible) return false;
+            bool member = false;
+            foreach (var entry in sessions)
+            {
+                int? queueId = (int?)entry["queue_id"];
+                bool contains = false;
+                foreach (var id in (JArray)entry["room_ids"])
+                    if ((int?)id == room) { contains = true; break; }
+                if (queueId != queue)
+                {
+                    if (add && contains) return false;
+                    continue;
+                }
+                int? candidate = (int?)entry["owner_room_id"];
+                if (candidate.HasValue && candidate.Value > 0 && candidate.Value <= UInt16.MaxValue)
+                    owner = (ushort)candidate.Value;
+                member = contains;
+            }
+            return owner != 0 && owner != room && (add ? !member : member);
+        }
+
+        internal static string BuildAudioMembershipCommand(bool add, ushort owner, ushort room)
+        {
+            return new JObject { ["async"] = true,
+                ["command"] = add ? "ADD_ROOMS_TO_SESSION" : "REMOVE_ROOMS_FROM_SESSION",
+                ["tParams"] = new JObject { ["ROOM_ID"] = owner,
+                    ["ROOM_ID_LIST"] = room.ToString(CultureInfo.InvariantCulture) } }.ToString(Formatting.None);
+        }
+
+        internal void ChangePanelAudioMembership(ushort room, ushort expectedOwner, int queue,
+            int generation, bool add, Action refresh)
+        {
+            Queue(delegate
+            {
+                try
+                {
+                    string host, token;
+                    if (!CurrentGeneration(generation) || !GetConnection(out host, out token) || !CurrentGeneration(generation)) return;
+                    int digitalMedia;
+                    string variables = ReadDigitalMediaVariables(host, token, generation, out digitalMedia);
+                    var scope = new[] { expectedOwner, room };
+                    ushort owner;
+                    if (variables == null || !CanChangePanelAudioMembership(BuildPanelAudioSessions(variables, scope),
+                        queue, room, add, out owner) || owner != expectedOwner || !CurrentGeneration(generation))
+                    {
+                        EmitMessage("Whole house audio membership command stopped: queue or room state changed");
+                        return;
+                    }
+                    string path = "/api/v1/items/" + digitalMedia.ToString(CultureInfo.InvariantCulture) + "/commands";
+                    Request(host, token, "POST", path, BuildAudioMembershipCommand(add, owner, room));
+                    bool verified = false;
+                    for (int attempt = 0; attempt < 3 && CurrentGeneration(generation); attempt++)
+                    {
+                        System.Threading.Thread.Sleep(350);
+                        if (!CurrentGeneration(generation)) break;
+                        string current = ReadWithTimeoutRetry(host, token,
+                            "/api/v1/items/" + digitalMedia.ToString(CultureInfo.InvariantCulture) + "/variables", generation);
+                        var snapshot = BuildPanelAudioSessions(current, scope);
+                        if ((bool?)snapshot["available"] == true &&
+                            PanelAudioSessionContains(snapshot, queue, room) == add)
+                        { verified = true; break; }
+                    }
+                    if (!CurrentGeneration(generation)) return;
+                    EmitMessage("Whole house audio room " + room + (add ? " add" : " remove") +
+                        (verified ? " verified in queue " + queue : " accepted; membership change unconfirmed"));
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Whole house audio membership request failed: " + FailureKind(ex));
+                }
+                finally { if (CurrentGeneration(generation)) refresh(); }
+            });
+        }
+
+        internal void ControlPanelAudioSessionRoom(ushort room, int queue, int generation, string operation,
+            ushort value, Action refresh)
+        {
+            Queue(delegate
+            {
+                try
+                {
+                    string host, token;
+                    if (!CurrentGeneration(generation) || !GetConnection(out host, out token) || !CurrentGeneration(generation)) return;
+                    var current = FetchPanelAudioSessions(host, token, generation, new[] { room }, false);
+                    if (!PanelAudioSessionContains(current, queue, room))
+                    {
+                        EmitMessage("Whole house audio command stopped: room is no longer in the selected queue");
+                        return;
+                    }
+                    if (!CurrentGeneration(generation)) return;
+                    string path = "/api/v1/items/" + room.ToString(CultureInfo.InvariantCulture) + "/commands";
+                    Request(host, token, "POST", path, BuildAudioCommand(operation, value));
+                    EmitMessage("Whole house audio room " + room + " " + operation + " accepted");
+                    if (CurrentGeneration(generation)) refresh();
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Whole house audio command failed: " + FailureKind(ex));
+                }
+            });
+        }
+
+        internal static bool PanelAudioSessionContains(JObject snapshot, int queue, ushort room)
+        {
+            var sessions = snapshot == null ? null : snapshot["sessions"] as JArray;
+            if (sessions == null) return false;
+            foreach (var entry in sessions)
+                if ((int?)entry["queue_id"] == queue)
+                    foreach (var member in (JArray)entry["room_ids"])
+                        if ((int?)member == room) return true;
+            return false;
+        }
+
+        private static JObject DigitalMediaSessionValues(string response)
+        {
+            return BuildPanelAudioSessions(response, null);
+        }
+
+        private static JObject BuildPanelAudioSessions(string response, ushort[] scope)
+        {
+            if (String.IsNullOrEmpty(response) || response.Length > 262144)
+                throw new InvalidDataException("Invalid Digital Media variable response");
+            var variables = JArray.Parse(response);
+            JObject queueStatus = null;
+            JArray roomSettings = null;
+            foreach (var row in variables)
+            {
+                if (!(row is JObject)) continue;
+                string name = ScalarText(row["varName"]);
+                var value = row["value"] as JObject;
+                if (value == null) continue;
+                if (name == "QUEUE_STATUS_V2") queueStatus = value["queues"] as JObject;
+                if (name == "ROOM_QUEUE_SETTINGS")
+                {
+                    var settings = value["room_queue_settings"] as JObject;
+                    if (settings != null) roomSettings = settings["room_info"] as JArray;
+                }
+            }
+
+            var allowed = scope == null ? null : new System.Collections.Generic.HashSet<ushort>(scope);
+            var roomIds = new System.Collections.Generic.SortedSet<ushort>();
+            var sessions = new JArray();
+            if (roomSettings != null)
+                foreach (var row in roomSettings)
+                {
+                    ushort id;
+                    if (row is JObject && UInt16.TryParse(ScalarText(row["roomid"]), out id) &&
+                        id != 0 && (allowed == null || allowed.Contains(id))) roomIds.Add(id);
+                }
+            var queueData = queueStatus == null ? null : queueStatus["queue"];
+            var queues = queueData as JArray;
+            if (queueData is JObject) queues = new JArray(queueData.DeepClone());
+            else if (queueStatus != null && (queueData == null || queueData.Type == JTokenType.Null))
+                queues = new JArray();
+            var seenQueues = new System.Collections.Generic.HashSet<int>();
+            if (queues != null)
+                foreach (var row in queues)
+                {
+                    int id;
+                    if (!(row is JObject) || !Int32.TryParse(ScalarText(row["id"]), out id) || id < 0 ||
+                        !seenQueues.Add(id)) continue;
+                    var container = row["rooms"] as JObject;
+                    var memberData = container == null ? null : container["id"];
+                    var members = memberData as JArray;
+                    if (members == null && (memberData?.Type == JTokenType.Integer || memberData?.Type == JTokenType.String))
+                        members = new JArray(memberData.DeepClone());
+                    if (members == null) continue;
+                    var visible = new System.Collections.Generic.SortedSet<ushort>();
+                    foreach (var member in members)
+                    {
+                        ushort room;
+                        if (UInt16.TryParse(ScalarText(member), out room) &&
+                            room != 0 && (allowed == null || allowed.Contains(room))) visible.Add(room);
+                    }
+                    if (visible.Count == 0) continue;
+                    foreach (ushort room in visible) roomIds.Add(room);
+                    var session = new JObject { ["queue_id"] = id, ["room_ids"] = new JArray(visible) };
+                    ushort owner;
+                    if (UInt16.TryParse(ScalarText(row["owner"]), out owner) && visible.Contains(owner))
+                        session["owner_room_id"] = owner;
+                    int source;
+                    if (Int32.TryParse(ScalarText(row["device_id"]), out source) && source > 0)
+                        session["source_item_id"] = source;
+                    string state = (ScalarText(row["state"]) ?? "").ToLowerInvariant();
+                    if (state == "play" || state == "playing" || state == "pause" || state == "paused" ||
+                        state == "stop" || state == "stopped" || state == "idle") session["state"] = state;
+                    sessions.Add(session);
+                }
+
+            var rooms = new JArray();
+            foreach (ushort id in roomIds) rooms.Add(new JObject { ["id"] = id });
+            return new JObject { ["room_id"] = 0, ["available"] = queues != null,
+                ["rooms"] = rooms, ["sessions"] = sessions };
+        }
+
+        internal sealed class PanelAction
+        {
+            internal string Name, Kind, Command, Parameter;
+            internal ushort Agent;
+            internal JToken Value;
+        }
+
+        internal void DiscoverPanelActions(Action<int, PanelAction[]> completed)
+        {
+            int generation;
+            lock (_sync) generation = _generation;
+            Queue(delegate
+            {
+                var resolved = new System.Collections.Generic.List<PanelAction>();
+                try
+                {
+                    string host, token;
+                    if (GetConnection(out host, out token) && CurrentGeneration(generation))
+                    {
+                        var agents = InventoryItems(ReadWithTimeoutRetry(host, token, "/api/v1/items", generation));
+                        foreach (string kind in new[] { "light", "macro" })
+                        {
+                            string agentName = kind == "light" ? "Advanced Lighting" : "Macros";
+                            string command = kind == "light" ? "ACTIVATE_SCENE" : "EXECUTE_MACRO";
+                            string parameter = kind == "light" ? "SCENE_ID" : "id";
+                            if (!CurrentGeneration(generation)) return;
+                            ushort agentId = 0;
+                            foreach (JObject row in agents)
+                            {
+                                if (ScalarText(row["type"]) != "9" ||
+                                    !String.Equals(ScalarText(row["name"]), agentName, StringComparison.OrdinalIgnoreCase)) continue;
+                                ushort candidate;
+                                if (!UInt16.TryParse(ScalarText(row["item_id"]), out candidate) || candidate == 0) continue;
+                                if (agentId != 0 && agentId != candidate) { agentId = 0; break; }
+                                agentId = candidate;
+                            }
+                            if (agentId == 0) continue;
+                            try
+                            {
+                                string path = "/api/v1/items/" + agentId.ToString(CultureInfo.InvariantCulture) + "/commands";
+                                string metadata = ReadWithTimeoutRetry(host, token, path, generation);
+                                ReadPanelActionOptions(metadata, kind, agentId, command, parameter,
+                                    host, token, generation, resolved);
+                            }
+                            catch (Exception ex)
+                            {
+                                InvalidateRejectedToken(ex);
+                                EmitMessage("Panel " + kind + " action discovery failed: " + FailureKind(ex));
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Panel action discovery failed: " + FailureKind(ex));
+                }
+                if (CurrentGeneration(generation)) completed(generation, resolved.ToArray());
+            });
+        }
+
+        private static bool SupportsActionId(string type)
+        {
+            switch ((type ?? "").ToLowerInvariant())
+            {
+                case "string": case "str": case "integer": case "int": case "uint": case "number": return true;
+                default: return false;
+            }
+        }
+
+        internal void RunPanelAction(PanelAction action, int generation)
+        {
+            Queue(delegate
+            {
+                try
+                {
+                    string host, token;
+                    if (!CurrentGeneration(generation) || !GetConnection(out host, out token) ||
+                        !CurrentGeneration(generation))
+                    { EmitMessage("Panel action stopped: refresh the action list"); return; }
+                    var body = new JObject { ["async"] = true, ["command"] = action.Command,
+                        ["tParams"] = new JObject { [action.Parameter] = action.Value.DeepClone() } };
+                    int status;
+                    string path = "/api/v1/items/" + action.Agent.ToString(CultureInfo.InvariantCulture) + "/commands";
+                    string response = Request(host, token, "POST", path, body.ToString(Formatting.None), out status);
+                    EmitMessage(action.Name + " request HTTP " + status + ", " + SceneCommandResponse(response));
+                }
+                catch (Exception ex)
+                {
+                    if (!CurrentGeneration(generation)) return;
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Panel action request failed: " + FailureKind(ex));
+                }
+            });
+        }
+
+        private static string SceneCommandResponse(string response)
+        {
+            if (String.IsNullOrWhiteSpace(response)) return "empty response";
+            if (response.Length > 16384) return "large response";
+            try
+            {
+                var body = JToken.Parse(response);
+                var obj = body as JObject;
+                if (obj != null)
+                {
+                    foreach (string key in new[] { "success", "ok", "result", "error", "status" })
+                    {
+                        var field = obj[key];
+                        if (field == null) continue;
+                        if (field.Type == JTokenType.Boolean || field.Type == JTokenType.Integer)
+                            return key + "=" + field.ToString();
+                        return key + " field (" + field.Type + ")";
+                    }
+                }
+                return "response type " + body.Type;
+            }
+            catch (JsonReaderException) { return "non-JSON response"; }
+        }
+
+        private void ReadPanelActionOptions(string metadata, string kind, ushort agentId, string commandName,
+            string parameterName, string host, string token, int generation,
+            System.Collections.Generic.List<PanelAction> actions)
+        {
+            if (String.IsNullOrEmpty(metadata) || metadata.Length > 262144)
+                throw new InvalidDataException("Invalid scene command metadata size");
+            var commands = JToken.Parse(metadata) as JArray;
+            if (commands == null) return;
+            foreach (var command in commands)
+            {
+                if (!(command is JObject) || ScalarText(command["command"]) != commandName) continue;
+                var parameters = command["params"] as JArray;
+                if (parameters == null) continue;
+                foreach (var parameter in parameters)
+                {
+                    if (!(parameter is JObject) || ScalarText(parameter["name"]) != parameterName) continue;
+                    var source = parameter["valueSrc"] as JObject;
+                    string path = source == null ? null : ScalarText(source["path"]);
+                    string field = ScalarText(parameter["valueField"]);
+                    string display = ScalarText(parameter["valueDisplay"]);
+                    string type = ScalarText(parameter["valueType"]);
+                    if (source == null || !String.Equals(ScalarText(source["method"]), "GET", StringComparison.OrdinalIgnoreCase) ||
+                        path == null || !System.Text.RegularExpressions.Regex.IsMatch(path, "^/api/v1/agents/[A-Za-z0-9_-]{1,80}$") ||
+                        !SupportsActionId(type) || !System.Text.RegularExpressions.Regex.IsMatch(field ?? "", "^[A-Za-z_][A-Za-z0-9_]{0,47}$"))
+                        throw new InvalidDataException("Unrecognized scene option source");
+                    if (!CurrentGeneration(generation)) return;
+                    string data = ReadWithTimeoutRetry(host, token, path, generation);
+                    if (String.IsNullOrEmpty(data) || data.Length > 262144)
+                        throw new InvalidDataException("Invalid scene list size");
+                    var options = JToken.Parse(data) as JArray;
+                    if (options == null) throw new InvalidDataException("Expected scene list");
+                    var found = new System.Collections.Generic.Dictionary<string, PanelAction>(StringComparer.Ordinal);
+                    var conflicts = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+                    foreach (var option in options)
+                    {
+                        var row = option as JObject;
+                        if (row == null) continue;
+                        string name = SceneOptionName(row, field, display);
+                        string id = ScalarText(row[field]);
+                        if (String.IsNullOrWhiteSpace(name) || name.Length > 160 || id == null ||
+                            !System.Text.RegularExpressions.Regex.IsMatch(id, "^[A-Za-z0-9_{}-]{1,64}$")) continue;
+                        JToken value;
+                        try { value = NativeMediaTypedValue(new JValue(type), row[field]); }
+                        catch (InvalidDataException) { continue; }
+                        string key = value.ToString(Formatting.None);
+                        PanelAction previous;
+                        if (found.TryGetValue(key, out previous))
+                        {
+                            if (!String.Equals(previous.Name, name, StringComparison.Ordinal)) conflicts.Add(key);
+                            continue;
+                        }
+                        if (found.Count >= 512) throw new InvalidDataException("Too many scene options");
+                        found.Add(key, new PanelAction { Name = name, Kind = kind, Agent = agentId,
+                            Command = commandName, Parameter = parameterName, Value = value });
+                    }
+                    foreach (var entry in found)
+                        if (!conflicts.Contains(entry.Key)) actions.Add(entry.Value);
+                    return;
+                }
+            }
+        }
+
+        private static string SceneOptionName(JObject row, string idField, string display)
+        {
+            if (!String.IsNullOrEmpty(display))
+            {
+                if (System.Text.RegularExpressions.Regex.IsMatch(display, "^[A-Za-z_][A-Za-z0-9_]{0,47}$"))
+                {
+                    string declared = ScalarText(row[display]);
+                    if (!String.IsNullOrWhiteSpace(declared)) return declared;
+                }
+                var fields = System.Text.RegularExpressions.Regex.Matches(display, "[A-Za-z_][A-Za-z0-9_]{0,47}");
+                foreach (System.Text.RegularExpressions.Match match in fields)
+                {
+                    if (match.Value == idField || SensitiveMediaKey(match.Value)) continue;
+                    var value = row[match.Value];
+                    if (value != null && value.Type == JTokenType.String) return ScalarText(value);
+                }
+            }
+            foreach (string field in new[] { "name", "scene_name", "macro_name", "label", "display_name" })
+            {
+                if (field == idField) continue;
+                var value = row[field];
+                if (value != null && value.Type == JTokenType.String) return ScalarText(value);
+            }
+            return null;
+        }
+
         private JArray ProbeRoomItems(string host, string token, int generation)
         {
             var result = new JArray();

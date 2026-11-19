@@ -260,9 +260,28 @@ namespace Control4Crestron
             }
         }
 
+        internal event Action AudioSessionReadbackHint;
+
+        private void SignalAudioSessionReadback(JToken message, int generation)
+        {
+            var handler = AudioSessionReadbackHint;
+            if (handler == null || !CurrentGeneration(generation)) return;
+            var packet = message as JObject;
+            if (packet == null || ScalarText(packet["evtName"]) != "OnDataToUI") return;
+            var data = packet["data"] as JObject;
+            if (data == null) return;
+            var media = data["EVENT"] as JObject;
+            string name = media == null ? null : ScalarText(media["NAME"]);
+            if (name != "DashboardChanged" && name != "QueueChanged" &&
+                !(data["active_state_changed"] is JObject)) return;
+            SafeEvent(handler);
+        }
+
         private void RouteRealtimeMessage(JToken message, int gen)
         {
             CaptureAudioFeedbackEvent(message, gen);
+            CaptureMediaSessionEvent(message, gen);
+            SignalAudioSessionReadback(message, gen);
             CaptureNowPlayingEvent(message, gen);
             RoutePlayingEvent(message, gen);
             CaptureLightProbeEvent(message, gen);
