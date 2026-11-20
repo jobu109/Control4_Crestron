@@ -10,10 +10,11 @@ describe('simulated router preview', () => {
   it('drives the real adapter end to end', async () => {
     const store = new HouseStore();
     store.attach(new PanelRouterAdapter(new SimulatedRouter()));
-    await vi.advanceTimersByTimeAsync(500);
+    // Requests are spaced REQUEST_GAP_MS apart and documents are paged, so startup takes a moment.
+    await vi.advanceTimersByTimeAsync(2000);
     expect(store.connection).toBe('online');
     expect(store.config.rooms.map((r) => r.name)).toEqual(['Family Room', 'Kitchen', 'Primary Suite', 'Office']);
-    expect(store.config.services).toEqual(['media', 'audio', 'scenes']);
+    expect(store.config.services).toEqual(['lighting', 'shades', 'media', 'audio', 'scenes']);
 
     store.focusRoom('1');
     await vi.advanceTimersByTimeAsync(500);

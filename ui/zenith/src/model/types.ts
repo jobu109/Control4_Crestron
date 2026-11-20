@@ -102,7 +102,19 @@ export interface HouseConfig {
   thermostats: Thermostat[];
   /** Optional wallpaper image URL per page id (home, rooms, lighting, ...). */
   wallpapers?: Record<string, string>;
+  /** House location as the system reports it. Sunrise and sunset are calculated from the coordinates. */
+  location?: SiteLocation;
 }
+
+export interface SiteLocation {
+  /** Place name to show, for example "Heathcote, New South Wales". */
+  name?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+/** State id used for the house's current weather. */
+export const HOUSE_WEATHER = 'house';
 
 // ---- Live state, keyed by `${kind}:${id}` (see stateKey) ----
 
@@ -163,7 +175,17 @@ export interface ThermostatState {
   action?: 'heating' | 'cooling' | 'idle';
 }
 
-export type StateKind = 'light' | 'shade' | 'media' | 'zone' | 'scene' | 'thermostat';
+/** Current outdoor weather. Fields the system does not report stay absent. */
+export interface WeatherState {
+  temperature?: number;
+  unit?: 'C' | 'F';
+  condition?: string;
+  /** Today's forecast range, when reported. */
+  low?: number;
+  high?: number;
+}
+
+export type StateKind = 'light' | 'shade' | 'media' | 'zone' | 'scene' | 'thermostat' | 'weather';
 
 export interface StateMap {
   light: LightState;
@@ -172,6 +194,7 @@ export interface StateMap {
   zone: ZoneState;
   scene: SceneState;
   thermostat: ThermostatState;
+  weather: WeatherState;
 }
 
 export function stateKey(kind: StateKind, id: string): string {

@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeFrames } from '../src/adapters/wire';
 import { HouseStore } from '../src/model/store';
-import { PANEL_FLOOR, PanelRouterAdapter, ROUTER_JOINS as J, SR260_KEYS } from '../src/adapters/panel-router';
+import { PANEL_FLOOR, PanelRouterAdapter, REQUEST_GAP_MS, ROUTER_JOINS as J, SR260_KEYS } from '../src/adapters/panel-router';
 import type { CrComLibLike } from '../src/adapters/crestron';
 
 // Simulates the Control4 - Panel Room Router joins. Frames use the same
@@ -10,7 +10,8 @@ import type { CrComLibLike } from '../src/adapters/crestron';
 /** Page request op -> stream kind, as handled by PanelRoomModule.Request. */
 const PAGE_KIND: Record<string, string> = {
   device_page: 'd', audio_page: 'a', video_page: 'v', media_page: 'm', playing_page: 'n',
-  rooms_page: 'rooms', scenes_page: 'scenes', audio_sessions_page: 'audio_sessions'
+  rooms_page: 'rooms', scenes_page: 'scenes', audio_sessions_page: 'audio_sessions', site_page: 'site',
+  house_devices_page: 'house_devices'
 };
 
 class FakeRouter implements CrComLibLike {
@@ -73,7 +74,7 @@ let store: HouseStore;
 function start() {
   router = new FakeRouter();
   store = new HouseStore();
-  store.attach(new PanelRouterAdapter(router));
+  store.attach(new PanelRouterAdapter(router, undefined, 0));
 }
 
 /** Connect, publish the room list and open Living Room with its devices and sources. */
@@ -93,9 +94,11 @@ describe('panel router adapter', () => {
     expect(store.connection).toBe('connecting');
     router.connect();
     expect(store.connection).toBe('online');
-    expect(router.ops()).toEqual(['rooms', 'scenes', 'audio_sessions']);
-    expect(router.requests.map((r) => r.q)).toEqual([1, 2, 3]);
+    expect(router.ops()).toEqual(['rooms', 'scenes', 'site', 'audio_sessions']);
+    expect(router.requests.map((r) => r.q)).toEqual([1, 2, 3, 4]);
     router.doc(J.state, 0, 'rooms', ROOMS);
+    // The heavy whole-house request waits for the room list.
+    expect(router.ops().slice(4)).toEqual(['house_devices']);
     expect(store.config.floors).toEqual([PANEL_FLOOR]);
     expect(store.config.rooms.map((r) => [r.id, r.name, r.lazy])).toEqual([['13', 'Living Room', true], ['212', 'Kitchen', true]]);
     expect(store.config.services).toEqual(['media']);
@@ -329,6 +332,63 @@ describe('panel router adapter', () => {
     expect(router.ops()).toEqual(['audio_sessions_close']);
   });
 
+  it('loads whole-house lights and shades and controls rooms that are not open', () => {
+    router.connect();
+    // Catalog first, room list second: the adapter must apply it once the rooms exist.
+    router.doc(J.state, 0, 'house_devices', { room_id: 0, rooms: [
+      { id: 13, devices: [{ id: 437, name: 'Main Hall', shade: false, value: 40 }, { id: 226, name: 'Middle Shade', shade: true, value: 100 }] },
+      { id: 212, devices: [{ id: 602, name: 'Island', shade: false, value: null }] },
+      { id: 999, devices: [{ id: 5, name: 'Out of scope', shade: false, value: 1 }] }
+    ] });
+    router.doc(J.state, 0, 'rooms', ROOMS);
+    expect(store.room('212')!.lights.map((l) => l.id)).toEqual(['602']);
+    expect(store.room('13')!.shades.map((s) => s.id)).toEqual(['226']);
+    expect(store.config.services).toEqual(['lighting', 'shades', 'media']);
+    expect(store.get('light', '437')).toEqual({ on: true, level: 40 });
+    expect(store.known('light', '602')).toBe(false);
+    expect(store.known('light', '5')).toBe(false);
+
+    router.plain(J.state, { h: 1, u: 602, v: 70 });
+    expect(store.get('light', '602')).toEqual({ on: true, level: 70 });
+
+    router.clear();
+    store.send({ kind: 'room-lights', id: '212', action: 'off' });
+    store.send({ kind: 'shade', id: '226', action: 'open' });
+    store.send({ kind: 'light', id: '5', action: 'on' });
+    expect(router.requests.map(({ q: _q, ...r }) => r)).toEqual([
+      { room_id: 212, device_id: 602, action: 'level', value: 0, op: 'house_device' },
+      { room_id: 13, device_id: 226, action: 'open', op: 'house_device' }
+    ]);
+
+    // Opening a room uses its session; leaving it keeps whole-house state.
+    store.focusRoom('13');
+    router.doc(J.state, 13, 'd', DEVICES);
+    router.clear();
+    store.send({ kind: 'light', id: '437', action: 'off' });
+    expect(router.last('device')).toMatchObject({ room_id: 13, device_id: 437, value: 0 });
+    store.focusRoom('212');
+    expect(store.get('shade', '226')).toEqual({ position: 100 });
+  });
+
+  it('publishes location and reported weather from the site document', () => {
+    router.connect();
+    router.doc(J.state, 0, 'site', { room_id: 0, name: 'Sample City, ST', latitude: 40, longitude: -95, temperature_unit: 'F',
+      weather_status: 'reporting', weather: { temperature: 68, low: 55, high: 72 } });
+    expect(store.config.location).toEqual({ name: 'Sample City, ST', latitude: 40, longitude: -95 });
+    expect(store.get('weather', 'house')).toEqual({ temperature: 68, unit: 'F', low: 55, high: 72 });
+
+    // A driver that stops reporting clears weather but keeps the location.
+    router.doc(J.state, 0, 'site', { room_id: 0, latitude: 40, longitude: -95, weather_status: 'not_reporting' });
+    expect(store.known('weather', 'house')).toBe(false);
+    expect(store.config.location).toEqual({ latitude: 40, longitude: -95 });
+
+    router.doc(J.state, 0, 'site', { room_id: 0, latitude: 400, longitude: -95, weather_status: 'unavailable' });
+    expect(store.config.location).toBeUndefined();
+
+    router.connect(false);
+    expect(store.known('weather', 'house')).toBe(false);
+  });
+
   it('marks zones unavailable when Whole House Audio is not available', () => {
     router.connect();
     router.doc(J.state, 0, 'rooms', ROOMS);
@@ -362,7 +422,7 @@ describe('panel router adapter', () => {
     store.send({ kind: 'light', id: '437', action: 'on' });
     expect(router.requests).toEqual([]);
     router.connect(true);
-    expect(router.ops()).toEqual(['rooms', 'scenes', 'audio_sessions', 'room']);
+    expect(router.ops()).toEqual(['rooms', 'scenes', 'site', 'audio_sessions', 'room']);
     expect(router.last('room')).toMatchObject({ room_id: 13 });
     router.doc(J.state, 13, 'd', DEVICES);
     expect(store.get('light', '437')?.level).toBe(40);
@@ -383,5 +443,80 @@ describe('panel router adapter', () => {
     router.emit('s', J.state, 'not json');
     router.doc(J.state, 13, 'd', { room_id: 212, devices: [] });
     expect(store.room('13')!.lights).toHaveLength(before);
+  });
+});
+
+// Request$ is one SIMPL+ STRING_INPUT: a busy CHANGE handler only sees the latest value.
+describe('panel router request pacing', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    router = new FakeRouter();
+    store = new HouseStore();
+    store.attach(new PanelRouterAdapter(router));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('spaces requests on the shared serial join', async () => {
+    router.connect();
+    expect(router.ops()).toEqual(['rooms']);
+    await vi.advanceTimersByTimeAsync(REQUEST_GAP_MS);
+    expect(router.ops()).toEqual(['rooms', 'scenes']);
+    await vi.advanceTimersByTimeAsync(REQUEST_GAP_MS * 3);
+    expect(router.ops()).toEqual(['rooms', 'scenes', 'site', 'audio_sessions']);
+  });
+
+  it('keeps only the latest queued level for the same device', async () => {
+    router.connect();
+    router.doc(J.state, 0, 'rooms', ROOMS);
+    store.focusRoom('13');
+    router.doc(J.state, 13, 'd', DEVICES);
+    await vi.advanceTimersByTimeAsync(REQUEST_GAP_MS * 20);
+    router.clear();
+    for (const value of [10, 20, 30, 40]) store.send({ kind: 'light', id: '437', action: 'level', value });
+    await vi.advanceTimersByTimeAsync(REQUEST_GAP_MS * 10);
+    const levels = router.requests.filter((r) => r.op === 'device').map((r) => r.value);
+    expect(levels).toEqual([10, 40]);
+  });
+
+  it('re-requests startup documents that never arrived', async () => {
+    router.connect();
+    await vi.advanceTimersByTimeAsync(REQUEST_GAP_MS * 10);
+    router.doc(J.state, 0, 'rooms', ROOMS);
+    await vi.advanceTimersByTimeAsync(REQUEST_GAP_MS * 10);
+    router.clear();
+    await vi.advanceTimersByTimeAsync(15000);
+    // rooms arrived; scenes and site were lost and are asked for again.
+    expect(router.ops()).toEqual(['scenes', 'site']);
+    router.clear();
+    await vi.advanceTimersByTimeAsync(15000 * 5);
+    expect(router.ops().filter((op) => op === 'scenes')).toHaveLength(1); // two retries in total
+  });
+});
+
+describe('panel router location name', () => {
+  it('names the location from the coordinates when the controller has no name, without flicker on refresh', async () => {
+    router = new FakeRouter();
+    store = new HouseStore();
+    const looked: Array<[number, number]> = [];
+    store.attach(new PanelRouterAdapter(router, undefined, 0, async (lat, lon) => { looked.push([lat, lon]); return 'Sample Town, ST'; }));
+    router.connect();
+    router.doc(J.state, 0, 'site', { room_id: 0, latitude: 40.25, longitude: -95.5, weather_status: 'unavailable' });
+    await tick();
+    expect(store.config.location).toEqual({ name: 'Sample Town, ST', latitude: 40.25, longitude: -95.5 });
+    router.doc(J.state, 0, 'site', { room_id: 0, latitude: 40.25, longitude: -95.5, weather_status: 'unavailable' });
+    expect(store.config.location?.name).toBe('Sample Town, ST');
+    expect(looked).toHaveLength(1);
+  });
+
+  it('prefers a name reported by the controller', async () => {
+    router = new FakeRouter();
+    store = new HouseStore();
+    let calls = 0;
+    store.attach(new PanelRouterAdapter(router, undefined, 0, async () => { calls++; return 'Lookup'; }));
+    router.connect();
+    router.doc(J.state, 0, 'site', { room_id: 0, name: 'Driver City', latitude: 40.25, longitude: -95.5, weather_status: 'unavailable' });
+    await tick();
+    expect(store.config.location?.name).toBe('Driver City');
+    expect(calls).toBe(0);
   });
 });

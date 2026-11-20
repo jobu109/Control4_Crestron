@@ -51,7 +51,7 @@ export class LightingPage extends OverviewPage {
   protected actions(r: Room) {
     const lit = this.store.lightsOn(r);
     const all = lit === r.lights.length;
-    const dimmable = r.lights.some((l) => l.dimmable);
+    const dimmable = r.lights.some((l) => l.dimmable) && (r.lightActions ?? ['ambient']).includes('ambient');
     const send = (action: 'ambient' | 'on' | 'off') => this.send({ kind: 'room-lights', id: r.id, action });
     return html`
       ${dimmable ? html`<button type="button" class="btn ${lit && !all ? 'sel' : ''}" @click=${() => send('ambient')}>AMBIENT</button>` : html`<span class="spacer"></span>`}

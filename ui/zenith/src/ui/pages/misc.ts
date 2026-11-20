@@ -4,23 +4,60 @@ import { ZPage, shared } from '../base';
 import { icon } from '../icons';
 
 export class ScenesPage extends ZPage {
+  static properties = { ...ZPage.properties, filter: { state: true }, sent: { state: true } };
+  /** Scene description (kind) to show, or '' for all. */
+  filter = '';
+  /** Scene just tapped; shown as "Sent" briefly because most systems report no scene state. */
+  sent = '';
+  private sentTimer?: number;
+
   static styles = [shared, css`
-    .content { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 16px; overflow-y: auto; }
-    .scene { border-radius: 16px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; text-align: left; background: var(--panel); border: 1px solid var(--line); min-height: 200px; }
+    /* Fixed row height so long scene lists scroll instead of squeezing. */
+    .content { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 92px; align-content: start; gap: 12px; overflow-y: auto; padding-right: 4px; }
+    .scene { position: relative; border-radius: 14px; padding: 0 16px; display: flex; align-items: center; gap: 14px; text-align: left; background: var(--panel); border: 1px solid var(--line); min-width: 0; }
     .scene.active { border: 2px solid #fff; background: rgba(8,10,13,0.8); }
-    .scene .tile { width: 72px; height: 72px; border-radius: 14px; }
-    .badge { height: 26px; padding: 0 10px; border-radius: 13px; background: var(--green); color: #0b0d10; font-size: 11px; font-weight: 700; letter-spacing: 1px; display: inline-flex; align-items: center; }
+    .scene.sent { border-color: var(--green); }
+    .scene .tile { width: 52px; height: 52px; border-radius: 12px; }
+    .scene .text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .scene .name { font-size: 17px; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .badge { position: absolute; top: 8px; right: 10px; height: 22px; padding: 0 8px; border-radius: 11px; background: var(--green); color: #0b0d10; font-size: 10px; font-weight: 700; letter-spacing: 1px; display: inline-flex; align-items: center; }
+    .filters { display: flex; gap: 6px; }
+    .filters .btn { height: 40px; padding: 0 16px; font-size: 12px; }
   `];
 
+  disconnectedCallback(): void {
+    window.clearTimeout(this.sentTimer);
+    super.disconnectedCallback();
+  }
+
+  private run(id: string): void {
+    this.send({ kind: 'scene', id, action: 'run' });
+    this.sent = id;
+    window.clearTimeout(this.sentTimer);
+    this.sentTimer = window.setTimeout(() => (this.sent = ''), 1500);
+  }
+
   render() {
+    const scenes = this.store.config.scenes;
+    const kinds = [...new Set(scenes.map((s) => s.description).filter((d): d is string => !!d))];
+    const filter = kinds.includes(this.filter) ? this.filter : '';
+    const shown = filter ? scenes.filter((s) => s.description === filter) : scenes;
     return html`
-      <div class="toolbar"><span class="hint">Tap a scene to run it</span></div>
+      <div class="toolbar">
+        <span class="hint">Tap a scene to run it · ${shown.length} ${shown.length === 1 ? 'scene' : 'scenes'}</span>
+        ${kinds.length > 1 ? html`<span class="filters" role="tablist" aria-label="Scene type">
+          ${['', ...kinds].map((k) => html`<button type="button" role="tab" class="btn ${k === filter ? 'sel' : ''}" aria-selected=${k === filter ? 'true' : 'false'}
+            @click=${() => (this.filter = k)}>${k ? k.toUpperCase() : 'ALL'}</button>`)}
+        </span>` : ''}
+      </div>
       <section class="content" aria-label="Scenes">
-        ${this.store.config.scenes.map((s) => {
+        ${shown.map((s) => {
           const active = !!this.store.get('scene', s.id)?.active;
-          return html`<button type="button" class="scene ${active ? 'active' : ''}" @click=${() => this.send({ kind: 'scene', id: s.id, action: 'run' })}>
-            <span style="width:100%;display:flex;justify-content:space-between"><span class="tile ${active ? 'on' : ''}">${icon(s.icon ?? 'scenes', 34, 1.4)}</span>${active ? html`<span class="badge">ACTIVE</span>` : ''}</span>
-            <span><span class="name" style="display:block;font-size:20px">${s.name}</span><span class="sub">${s.description ?? ''}</span></span>
+          const sent = this.sent === s.id;
+          return html`<button type="button" class="scene ${active ? 'active' : ''} ${sent ? 'sent' : ''}" @click=${() => this.run(s.id)}>
+            <span class="tile ${active ? 'on' : ''}">${icon(s.icon ?? 'scenes', 26, 1.4)}</span>
+            <span class="text"><span class="name">${s.name}</span><span class="sub">${sent ? 'Sent' : s.description ?? ''}</span></span>
+            ${active ? html`<span class="badge">ACTIVE</span>` : ''}
           </button>`;
         })}
       </section>`;

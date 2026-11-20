@@ -24,7 +24,8 @@ const MUSIC_KEYS = ['Play', 'Pause', 'Skip_Forward', 'Skip_Back', 'Volume_Up', '
 const TRACKS = [['Morning Light', 'The Harbor Lines'], ['Slow Tide', 'North Coast'], ['Paper Planes', 'Lumen Six'], ['Open Road', 'Delta Sun']];
 const PAGE_KIND: Record<string, string> = {
   device_page: 'd', audio_page: 'a', video_page: 'v', media_page: 'm', playing_page: 'n',
-  rooms_page: 'rooms', scenes_page: 'scenes', audio_sessions_page: 'audio_sessions'
+  rooms_page: 'rooms', scenes_page: 'scenes', audio_sessions_page: 'audio_sessions', site_page: 'site',
+  house_devices_page: 'house_devices'
 };
 
 function room(id: number, name: string, devices: Array<[string, boolean, number | null]>): SimRoom {
@@ -101,11 +102,26 @@ export class SimulatedRouter implements CrComLibLike {
       case 'scene_activate':
         if (r.slot === 3) for (const rm of this.rooms) for (const d of rm.devices) if (!d.shade) this.setDevice(rm, d, 0);
         return;
+      case 'site': return this.doc(J.state, 0, 'site', {
+        room_id: 0, name: 'Sample City, Sample State', latitude: 40.0, longitude: -95.0, temperature_unit: 'F',
+        weather_status: 'reporting', weather: { temperature: 68, low: 55, high: 72, humidity: 48 }
+      });
       case 'audio_sessions': return this.publishSessions();
       case 'audio_sessions_close': return;
       case 'audio_session_volume': case 'audio_session_mute': case 'audio_session_add': case 'audio_session_remove':
         return this.sessionCommand(op, r);
       case 'room': return this.select(Number(r.room_id));
+      case 'house_devices': return this.doc(J.state, 0, 'house_devices', { room_id: 0, rooms: this.rooms.map((rm) => ({
+        id: rm.id, devices: rm.devices.map(({ id, name, shade, value }) => ({ id, name, shade, value })) })) });
+      case 'house_devices_close': return;
+      case 'house_device': {
+        const rm = this.rooms.find((x) => x.id === r.room_id);
+        const d = rm?.devices.find((x) => x.id === r.device_id);
+        if (!rm || !d) return;
+        if (r.action === 'level') this.setDevice(rm, d, Number(r.value));
+        else if (r.action === 'open' || r.action === 'close') this.setDevice(rm, d, r.action === 'open' ? 100 : 0);
+        return;
+      }
     }
     const rm = this.active;
     if (!rm || r.room_id !== rm.id) return;
@@ -182,7 +198,10 @@ export class SimulatedRouter implements CrComLibLike {
 
   private setDevice(rm: SimRoom, d: SimDevice, value: number): void {
     d.value = Math.max(0, Math.min(100, Math.round(value)));
-    if (this.active === rm) setTimeout(() => this.plain(J.state, { r: rm.id, u: d.id, v: d.value }), 150);
+    setTimeout(() => {
+      this.plain(J.state, { h: 1, u: d.id, v: d.value });
+      if (this.active === rm) this.plain(J.state, { r: rm.id, u: d.id, v: d.value });
+    }, 150);
   }
 
   private state(rm: SimRoom): void {

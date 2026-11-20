@@ -1,8 +1,11 @@
+import { lookupPlace } from '../model/places';
 import type { Adapter, HouseStore } from '../model/store';
 import type {
   AudioZone, Command, HouseConfig, Light, MediaAction, MediaCatalog, RoomMediaState, Room, Scene,
-  ServiceId, Shade, Source, ZoneAction
+  ServiceId, Shade, SiteLocation, Source, WeatherState, ZoneAction
 } from '../model/types';
+import { HOUSE_WEATHER } from '../model/types';
+import { validCoordinates } from '../model/sun';
 import type { CrComLibLike } from './crestron';
 import { FrameCollector, type WireFrame } from './wire';
 
@@ -84,12 +87,37 @@ class ActiveRoom {
 }
 
 type Doc = Record<string, unknown>;
-interface HouseCollectors { rooms: FrameCollector<Doc>; scenes: FrameCollector<Doc>; audio_sessions: FrameCollector<Doc> }
+interface HouseCollectors {
+  rooms: FrameCollector<Doc>; scenes: FrameCollector<Doc>; audio_sessions: FrameCollector<Doc>; site: FrameCollector<Doc>;
+  house_devices: FrameCollector<Doc>;
+}
 
 const PAGE_OPS: Record<string, string> = {
   d: 'device_page', a: 'audio_page', v: 'video_page', m: 'media_page', n: 'playing_page',
-  rooms: 'rooms_page', scenes: 'scenes_page', audio_sessions: 'audio_sessions_page'
+  rooms: 'rooms_page', scenes: 'scenes_page', audio_sessions: 'audio_sessions_page', site: 'site_page',
+  house_devices: 'house_devices_page'
 };
+
+/** Director room discovery can finish after Connected_FB; retry an empty whole-house catalog a few times. */
+const HOUSE_RETRY_MS = 10000;
+const HOUSE_RETRIES = 6;
+
+/**
+ * Requests share one serial join (Request$). The router's SIMPL+ CHANGE handler only sees the
+ * latest value, so requests sent in the same instant can be lost; space them out.
+ */
+export const REQUEST_GAP_MS = 60;
+
+/** `?debug=1` logs every router join in the browser console (Web XPanel: F12). */
+const ROUTER_DEBUG = typeof location !== 'undefined' && /[?&]debug=1/.test(location.search);
+
+/** Re-request a startup document (rooms, scenes, site) that has not arrived after this long. */
+const INITIAL_RETRY_MS = 15000;
+const INITIAL_RETRIES = 2;
+const INITIAL_DOCS = ['rooms', 'scenes', 'site'] as const;
+
+/** Location and weather are re-read this often; weather drivers update on a similar cadence. */
+export const SITE_REFRESH_MS = 15 * 60 * 1000;
 
 export class PanelRouterAdapter implements Adapter {
   readonly name = 'panel-router';
@@ -106,8 +134,27 @@ export class PanelRouterAdapter implements Adapter {
   private scenes: Scene[] = [];
   private sessions: AudioSessions | null = null;
   private sessionsOpen = false;
+  private siteTimer: ReturnType<typeof setInterval> | undefined;
+  /** Whole-house lights and shades of every scoped room: device id -> owning room and kind. */
+  private houseDevices = new Map<number, Device & { room: number }>();
+  private houseTries = 0;
+  private houseTimer: ReturnType<typeof setTimeout> | undefined;
+  private houseRequested = false;
+  private outbox: Array<{ key: string; json: string }> = [];
+  private outboxTimer: ReturnType<typeof setTimeout> | undefined;
+  private received = new Set<string>();
+  private initialTries = 0;
+  private initialTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Last nearest-town lookup, so the 15-minute site refresh does not flicker the name. */
+  private place: { lat: number; lon: number; label?: string } | undefined;
 
-  constructor(private lib: CrComLibLike, private joins = ROUTER_JOINS) {}
+  constructor(
+    private lib: CrComLibLike,
+    private joins = ROUTER_JOINS,
+    private requestGapMs = REQUEST_GAP_MS,
+    private placeLookup: (lat: number, lon: number) => Promise<string | undefined> =
+      (lat, lon) => lookupPlace(lat, lon).then((p) => p?.label)
+  ) {}
 
   connect(store: HouseStore): void {
     this.store = store;
@@ -125,6 +172,10 @@ export class PanelRouterAdapter implements Adapter {
   }
 
   dispose(): void {
+    clearInterval(this.siteTimer);
+    clearTimeout(this.houseTimer);
+    clearTimeout(this.initialTimer);
+    if (this.online) this.request('house_devices_close');
     if (this.sessionsOpen) this.request('audio_sessions_close');
     for (const [type, signal, id] of this.subs) this.lib.unsubscribeState(type, signal, id);
     this.subs = [];
@@ -149,16 +200,39 @@ export class PanelRouterAdapter implements Adapter {
     if (!store || online === this.online) return;
     this.online = online;
     this.house = houseCollectors();
+    this.received.clear();
+    this.houseRequested = false;
+    this.outbox = [];
+    clearTimeout(this.outboxTimer);
+    this.outboxTimer = undefined;
+    clearTimeout(this.initialTimer);
+    this.initialTries = 0;
     if (!online) {
       this.sessionsOpen = false;
+      clearInterval(this.siteTimer);
+      this.siteTimer = undefined;
+      clearTimeout(this.houseTimer);
       this.leaveActive();
+      for (const d of this.houseDevices.values()) store.clearState(d.shade ? 'shade' : 'light', String(d.id));
+      this.houseDevices.clear();
       for (const zone of store.config.audioZones) store.clearState('zone', zone.id);
+      store.clearState('weather', HOUSE_WEATHER);
       store.setConnection('offline');
       return;
     }
     store.setConnection('online');
     this.request('rooms');
     this.request('scenes');
+    this.request('site');
+    this.houseTries = 0;
+    // house_devices follows the room list (onRooms): it is the heaviest request and its level
+    // updates share State$ with the startup documents.
+    this.scheduleInitialCheck();
+    clearInterval(this.siteTimer);
+    this.siteTimer = setInterval(() => {
+      this.house.site = new FrameCollector<Doc>(0, 'site');
+      this.request('site');
+    }, SITE_REFRESH_MS);
     // Opening the session catalog also tells us whether Whole House Audio is
     // available; it is closed again once read unless the Audio page is open.
     this.openSessions();
@@ -172,6 +246,10 @@ export class PanelRouterAdapter implements Adapter {
       const frame = packet as unknown as WireFrame;
       if (frame.r === 0) this.onHouseFrame(frame);
       else if (this.active && frame.r === this.active.id && frame.k === 'd') this.onRoomFrame(frame, 'd');
+      return;
+    }
+    if (packet.h === 1 && Number.isInteger(packet.u)) {
+      this.onHouseValue(packet.u as number, packet.v);
       return;
     }
     const room = this.active;
@@ -193,9 +271,97 @@ export class PanelRouterAdapter implements Adapter {
     if (!collector) return;
     const doc = this.collect(collector, frame, PAGE_OPS[frame.k], false);
     if (!doc) return;
+    this.received.add(frame.k);
     if (frame.k === 'rooms') this.onRooms(doc);
     else if (frame.k === 'scenes') this.onScenes(doc);
     else if (frame.k === 'audio_sessions') this.onSessions(doc);
+    else if (frame.k === 'site') this.onSite(doc);
+    else if (frame.k === 'house_devices') this.onHouseDevices(doc);
+  }
+
+  /** Catalog of every scoped room's lights and shades, with current levels. */
+  private lastHouseDoc: Doc | null = null;
+
+  private onHouseDevices(doc: Doc): void {
+    const store = this.store!;
+    this.lastHouseDoc = doc;
+    const rooms = Array.isArray(doc.rooms) ? doc.rooms : [];
+    const next = new Map<number, Device & { room: number }>();
+    let config = store.config;
+    for (const r of rooms) {
+      if (!r || !validId(r.id) || !this.inScope(r.id) || !Array.isArray(r.devices)) continue;
+      const lights: Light[] = [];
+      const shades: Shade[] = [];
+      for (const d of r.devices) {
+        if (!d || !validId(d.id) || typeof d.name !== 'string' || typeof d.shade !== 'boolean' || next.has(d.id)) continue;
+        next.set(d.id, { id: d.id, name: d.name, shade: d.shade, room: r.id });
+        if (d.shade) shades.push({ id: String(d.id), name: d.name, positionable: true });
+        else lights.push({ id: String(d.id), name: d.name, dimmable: true });
+      }
+      config = { ...config, rooms: config.rooms.map((room) => (room.id === String(r.id) ? { ...room, lights, shades } : room)) };
+    }
+    // Devices that disappeared from the catalog are no longer reported.
+    for (const [id, d] of this.houseDevices) if (!next.has(id)) store.clearState(d.shade ? 'shade' : 'light', String(id));
+    this.houseDevices = next;
+    store.setConfig(this.withServices(config));
+    for (const r of rooms) for (const d of (r && Array.isArray(r.devices) ? r.devices : [])) if (d && validId(d.id)) this.onHouseValue(d.id, d.value);
+    clearTimeout(this.houseTimer);
+    if (next.size === 0 && this.houseTries < HOUSE_RETRIES) {
+      this.houseTries++;
+      this.houseTimer = setTimeout(() => {
+        this.house.house_devices = new FrameCollector<Doc>(0, 'house_devices');
+        this.request('house_devices');
+      }, HOUSE_RETRY_MS);
+    }
+  }
+
+  private onHouseValue(id: number, value: unknown): void {
+    const device = this.houseDevices.get(id);
+    if (!device) return;
+    const store = this.store!;
+    const key = String(id);
+    if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > 100) {
+      store.clearState(device.shade ? 'shade' : 'light', key);
+      return;
+    }
+    const level = value as number;
+    if (device.shade) store.putState('shade', key, { position: level });
+    else store.putState('light', key, { on: level > 0, level });
+  }
+
+  /** Location (coordinates, optional name) and weather from the gateway's site document. */
+  private onSite(doc: Doc): void {
+    const store = this.store!;
+    const location: SiteLocation = {};
+    if (typeof doc.name === 'string' && doc.name.trim()) location.name = doc.name.trim();
+    if (validCoordinates(doc.latitude, doc.longitude)) {
+      location.latitude = doc.latitude as number;
+      location.longitude = doc.longitude as number;
+    }
+    // No name from the controller: use the nearest town to the project coordinates (offline table).
+    if (!location.name && location.latitude !== undefined && location.longitude !== undefined) {
+      const lat = location.latitude, lon = location.longitude;
+      if (this.place && this.place.lat === lat && this.place.lon === lon) {
+        if (this.place.label) location.name = this.place.label;
+      } else {
+        void this.placeLookup(lat, lon).then((label) => {
+          this.place = { lat, lon, label };
+          const current = this.store?.config.location;
+          if (label && current && !current.name && current.latitude === lat && current.longitude === lon)
+            this.store!.setConfig({ ...this.store!.config, location: { ...current, name: label } });
+        });
+      }
+    }
+    store.setConfig({ ...store.config, location: Object.keys(location).length ? location : undefined });
+    const w = doc.weather as Doc | undefined;
+    if (doc.weather_status === 'reporting' && w && typeof w.temperature === 'number' && Number.isFinite(w.temperature)) {
+      const weather: WeatherState = { temperature: w.temperature };
+      if (doc.temperature_unit === 'F' || doc.temperature_unit === 'C') weather.unit = doc.temperature_unit;
+      if (typeof w.low === 'number' && typeof w.high === 'number' && w.low <= w.high) { weather.low = w.low; weather.high = w.high; }
+      store.putState('weather', HOUSE_WEATHER, weather);
+    } else {
+      store.clearState('weather', HOUSE_WEATHER);
+    }
   }
 
   private onRoomFrame(raw: string | WireFrame, kind: 'd' | 'a' | 'v' | 'm' | 'n'): void {
@@ -233,6 +399,12 @@ export class PanelRouterAdapter implements Adapter {
       })
     };
     store.setConfig(this.withServices(config));
+    if (!this.houseRequested) {
+      this.houseRequested = true;
+      this.request('house_devices');
+    }
+    // The whole-house catalog may have arrived before the room list; apply it to the new rooms.
+    if (this.lastHouseDoc) this.onHouseDevices(this.lastHouseDoc);
     this.selectWanted();
   }
 
@@ -454,9 +626,10 @@ export class PanelRouterAdapter implements Adapter {
   }
 
   private withServices(config: HouseConfig): HouseConfig {
-    // Lighting and Shades overview pages need whole-house device data, which the
-    // router does not provide. Room pages still show their own lights and shades.
+    // Lighting and Shades overviews appear once the whole-house catalog reports devices.
     const services: ServiceId[] = [];
+    if (this.houseDevices.size && config.rooms.some((r) => r.lights.length)) services.push('lighting');
+    if (this.houseDevices.size && config.rooms.some((r) => r.shades.length)) services.push('shades');
     if (config.rooms.length) services.push('media');
     if (config.audioZones.length) services.push('audio');
     if (config.scenes.length) services.push('scenes');
@@ -471,37 +644,39 @@ export class PanelRouterAdapter implements Adapter {
       case 'scene': return this.runScene(c.id);
       case 'zone': return this.zoneCommand(c.id, c.action, 'value' in c ? c.value : undefined);
     }
-    const room = this.active;
-    if (!room) return;
     switch (c.kind) {
       case 'light': {
         const id = Number(c.id);
-        const device = room.devices.get(id);
-        if (!device || device.shade) return;
         let level: number;
         if (c.action === 'level') level = c.value;
         else if (c.action === 'toggle') level = this.store!.get('light', c.id)?.on ? 0 : 100;
         else level = c.action === 'on' ? 100 : 0;
-        return this.device(room, id, 'level', clamp(level));
+        return this.device(id, false, 'level', clamp(level));
       }
       case 'room-lights':
-        if (String(room.id) !== c.id || c.action === 'ambient') return;
-        for (const d of room.devices.values()) if (!d.shade) this.device(room, d.id, 'level', c.action === 'on' ? 100 : 0);
+        if (c.action === 'ambient') return;
+        for (const d of this.roomDevices(Number(c.id))) if (!d.shade) this.device(d.id, false, 'level', c.action === 'on' ? 100 : 0);
         return;
       case 'shade': {
         const id = Number(c.id);
-        if (!room.devices.get(id)?.shade) return;
-        if (c.action === 'position') return this.device(room, id, 'level', clamp(c.value));
-        return this.device(room, id, c.action);
+        if (c.action === 'position') return this.device(id, true, 'level', clamp(c.value));
+        return this.device(id, true, c.action);
       }
       case 'room-shades':
-        if (String(room.id) !== c.id) return;
-        for (const d of room.devices.values()) if (d.shade) this.device(room, d.id, c.action);
+        for (const d of this.roomDevices(Number(c.id))) if (d.shade) this.device(d.id, true, c.action);
         return;
-      case 'media':
-        if (String(room.id) !== c.id) return;
+      case 'media': {
+        const room = this.active;
+        if (!room || String(room.id) !== c.id) return;
         return this.mediaCommand(room, c);
+      }
     }
+  }
+
+  /** Lights and shades of a scoped room: the open room's session list, else the whole-house catalog. */
+  private roomDevices(roomId: number): Device[] {
+    if (this.active?.id === roomId && this.active.devices.size) return [...this.active.devices.values()];
+    return [...this.houseDevices.values()].filter((d) => d.room === roomId);
   }
 
   private mediaCommand(room: ActiveRoom, c: Extract<Command, { kind: 'media' }>): void {
@@ -575,8 +750,21 @@ export class PanelRouterAdapter implements Adapter {
     }
   }
 
-  private device(room: ActiveRoom, id: number, action: string, value?: number): void {
-    this.request('device', value === undefined ? { room_id: room.id, device_id: id, action } : { room_id: room.id, device_id: id, action, value });
+  /**
+   * Device command. The open room's devices use its session ("device"); devices in other
+   * scoped rooms go through the whole-house catalog ("house_device"). Unknown ids are dropped.
+   */
+  private device(id: number, shade: boolean, action: string, value?: number): void {
+    const room = this.active;
+    const fields: Record<string, unknown> = { device_id: id, action };
+    if (value !== undefined) fields.value = value;
+    const sessionDevice = room?.devices.get(id);
+    if (room && sessionDevice) {
+      if (sessionDevice.shade === shade) this.request('device', { room_id: room.id, ...fields });
+      return;
+    }
+    const houseDevice = this.houseDevices.get(id);
+    if (houseDevice && houseDevice.shade === shade) this.request('house_device', { room_id: houseDevice.room, ...fields });
   }
 
   // ---- helpers ----
@@ -596,7 +784,8 @@ export class PanelRouterAdapter implements Adapter {
     const store = this.store;
     this.active = null;
     if (!room || !store) return;
-    for (const d of room.devices.values()) store.clearState(d.shade ? 'shade' : 'light', String(d.id));
+    // Devices in the whole-house catalog keep reporting, so only the others go stale.
+    for (const d of room.devices.values()) if (!this.houseDevices.has(d.id)) store.clearState(d.shade ? 'shade' : 'light', String(d.id));
     store.clearState('media', String(room.id));
   }
 
@@ -640,7 +829,48 @@ export class PanelRouterAdapter implements Adapter {
       console.warn('Panel Room Router request over 255 characters, dropped', op);
       return;
     }
-    this.lib.publishEvent('s', this.joins.request, json);
+    // A queued request for the same target is replaced (slider drags send many levels).
+    const { value: _value, ...target } = fields;
+    const key = JSON.stringify({ ...target, op });
+    const queued = this.outbox.findIndex((item) => item.key === key);
+    if (queued >= 0) this.outbox[queued] = { key, json };
+    else this.outbox.push({ key, json });
+    this.flush();
+  }
+
+  private flush(): void {
+    if (this.outboxTimer !== undefined) return;
+    if (this.requestGapMs <= 0) {
+      for (const item of this.outbox.splice(0)) {
+        if (ROUTER_DEBUG) console.log('[router out]', item.json);
+        this.lib.publishEvent('s', this.joins.request, item.json);
+      }
+      return;
+    }
+    const next = this.outbox.shift();
+    if (!next) return;
+    if (ROUTER_DEBUG) console.log('[router out]', next.json);
+    this.lib.publishEvent('s', this.joins.request, next.json);
+    this.outboxTimer = setTimeout(() => {
+      this.outboxTimer = undefined;
+      this.flush();
+    }, REQUEST_GAP_MS);
+  }
+
+  /** Re-requests startup documents that never completed (a lost request or frame). */
+  private scheduleInitialCheck(): void {
+    clearTimeout(this.initialTimer);
+    this.initialTimer = setTimeout(() => {
+      if (!this.online) return;
+      const missing = INITIAL_DOCS.filter((k) => !this.received.has(k));
+      if (!missing.length || this.initialTries >= INITIAL_RETRIES) return;
+      this.initialTries++;
+      for (const k of missing) {
+        this.house[k] = new FrameCollector<Doc>(0, k);
+        this.request(k);
+      }
+      this.scheduleInitialCheck();
+    }, INITIAL_RETRY_MS);
   }
 
   private parse(raw: string): Record<string, unknown> | null {
@@ -654,7 +884,16 @@ export class PanelRouterAdapter implements Adapter {
   }
 
   private sub(type: 'b' | 'n' | 's', signal: string, cb: (value: never) => void): void {
-    this.subs.push([type, signal, this.lib.subscribeState(type, signal, cb)]);
+    const wrapped = (value: never) => {
+      if (ROUTER_DEBUG) console.log('[router in]', type, signal, typeof value === 'string' ? (value as string).slice(0, 200) : value);
+      try {
+        cb(value);
+      } catch (error) {
+        // One bad packet must not stop the panel; report it for diagnosis.
+        console.error('[router] failed to handle', type, signal, error);
+      }
+    };
+    this.subs.push([type, signal, this.lib.subscribeState(type, signal, wrapped)]);
   }
 }
 
@@ -662,7 +901,9 @@ function houseCollectors(): HouseCollectors {
   return {
     rooms: new FrameCollector<Doc>(0, 'rooms'),
     scenes: new FrameCollector<Doc>(0, 'scenes'),
-    audio_sessions: new FrameCollector<Doc>(0, 'audio_sessions')
+    audio_sessions: new FrameCollector<Doc>(0, 'audio_sessions'),
+    site: new FrameCollector<Doc>(0, 'site'),
+    house_devices: new FrameCollector<Doc>(0, 'house_devices')
   };
 }
 
@@ -679,7 +920,11 @@ function clamp(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+/** Labels for the scene kinds the gateway reports (GatewayCore.DiscoverPanelActions). */
+const SCENE_KIND_LABELS: Record<string, string> = { light: 'Lighting', macro: 'Macro' };
+
 function humanize(kind: string): string {
+  if (SCENE_KIND_LABELS[kind]) return SCENE_KIND_LABELS[kind];
   const text = kind.replace(/[_-]+/g, ' ').trim();
   return text ? text.charAt(0).toUpperCase() + text.slice(1) : '';
 }

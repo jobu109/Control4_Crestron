@@ -1,5 +1,6 @@
 import type { Adapter, HouseStore } from '../model/store';
 import type { Command, HouseConfig, Room, ServiceId } from '../model/types';
+import { HOUSE_WEATHER } from '../model/types';
 
 // Offline sample house that matches the design mockups. Used by `npm run dev`
 // and as the reference for what the real adapters must produce.
@@ -84,7 +85,8 @@ export const SAMPLE_HOUSE: HouseConfig = {
   ],
   thermostats: [
     { id: 'main', name: 'Main Level', modes: ['Heat', 'Cool', 'Auto', 'Fan', 'Dry', 'Off'], fanModes: ['Auto', 'Low', 'Medium', 'High'] }
-  ]
+  ],
+  location: { name: 'Sample City, Sample State', latitude: 40.0, longitude: -95.0 }
 };
 
 export class MockAdapter implements Adapter {
@@ -99,6 +101,7 @@ export class MockAdapter implements Adapter {
     this.store = store;
     store.setConfig(this.config);
     this.seed(store);
+    store.setState('weather', HOUSE_WEATHER, { temperature: 21, unit: 'C', condition: 'Partly cloudy' });
     store.setConnection('online');
   }
 
