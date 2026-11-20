@@ -16,6 +16,7 @@
   "dependencies": {
     "@crestron/ch5-crcomlib": "^2.20.0",
     "@crestron/ch5-webxpanel": "^2.8.0",
+    "@fontsource/montserrat": "5.3.0",
     "lit": "3.3.3"
   },
   "devDependencies": {

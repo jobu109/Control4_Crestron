@@ -72,9 +72,12 @@ export class RoomPage extends ZPage {
     .swipe { position: absolute; left: 310px; right: 40px; top: 108px; height: 64px; display: flex; justify-content: space-between; align-items: center; }
     .swipe button { height: 64px; padding: 0 12px; border: none; background: transparent; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; }
     .swipe span { font-size: 22px; font-weight: 700; letter-spacing: 3px; color: var(--soft); }
-    .hero { position: absolute; left: 330px; right: 60px; top: 330px; display: flex; justify-content: space-between; align-items: flex-end; }
-    .hero h1 { font-size: 104px; font-weight: 300; line-height: 1; letter-spacing: -1px; }
-    .hero .st { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; font-size: 24px; font-weight: 300; }
+    /* Anchored to the bottom so a two-line room name grows upward instead of over the buttons. */
+    .hero { position: absolute; left: 330px; right: 60px; bottom: 336px; display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; }
+    .hero h1 { flex: 1; min-width: 0; font-size: 104px; font-weight: 300; line-height: 1.15; letter-spacing: -1px;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+    .hero h1.long { font-size: 80px; }
+    .hero .st { flex-shrink: 0; max-width: 340px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; font-size: 24px; font-weight: 300; text-align: right; }
     .quick { position: absolute; left: 330px; right: 60px; top: 500px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
     .quick .btn { height: 68px; font-size: 18px; letter-spacing: 1.5px; }
     .sheet { position: absolute; left: 290px; right: 40px; top: 100px; bottom: 64px; border-radius: 16px; background: rgba(6,8,11,0.96); border: 1px solid rgba(255,255,255,0.12); padding: 26px 40px 110px; overflow: hidden; }
@@ -94,6 +97,44 @@ export class RoomPage extends ZPage {
   willUpdate(): void {
     const room = this.room;
     if (room) this.store.focusRoom(room.id);
+  }
+
+  private swipeStart: { x: number; y: number; id: number } | null = null;
+
+  private onPointerDown = (e: PointerEvent): void => {
+    // Sliders, buttons and open sheets keep their own gestures.
+    const target = e.composedPath()[0] as Element | undefined;
+    if (this.sheet || target?.closest?.('input, button, a, .sheet')) { this.swipeStart = null; return; }
+    this.swipeStart = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    // Keep receiving the pointer when the finger leaves the page mid-swipe.
+    try { this.setPointerCapture(e.pointerId); } catch { /* pointer already released */ }
+  };
+
+  private onPointerUp = (e: PointerEvent): void => {
+    const start = this.swipeStart;
+    this.swipeStart = null;
+    if (!start || start.id !== e.pointerId || this.sheet) return;
+    const scale = this.getBoundingClientRect().width / 1280 || 1;
+    const dx = (e.clientX - start.x) / scale;
+    const dy = (e.clientY - start.y) / scale;
+    if (Math.abs(dx) >= 80 && Math.abs(dx) > Math.abs(dy) * 1.5) this.step(dx < 0 ? 1 : -1);
+  };
+
+  private onPointerCancel = (): void => { this.swipeStart = null; };
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.addEventListener('pointerdown', this.onPointerDown);
+    this.addEventListener('pointerup', this.onPointerUp);
+    this.addEventListener('pointercancel', this.onPointerCancel);
+    this.style.touchAction = 'pan-y';
+  }
+
+  disconnectedCallback(): void {
+    this.removeEventListener('pointerdown', this.onPointerDown);
+    this.removeEventListener('pointerup', this.onPointerUp);
+    this.removeEventListener('pointercancel', this.onPointerCancel);
+    super.disconnectedCallback();
   }
 
   private step(delta: number): void {
@@ -132,7 +173,7 @@ export class RoomPage extends ZPage {
         <button type="button" @click=${() => this.step(1)}>NEXT<br />ROOM${icon('doubleRight', 34, 1.4)}</button>
       </div>
       <div class="hero">
-        <h1>${room.name}</h1>
+        <h1 class=${room.name.length > 12 ? 'long' : ''}>${room.name}</h1>
         <div class="st">
           ${room.lights.length ? html`<span>Lights are <em>${lit ? `${lit} on` : lightsKnown ? 'Off' : 'unknown'}</em></span>` : nothing}
           ${t ? html`<span>Climate is <em>${t.power ? `${t.mode} ${t.setpoint}°` : 'Off'}</em></span>` : nothing}

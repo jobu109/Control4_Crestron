@@ -2,15 +2,22 @@ import { css, html, nothing } from 'lit';
 import type { AudioZone, MediaAction, Room, RoomMediaState, Source, ZoneAction } from '../../model/types';
 import { ZPage, iconButton, shared, slider } from '../base';
 import { icon } from '../icons';
+import { availablePads, padTabs, remote, remoteStyles, type Pad } from '../remote';
 
 export class MediaPage extends ZPage {
-  static properties = { ...ZPage.properties, tab: { state: true }, roomId: { state: true }, browsing: { state: true } };
+  static properties = {
+    ...ZPage.properties, tab: { state: true }, roomId: { state: true }, browsing: { state: true },
+    showRemote: { state: true }, pad: { state: true }
+  };
   tab: 'video' | 'audio' = 'video';
   roomId = '';
   /** Audio source whose saved presets are shown, if the user opened one. */
   browsing = '';
+  /** Watch tab shows the remote instead of the source list. */
+  showRemote = false;
+  pad: Pad = 'nav';
 
-  static styles = [shared, css`
+  static styles = [shared, remoteStyles, css`
     .rooms, .tabs { display: flex; gap: 8px; }
     .tabs { gap: 4px; padding: 4px; border-radius: 12px; background: var(--panel); border: 1px solid rgba(255,255,255,0.18); }
     .tabs .btn { height: 40px; padding: 0 26px; display: flex; align-items: center; gap: 8px; background: transparent; }
@@ -34,6 +41,11 @@ export class MediaPage extends ZPage {
     .btn:disabled { opacity: 0.35; cursor: default; }
     .presets { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 64px; gap: 10px; overflow-y: auto; }
     .presets .btn { height: 64px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .progress { display: flex; flex-direction: column; gap: 6px; }
+    .progress .bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.18); overflow: hidden; }
+    .progress .bar div { height: 6px; background: #fff; }
+    .progress .times { display: flex; justify-content: space-between; font-size: 13px; color: var(--soft); font-variant-numeric: tabular-nums; }
+    .transport .shuffle { width: 52px; height: 52px; }
     .back { height: 40px; padding: 0 14px; display: inline-flex; align-items: center; gap: 6px; background: transparent; border: none; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; color: var(--soft); }
   `];
 
@@ -86,8 +98,13 @@ export class MediaPage extends ZPage {
             </div>
             ${iconButton('power', st.power ? 'Turn room media off' : 'Room media is off', () => m('off'), `btn square ${st.power ? 'on' : ''}`)}
           </div>
-          ${st.progress ? html`<div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.18);overflow:hidden"><div style="height:6px;background:#fff;width:${Math.min(100, (st.progress.position / Math.max(1, st.progress.duration)) * 100)}%"></div></div>` : nothing}
+          ${st.progress ? html`<div class="progress">
+            <div class="bar"><div style="width:${Math.min(100, (st.progress.position / Math.max(1, st.progress.duration)) * 100)}%"></div></div>
+            <span class="times"><span>${clock(st.progress.position)}</span><span>${clock(st.progress.duration)}</span></span>
+          </div>` : nothing}
           <div class="transport">
+            ${this.tab === 'audio' && st.shuffle !== undefined ? html`<button type="button" class="btn ${st.shuffle ? 'sel' : 'outline'} shuffle" aria-label="Shuffle" aria-pressed=${st.shuffle ? 'true' : 'false'}
+              @click=${() => this.send({ kind: 'media', id: room.id, action: 'shuffle', value: !st.shuffle })}>${icon('shuffle', 20, 1.8)}</button>` : nothing}
             <button type="button" class="btn outline" aria-label="Previous" ?disabled=${!can('previous')} @click=${() => m('previous')}>${icon('previous', 24)}</button>
             <button type="button" class="btn sel main" aria-label=${main === 'play' ? 'Play' : 'Pause'} ?disabled=${!can(main)} @click=${() => m(main)}>${icon(main, 30, 2.2)}</button>
             <button type="button" class="btn outline" aria-label="Next" ?disabled=${!can('next')} @click=${() => m('next')}>${icon('next', 24)}</button>
@@ -122,11 +139,28 @@ export class MediaPage extends ZPage {
               ?disabled=${!catalog.selectable} @click=${() => this.send({ kind: 'media', id: room.id, action: 'item', value: item.id })}>${item.name}</button>`)}</div>`
           : html`<p class="panel empty">No saved presets for ${source?.name ?? 'this service'}</p>`}`;
     }
+    // Keys follow the room's active device, so the remote is offered only while a Watch source is active.
+    const watching = !!st.activeSourceId && room.videoSources.some((s) => s.id === st.activeSourceId);
+    const pads = this.tab === 'video' && watching ? availablePads(st.keys ?? []) : [];
+    const showRemote = this.showRemote && pads.length > 0;
+    const header = pads.length
+      ? html`<span style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span class="pads" role="tablist" aria-label="Watch view">
+            ${(['sources', 'remote'] as const).map((v) => html`<button type="button" role="tab" class="btn ${(v === 'remote') === showRemote ? 'sel' : ''}"
+              aria-selected=${(v === 'remote') === showRemote ? 'true' : 'false'} @click=${() => (this.showRemote = v === 'remote')}>${v.toUpperCase()}</button>`)}
+          </span>
+          ${showRemote ? padTabs(pads, pads.includes(this.pad) ? this.pad : pads[0], (p) => (this.pad = p)) : nothing}
+        </span>`
+      : html`<span class="label">${this.tab} sources</span>`;
+    if (showRemote) {
+      const pad = pads.includes(this.pad) ? this.pad : pads[0];
+      return html`${header}${remote(st.keys ?? [], pad, (key) => this.send({ kind: 'media', id: room.id, action: 'key', value: key }))}`;
+    }
     const empty = room.lazy
       ? (this.store.connection === 'online' ? `Loading ${room.name}…` : `${room.name} is unavailable while disconnected`)
       : `No ${this.tab} sources in ${room.name}`;
     return html`
-      <span class="label">${this.tab} sources</span>
+      ${header}
       ${sources.length ? html`<div class="grid">${sources.map((s) => this.sourceCard(room, s, s.id === st.activeSourceId))}</div>`
         : html`<p class="panel empty">${empty}</p>`}`;
   }
@@ -140,6 +174,15 @@ export class MediaPage extends ZPage {
       <span><span class="name" style="display:block;font-size:16px">${s.name}</span><span class="sub">${isActive ? 'Playing' : s.detail ?? ''}</span></span>
     </button>`;
   }
+}
+
+/** Seconds as m:ss, or h:mm:ss for long items. */
+export function clock(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = String(s % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
 }
 
 export class AudioPage extends ZPage {

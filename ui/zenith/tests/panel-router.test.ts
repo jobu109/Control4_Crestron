@@ -177,7 +177,8 @@ describe('panel router adapter', () => {
       power: true, volume: 31, mute: false, activeSourceId: '1648',
       title: 'Amish Paradise', artist: 'Weird Al', album: 'Bad Hair Day', artUrl: 'https://example.invalid/a.jpg',
       station: 'Weird Al Radio', playbackAction: 'pause', progress: { position: 12, duration: 235 },
-      actions: ['off', 'mute', 'unmute', 'play', 'pause', 'next']
+      actions: ['off', 'mute', 'unmute', 'play', 'pause', 'next'],
+      keys: ['Play', 'Skip_Forward', 'Pause']
     });
 
     router.plain(J.state, { r: 13, volumeValid: 0, nowPlayingValid: 0 });
@@ -228,6 +229,52 @@ describe('panel router adapter', () => {
 
     router.doc(J.catalog, 13, 'm', { room_id: 13, kind: '', valid: false, revision: '', items: [], selection_supported: false });
     expect(store.get('media', '13')?.catalog).toBeUndefined();
+  });
+
+  it('sends only advertised remote keys and never Room_Off as a key', () => {
+    openLivingRoom();
+    router.plain(J.keys, keys(['Room_Off', 'Up', 'Select', 'Digit_5', 'Menu']));
+    expect(store.get('media', '13')?.keys).toEqual(['Up', 'Select', 'Menu', 'Digit_5']);
+    router.clear();
+    for (const k of ['Up', 'Digit_5', 'Down', 'Room_Off', 'Guide']) store.send({ kind: 'media', id: '13', action: 'key', value: k });
+    expect(router.requests.map((r) => r.value)).toEqual(['Up', 'Digit_5']);
+  });
+
+  it('treats local_ui keys as panel-side and never sends them', () => {
+    openLivingRoom();
+    // GatewayRoomTransport always marks Watch, Listen and List as local_ui ('l').
+    const states = SR260_KEYS.map((k) => (['Watch', 'Listen', 'List'].includes(k) ? 'l' : k === 'Up' ? 'a' : 'u')).join('');
+    router.plain(J.keys, { wire: 'keys1', room_id: 13, states });
+    expect(store.get('media', '13')?.keys).toEqual(['Up']);
+    router.clear();
+    for (const k of ['Watch', 'Listen', 'List']) store.send({ kind: 'media', id: '13', action: 'key', value: k });
+    expect(router.requests).toEqual([]);
+    router.plain(J.keys, { room_id: 13, keys: [{ key: 'List', state: 'local_ui' }, { key: 'Menu', state: 'advertised' }] });
+    expect(store.get('media', '13')?.keys).toEqual(['Menu']);
+  });
+
+  it('reports shuffle only for the service that is actually playing', () => {
+    openLivingRoom();
+    const pandora = { room_id: 13, kind: 'service_presets', valid: true, revision: 'p1', items: [{ id: '5', name: 'Radio' }],
+      selection_supported: true, source_id: 1648, pandora_shuffle: 'Off' };
+    router.clear();
+    store.send({ kind: 'media', id: '13', action: 'shuffle', value: true });
+    // Browsing Pandora while nothing is playing: no shuffle.
+    router.doc(J.catalog, 13, 'm', pandora);
+    expect(store.get('media', '13')?.shuffle).toBeUndefined();
+    store.send({ kind: 'media', id: '13', action: 'shuffle', value: true });
+    expect(router.last('shuffle')).toBeUndefined();
+    // Pandora (index 2) is the measured active source.
+    router.plain(J.state, { r: 13, audioIndex: 2, audioValid: 1 });
+    expect(store.get('media', '13')?.shuffle).toBe(false);
+    store.send({ kind: 'media', id: '13', action: 'shuffle', value: true });
+    expect(router.last('shuffle')).toMatchObject({ room_id: 13, value: 1 });
+    // Spotify becomes active: Pandora's catalog no longer applies.
+    router.plain(J.state, { r: 13, audioIndex: 1 });
+    expect(store.get('media', '13')?.shuffle).toBeUndefined();
+    router.plain(J.state, { r: 13, audioIndex: 2 });
+    router.doc(J.catalog, 13, 'm', { ...pandora, kind: 'other_kind', revision: 'p2' });
+    expect(store.get('media', '13')?.shuffle).toBeUndefined();
   });
 
   it('publishes scenes and runs them only with the current revision', () => {

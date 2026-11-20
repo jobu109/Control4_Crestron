@@ -54,7 +54,7 @@ const ZONE_STEP = 5;
 interface Device { id: number; name: string; shade: boolean }
 interface RoomFeedback { [field: string]: number }
 interface NowPlaying { valid: boolean; title?: string; artist?: string; album?: string; artwork?: string; station?: string; playback_action?: string }
-interface Catalog { kind: string; valid: boolean; revision: string; items: Array<{ id: string; name: string }>; selection_supported: boolean; source_id?: number }
+interface Catalog { kind: string; valid: boolean; revision: string; items: Array<{ id: string; name: string }>; selection_supported: boolean; source_id?: number; shuffle?: boolean }
 interface SessionRoom { id: number; name?: string; volume?: number; muted?: boolean }
 interface AudioSession { queue_id: number; room_ids: number[]; owner_room_id?: number; source_item_id?: number; state?: string }
 interface AudioSessions { available: boolean; revision: string; rooms: SessionRoom[]; sessions: AudioSession[] }
@@ -329,7 +329,8 @@ export class PanelRouterAdapter implements Adapter {
       revision: typeof doc.revision === 'string' ? doc.revision : '',
       items,
       selection_supported: doc.selection_supported === true,
-      source_id: Number.isInteger(doc.source_id) ? (doc.source_id as number) : undefined
+      source_id: Number.isInteger(doc.source_id) ? (doc.source_id as number) : undefined,
+      shuffle: doc.pandora_shuffle === 'On' ? true : doc.pandora_shuffle === 'Off' ? false : undefined
     };
     this.publishMedia(room);
   }
@@ -355,13 +356,15 @@ export class PanelRouterAdapter implements Adapter {
     const room = this.active;
     const p = this.parse(raw);
     if (!room || !p || !this.online || p.room_id !== room.id) return;
+    // Only keys the device advertises reach the gateway. `local_ui` keys
+    // (Watch, Listen, List) are panel-side view switches that the gateway rejects.
     const keys = new Set<string>();
     if (p.wire === 'keys1') {
       const states = p.states;
       if (typeof states !== 'string' || states.length !== SR260_KEYS.length || !/^[alu]+$/.test(states)) return;
-      SR260_KEYS.forEach((key, i) => { if (states[i] !== 'u') keys.add(key); });
+      SR260_KEYS.forEach((key, i) => { if (states[i] === 'a') keys.add(key); });
     } else if (Array.isArray(p.keys)) {
-      for (const k of p.keys) if (k && typeof k.key === 'string' && (k.state === 'advertised' || k.state === 'local_ui')) keys.add(k.key);
+      for (const k of p.keys) if (k && typeof k.key === 'string' && k.state === 'advertised') keys.add(k.key);
     } else return;
     room.keys = keys;
     this.publishMedia(room);
@@ -393,9 +396,26 @@ export class PanelRouterAdapter implements Adapter {
     const actions: MediaAction[] = ['off', 'mute', 'unmute'];
     for (const [action, key] of Object.entries(KEY_ACTIONS)) if (room.keys.has(key!)) actions.push(action as MediaAction);
     state.actions = actions;
+    // Room_Off is the power button, not a remote key.
+    state.keys = SR260_KEYS.filter((k) => k !== 'Room_Off' && room.keys.has(k));
     const catalog = this.catalogState(room);
     if (catalog) state.catalog = catalog;
+    const shuffle = this.playingShuffle(room);
+    if (shuffle !== undefined) state.shuffle = shuffle;
     this.store!.putState('media', String(room.id), state);
+  }
+
+  /**
+   * Shuffle of the service that is actually playing: the catalog must be a valid
+   * service catalog for the room's measured active audio source.
+   */
+  private playingShuffle(room: ActiveRoom): boolean | undefined {
+    const c = room.catalog;
+    const f = room.feedback;
+    const audio = pick(room.listen, f.audioValid, f.audioIndex);
+    if (!c?.valid || c.kind !== 'service_presets' || c.shuffle === undefined || c.source_id === undefined) return undefined;
+    if (!audio || audio.id !== String(c.source_id)) return undefined;
+    return c.shuffle;
   }
 
   private catalogState(room: ActiveRoom): MediaCatalog | undefined {
@@ -501,6 +521,12 @@ export class PanelRouterAdapter implements Adapter {
         this.request('item', { ...r, kind: catalog.kind, revision: catalog.revision, id: c.value });
         return;
       }
+      case 'key':
+        if (c.value !== 'Room_Off' && room.keys.has(c.value)) this.request('key', { ...r, value: c.value });
+        return;
+      case 'shuffle':
+        if (this.playingShuffle(room) !== undefined) this.request('shuffle', { ...r, value: c.value ? 1 : 0 });
+        return;
       case 'volume': return this.request('volume', { ...r, value: clamp(c.value) });
       case 'mute': return this.request('mute_on', r);
       case 'unmute': return this.request('mute_off', r);

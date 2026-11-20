@@ -31,6 +31,7 @@ export const ICONS: Record<string, string> = {
   pause: 'M8 5v14M16 5v14',
   previous: 'M18 6l-8 6 8 6zM6 6v12',
   next: 'M6 6l8 6-8 6zM18 6v12',
+  shuffle: 'M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5',
   mute: 'M4 10v4h4l5 4V6L8 10zM17 10l4 4M21 10l-4 4',
   dots: 'M5 12h.01M12 12h.01M19 12h.01',
   intercom: 'M7 3h10v18H7zM10 7h4M12 17h.01M10 11h4',

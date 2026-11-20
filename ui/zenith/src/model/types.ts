@@ -126,6 +126,10 @@ export interface RoomMediaState {
   actions?: MediaAction[];
   /** Saved stations or presets of the service source the user opened. */
   catalog?: MediaCatalog;
+  /** Remote keys the room's video device accepts (SR-260 names such as Up, Select, Digit_1). */
+  keys?: string[];
+  /** Service shuffle, when the service reports it. */
+  shuffle?: boolean;
 }
 
 export type MediaAction = 'off' | 'mute' | 'unmute' | 'play' | 'pause' | 'next' | 'previous' | 'volume-up' | 'volume-down';
@@ -186,6 +190,8 @@ export type Command =
   | { kind: 'media'; id: string; action: 'source'; value: string }
   | { kind: 'media'; id: string; action: 'volume'; value: number }
   | { kind: 'media'; id: string; action: 'item'; value: string }
+  | { kind: 'media'; id: string; action: 'key'; value: string }
+  | { kind: 'media'; id: string; action: 'shuffle'; value: boolean }
   | { kind: 'media'; id: string; action: MediaAction }
   | { kind: 'zone'; id: string; action: 'on' | 'off' | 'mute' | 'unmute' | 'volume-up' | 'volume-down' }
   | { kind: 'zone'; id: string; action: 'volume'; value: number }

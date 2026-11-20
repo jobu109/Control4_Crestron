@@ -58,6 +58,7 @@ Pages for services the system does not report are hidden from the dock.
 ```bash
 npm install
 npm run dev          # http://127.0.0.1:5173 with the sample house
+                     # add ?adapter=sim for the Panel Room Router adapter on a simulated router
 npm test             # adapter and wire-format tests
 npm run typecheck
 ```
@@ -93,6 +94,5 @@ Restart Home Assistant. Rooms come from your HA areas, grouped by HA floors (are
 
 ## Known gaps
 
-- The Montserrat font loads from Google Fonts. TSW panels without internet fall back to system fonts until the font is bundled.
+- Montserrat is bundled in the CH5 archive (`@fontsource/montserrat`, OFL-1.1, Latin subset). The Home Assistant panel does not bundle it yet and falls back to system fonts.
 - Wallpapers: set `wallpapers` in the house config (`{ "home": "<url>", "default": "<url>" }`). No images ship yet.
-- Swipe gestures on the Room page are buttons for now.

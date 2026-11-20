@@ -1,10 +1,18 @@
 import { HouseStore, type Adapter } from './model/store';
 import { MockAdapter } from './adapters/mock';
 import './ui/app';
+// Montserrat ships inside the archive so TSW panels without internet keep the design font.
+import '@fontsource/montserrat/latin-200.css';
+import '@fontsource/montserrat/latin-300.css';
+import '@fontsource/montserrat/latin-400.css';
+import '@fontsource/montserrat/latin-400-italic.css';
+import '@fontsource/montserrat/latin-500.css';
+import '@fontsource/montserrat/latin-700.css';
 
 declare const __DEFAULT_ADAPTER__: string;
 
-// Picks the adapter: ?adapter=mock|crestron|contract overrides the build default.
+// Picks the adapter: ?adapter=mock|sim|crestron|contract overrides the build default.
+//   sim       -> real Panel Room Router adapter against a simulated router (no processor)
 //   crestron  -> existing Panel Room Router joins (serial 101-108, digital 7)
 //   contract  -> draft ZenithUI house contract (docs/CONTRACT.md, not on the processor yet)
 // Crestron Web XPanel also reads ?host=<processor>&ipId=<0x03>.
@@ -19,6 +27,11 @@ async function start(): Promise<void> {
 }
 
 async function createAdapter(choice: string, params: URLSearchParams): Promise<Adapter> {
+  // Development only: a production panel must never run a simulated house.
+  if (choice === 'sim' && import.meta.env.DEV) {
+    const [{ PanelRouterAdapter }, { SimulatedRouter }] = await Promise.all([import('./adapters/panel-router'), import('./adapters/router-sim')]);
+    return new PanelRouterAdapter(new SimulatedRouter());
+  }
   if (choice !== 'crestron' && choice !== 'contract') return new MockAdapter();
   const [{ CrestronContractAdapter }, { PanelRouterAdapter }, CrComLib, xpanel] = await Promise.all([
     import('./adapters/crestron'),

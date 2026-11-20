@@ -49,6 +49,8 @@ On a TSW panel, the container app provides the connection and the URL parameters
 | Preset | `item` with the catalog `kind` and `revision` |
 | Volume, mute, unmute, room off | `volume`, `mute_on`, `mute_off`, `off` |
 | Play, pause, next, previous, volume ± | `key` with `Play`, `Pause`, `Skip_Forward`, `Skip_Back`, `Volume_Up`, `Volume_Down`, only when Keys$ advertises the key |
+| Watch remote (Navigation, Keypad, Playback pads) | `key` with the SR-260 key name. Offered only while a Watch source is active, and only for `advertised` keys. Room_Off is the power button. `local_ui` keys (Watch, Listen, List) are panel-side and never sent. |
+| Pandora shuffle | `shuffle` with 0 or 1. Shown only on the Audio tab when the playing source's catalog reports `pandora_shuffle`. |
 | Scene | `scene_activate` with the current catalog `revision` and `slot` |
 | Zone volume, mute | `audio_session_volume`, `audio_session_mute` |
 | Zone on / off | `audio_session_add` / `audio_session_remove` |
@@ -65,6 +67,10 @@ The adapter does not invent state. Controls are disabled or hidden when the rout
 - **Transport keys** that the room does not advertise are disabled.
 - **Zone power.** Removing the queue owner is not offered, because the router rejects it. "On" joins a room to the only active session in scope. With no session, or more than one, it is disabled because the target would be ambiguous. Zone volume ± steps the measured volume by 5.
 - **Climate, security, cameras and the other designed pages** stay hidden. The router does not report them.
+
+## Preview without a processor
+
+`npm run dev`, then open `http://127.0.0.1:5173/?adapter=sim`. This runs the real adapter against a simulated router ([src/adapters/router-sim.ts](../src/adapters/router-sim.ts)) with a generic four-room house. Lights, shades, sources, presets, the remote, shuffle, progress, scenes and Whole House Audio all respond. The simulator exists only in the dev server. Production builds and the CH5 archive leave it out, so a deployed panel can never run a simulated house.
 
 ## Not verified yet
 
