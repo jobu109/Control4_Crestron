@@ -90,6 +90,8 @@
     <Compile Include="Core\GatewayAudioCapture.cs" />
     <Compile Include="Core\GatewayInventory.cs" />
     <Compile Include="Core\GatewaySetupReport.cs" />
+    <Compile Include="Core\GatewaySiteProbe.cs" />
+    <Compile Include="Core\GatewaySite.cs" />
     <Compile Include="Core\GatewayRooms.cs" />
     <Compile Include="Core\GatewayRoomTransport.cs" />
     <Compile Include="Core\GatewayRoomStateInspection.cs" />

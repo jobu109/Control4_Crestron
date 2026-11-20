@@ -19,7 +19,7 @@ namespace Control4Crestron
             internal bool Dirty, FromEvent;
         }
 
-        internal bool RegisterShade(ushort id, bool reuseRegistration = false)
+        internal bool RegisterShade(ushort id, bool reuseRegistration = false, bool query = true)
         {
             if (id == 0) return false;
             bool online, shared;
@@ -31,7 +31,7 @@ namespace Control4Crestron
                 shared = count > 0;
                 online = _online && (!reuseRegistration || !shared);
             }
-            if (online) QueryShade(id);
+            if (online && query) QueryShade(id);
             return shared;
         }
         internal void UnregisterShade(ushort id)
@@ -184,6 +184,72 @@ namespace Control4Crestron
                     }
                 }
             });
+        }
+
+        /// <summary>
+        /// Initial levels for a large device set (the whole-house view), read one at a time in a
+        /// single worker. One query per device would put dozens of concurrent HTTPS reads on the
+        /// two-connection limit and starve commands, scenes and site reads behind them.
+        /// </summary>
+        internal void ReadHouseLevels(List<ushort> lights, List<ushort> shades)
+        {
+            if (lights.Count == 0 && shades.Count == 0) return;
+            int generation;
+            lock (_sync) { generation = _generation; }
+            EmitMessage("Whole-house initial reads: " + lights.Count + " lights, " + shades.Count + " shades");
+            Queue(delegate
+            {
+                foreach (ushort id in lights)
+                {
+                    bool cached;
+                    lock (_sync)
+                    {
+                        if (_generation != generation || !_online) return;
+                        if (!_panelLightReferences.ContainsKey(id)) continue;
+                        cached = _lights.ContainsKey(id);
+                    }
+                    if (cached) PublishCurrentLight(id);
+                    else ReadLight(id, generation);
+                }
+                foreach (ushort id in shades)
+                {
+                    bool cached;
+                    lock (_sync)
+                    {
+                        if (_generation != generation || !_online) return;
+                        if (!_registeredShades.ContainsKey(id)) continue;
+                        cached = _shadePositions.ContainsKey(id);
+                    }
+                    if (cached) PublishCurrentShade(id);
+                    else ReadShadeOnce(id, generation);
+                }
+                EmitMessage("Whole-house initial reads complete");
+            });
+        }
+
+        private void ReadShadeOnce(ushort proxyId, int generation)
+        {
+            try
+            {
+                string host, token;
+                if (!GetConnection(out host, out token) || !CurrentGeneration(generation)) return;
+                string json = ReadWithTimeoutRetry(host, token, "/api/v1/items/" + proxyId + "/variables?varnames=Level", generation);
+                ushort position;
+                if (!TryParseLightLevel(json, out position)) { InvalidateShade(proxyId); return; }
+                lock (_sync)
+                {
+                    if (_generation != generation || !_online) return;
+                    _shadePositions[proxyId] = position;
+                    PublishShade(proxyId, position, 1);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (!CurrentGeneration(generation)) return;
+                InvalidateRejectedToken(ex);
+                InvalidateShade(proxyId);
+                EmitMessage("Shade " + proxyId + " readback failed: " + FailureKind(ex));
+            }
         }
 
         public void PublishCurrentShade(ushort proxyId)

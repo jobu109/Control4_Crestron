@@ -1,0 +1,14 @@
+{
+  "note": "site_weather_probe revision 1 from the EA-5 export generated 2026-11-20T01:12:13Z. Variable rows were keyed by the item name (Director 'name') instead of 'varName', so variable names below are the owning item's name. Revision 2 reads varName.",
+  "root_item": { "item_id": 1, "typeName": "root", "fields": ["type", "typeName", "name", "id", "parentId", "control", "URIs"], "variable_types": ["String", "Float", "Float"] },
+  "site_item": { "item_id": 10, "typeName": "site", "variables": 0 },
+  "building_item": { "item_id": 11, "typeName": "building", "variables": 0 },
+  "floor_item": { "item_id": 12, "typeName": "floor", "variables": 0 },
+  "openweather_item": { "item_id": 332, "type": 9, "typeName": "agent", "fields": ["type", "typeName", "control", "name", "id", "proxy", "parentId", "allControlBindingsHidden", "URIs"], "variable_count": 32, "variable_types": "all Integer, reported value 0" },
+  "agents": {
+    "names": ["macros", "variables", "Daylight", "delay", "color_preset", "navigation", "Govee", "media_scenes", "screensaver", "timer_agent", "OpenWeather", "wakeup_goodnight", "announcements", "communication", "media_sessions", "scheduler", "push_notification", "email_notification", "ui_configuration", "identity", "history", "driver_update", "zwave_scenes", "zwave", "advanced_lighting", "system_diagnostics", "remote_access", "backup", "update_manager"],
+    "GET /api/v1/agents/OpenWeather": "HTTP 404",
+    "GET /api/v1/agents/timer_agent": "HTTP 404"
+  },
+  "daylight_item": { "item_id": 1856, "type": 9, "probed": false }
+}

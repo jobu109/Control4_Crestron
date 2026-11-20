@@ -1,0 +1,37 @@
+{
+  "note": "site_weather_probe revision 2 from the EA-5 export generated 2026-11-20T01:18:41Z. Coordinate values are redacted here; the export carried real Float values.",
+  "root_item": {
+    "item_id": 1,
+    "typeName": "root",
+    "variables": [
+      { "varName": "Zipcode", "type": "String", "value": "" },
+      { "varName": "Latitude", "type": "Float", "value": "<redacted, present>" },
+      { "varName": "Longitude", "type": "Float", "value": "<redacted, present>" }
+    ]
+  },
+  "openweather_item": {
+    "item_id": 332,
+    "typeName": "agent",
+    "GET /api/v1/agents/OpenWeather": "HTTP 404",
+    "variables_all_integer": true,
+    "observed": "every reported value 0; CURRENT_SNOW, TODAY_SNOW and TOMORROW_SNOW have no value; no condition text variable",
+    "varNames": [
+      "CURRENT_TEMPERATURE", "CURRENT_HUMIDITY", "CURRENT_CLOUDS", "CURRENT_PRESSURE", "CURRENT_WIND_SPEED", "CURRENT_WIND_DIRECTION",
+      "CURRENT_DEW_POINT", "CURRENT_RAIN", "CURRENT_SNOW", "CURRENT_UV_INDEX",
+      "TODAY_TEMPERATURE_MIN", "TODAY_TEMPERATURE_MAX", "TODAY_WIND_SPEED", "TODAY_WIND_DIRECTION", "TODAY_PRESSURE", "TODAY_HUMIDITY",
+      "TODAY_DEW_POINT", "TODAY_CLOUDS", "TODAY_RAIN", "TODAY_SNOW", "TODAY_UV_INDEX",
+      "TOMORROW_TEMPERATURE_MIN", "TOMORROW_TEMPERATURE_MAX", "TOMORROW_WIND_SPEED", "TOMORROW_WIND_DIRECTION", "TOMORROW_PRESSURE",
+      "TOMORROW_HUMIDITY", "TOMORROW_DEW_POINT", "TOMORROW_CLOUDS", "TOMORROW_RAIN", "TOMORROW_SNOW", "TOMORROW_UV_INDEX"
+    ]
+  },
+  "daylight_item": {
+    "item_id": 1856,
+    "typeName": "agent",
+    "GET /api/v1/agents/Daylight": "HTTP 404",
+    "variables": [
+      { "varName": "1001", "type": "Object" }, { "varName": "1002", "type": "Object" },
+      { "varName": "1003", "type": "Object" }, { "varName": "1004", "type": "Object" }
+    ]
+  },
+  "site_building_floor_items": "items 10, 11 and 12 have no variables"
+}

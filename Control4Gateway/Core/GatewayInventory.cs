@@ -221,6 +221,7 @@ namespace Control4Crestron
                         inventory["media_sessions_events"] = RotateMediaSessionCapture(gen);
                         inventory["live_room_item_detail_probe"] = ProbeRoomItems(host, token, gen);
                         inventory["light_feedback_probe"] = ProbeLightFeedback(host, token, gen);
+                        inventory["site_weather_probe"] = ProbeSiteAndWeather(all, host, token, gen);
                         string reportBase = "/user/Control4Gateway_" + _instance + "_setup";
                         lock (_sync)
                         {
