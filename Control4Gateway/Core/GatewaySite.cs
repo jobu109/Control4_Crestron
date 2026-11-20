@@ -143,6 +143,13 @@ namespace Control4Crestron
                 weather["high"] = high;
             }
             if (humidityReported) weather["humidity"] = humidity;
+            // Conditions for the Home page overview. OpenWeather reports wind in mph (imperial) or m/s
+            // (metric), cloud cover in percent, and rain/snow as the last hour's millimetres.
+            decimal wind, clouds, rain, snow;
+            if (SiteNumber(SiteVariable(weatherVariables, "CURRENT_WIND_SPEED"), out wind) && wind >= 0 && wind < 300) weather["wind_speed"] = wind;
+            if (SiteNumber(SiteVariable(weatherVariables, "CURRENT_CLOUDS"), out clouds) && clouds >= 0 && clouds <= 100) weather["clouds"] = clouds;
+            if (SiteNumber(SiteVariable(weatherVariables, "CURRENT_RAIN"), out rain) && rain >= 0 && rain < 1000) weather["rain"] = rain;
+            if (SiteNumber(SiteVariable(weatherVariables, "CURRENT_SNOW"), out snow) && snow >= 0 && snow < 1000) weather["snow"] = snow;
             decimal dewPoint;
             string unit = humidityReported && SiteNumber(SiteVariable(weatherVariables, "CURRENT_DEW_POINT"), out dewPoint)
                 ? InferTemperatureUnit(temperature, humidity, dewPoint) : null;

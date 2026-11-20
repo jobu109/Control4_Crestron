@@ -60,4 +60,7 @@ $m=Site $root $live $null '[{"varName":"Some_Flag","value":"1"},{"varName":"LOCA
 Check ($m.name -eq 'Sample Town, ST') "Custom variable place name not published: $($m.name)"
 $n2=Site $root '[{"varName":"CURRENT_TEMPERATURE","value":68},{"varName":"LOCATION_NAME","value":"Driver City"}]' $null '[{"varName":"LOCATION_NAME","value":"Custom City"}]' | ConvertFrom-Json
 Check ($n2.name -eq 'Driver City') 'Driver place name must win over the custom variable'
-'Site document checks passed: driver place name (preferred, independent of weather, unsafe rejected); temperature scale identified from readings (F, C, undecided, remembered); varName coordinates, all-zero weather rejected, live weather published, invalid coordinates and missing agents unavailable'
+# Overview conditions: wind, clouds, rain; a missing snow value (OpenWeather leaves it empty) is left out.
+$o=Site $root '[{"varName":"CURRENT_TEMPERATURE","value":69.5},{"varName":"CURRENT_HUMIDITY","value":54},{"varName":"CURRENT_WIND_SPEED","value":4},{"varName":"CURRENT_CLOUDS","value":0},{"varName":"CURRENT_RAIN","value":0},{"varName":"CURRENT_SNOW"}]' | ConvertFrom-Json
+Check ($o.weather.wind_speed -eq 4 -and $o.weather.clouds -eq 0 -and $o.weather.rain -eq 0 -and $null -eq $o.weather.snow) 'Wind, clouds and rain not published'
+'Site document checks passed: wind/clouds/rain published, empty snow omitted; driver place name (preferred, independent of weather, unsafe rejected); temperature scale identified from readings (F, C, undecided, remembered); varName coordinates, all-zero weather rejected, live weather published, invalid coordinates and missing agents unavailable'

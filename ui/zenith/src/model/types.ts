@@ -183,6 +183,15 @@ export interface WeatherState {
   /** Today's forecast range, when reported. */
   low?: number;
   high?: number;
+  /** Relative humidity, percent. */
+  humidity?: number;
+  /** Wind speed in the driver's units: mph with °F, m/s with °C. */
+  windSpeed?: number;
+  /** Cloud cover, percent. */
+  clouds?: number;
+  /** Rain and snow over the last hour, mm. */
+  rain?: number;
+  snow?: number;
 }
 
 export type StateKind = 'light' | 'shade' | 'media' | 'zone' | 'scene' | 'thermostat' | 'weather';

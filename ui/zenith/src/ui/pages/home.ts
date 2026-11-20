@@ -3,6 +3,7 @@ import { ZPage, shared, toggle } from '../base';
 import { icon } from '../icons';
 import { HOUSE_WEATHER, type WeatherState } from '../../model/types';
 import { sunTimes, validCoordinates } from '../../model/sun';
+import { humidityText, weatherOverview, windText } from '../../model/weather';
 
 export class HomePage extends ZPage {
   static properties = { ...ZPage.properties, scenesOpen: { state: true } };
@@ -20,6 +21,9 @@ export class HomePage extends ZPage {
     .site .k { display: block; color: #a9afb6; }
     .site .v { display: block; color: #fff; font-weight: 400; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
     .site .v.na { color: #a9afb6; font-style: italic; font-weight: 300; }
+    .site .place { font-size: 24px; font-weight: 400; color: #fff; }
+    .site .now { display: flex; flex-direction: column; gap: 4px; }
+    .site .overview { color: #d7dbe0; font-weight: 300; font-style: italic; }
     .site .sun { display: grid; grid-template-columns: 130px 1fr; row-gap: 6px; }
     .site .sun .v { font-variant-numeric: tabular-nums; }
     .greet h1 { font-size: 56px; font-weight: 700; line-height: 1.05; }
@@ -81,7 +85,7 @@ export class HomePage extends ZPage {
     `;
   }
 
-  /** Location, current weather and today's sunrise/sunset. Missing data shows as unavailable. */
+  /** Place name, current weather with an overview, humidity, wind and today's sunrise/sunset. */
   private siteInfo(now: Date) {
     const location = this.store.config.location;
     const weather = this.store.get('weather', HOUSE_WEATHER);
@@ -90,16 +94,26 @@ export class HomePage extends ZPage {
       : html`<span class="v na">Unavailable</span>`;
     let sunrise: string | undefined;
     let sunset: string | undefined;
+    let daylight: boolean | undefined;
     if (location && validCoordinates(location.latitude, location.longitude)) {
       const sun = sunTimes(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12), location.latitude!, location.longitude!);
       const time = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       sunrise = sun.sunrise ? time(sun.sunrise) : sun.polar === 'day' ? 'Sun up all day' : sun.polar === 'night' ? 'No sunrise today' : undefined;
       sunset = sun.sunset ? time(sun.sunset) : sun.polar === 'day' ? 'No sunset today' : sun.polar === 'night' ? 'Sun down all day' : undefined;
+      if (sun.sunrise && sun.sunset) daylight = now >= sun.sunrise && now < sun.sunset;
+      else if (sun.polar) daylight = sun.polar === 'day';
     }
+    const current = weatherText(weather);
+    const overview = weatherOverview(weather, daylight);
     return html`<div class="site" aria-label="Location and weather">
-      <div><span class="k">Location</span>${value(location?.name)}</div>
-      <div><span class="k">Current Weather</span>${value(weatherText(weather))}</div>
+      ${location?.name ? html`<span class="place">${location.name}</span>` : nothing}
+      <div class="now">
+        ${value(current)}
+        ${overview ? html`<span class="overview">${overview}</span>` : nothing}
+      </div>
       <div class="sun">
+        <span class="k">Humidity</span>${value(humidityText(weather))}
+        <span class="k">Wind</span>${value(windText(weather))}
         <span class="k">Sunrise</span>${value(sunrise)}
         <span class="k">Sunset</span>${value(sunset)}
       </div>

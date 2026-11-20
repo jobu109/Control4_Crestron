@@ -358,6 +358,9 @@ export class PanelRouterAdapter implements Adapter {
       const weather: WeatherState = { temperature: w.temperature };
       if (doc.temperature_unit === 'F' || doc.temperature_unit === 'C') weather.unit = doc.temperature_unit;
       if (typeof w.low === 'number' && typeof w.high === 'number' && w.low <= w.high) { weather.low = w.low; weather.high = w.high; }
+      const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
+      const extra = { humidity: num(w.humidity), windSpeed: num(w.wind_speed), clouds: num(w.clouds), rain: num(w.rain), snow: num(w.snow) };
+      for (const [key, value] of Object.entries(extra)) if (value !== undefined) (weather as Record<string, number>)[key] = value;
       store.putState('weather', HOUSE_WEATHER, weather);
     } else {
       store.clearState('weather', HOUSE_WEATHER);

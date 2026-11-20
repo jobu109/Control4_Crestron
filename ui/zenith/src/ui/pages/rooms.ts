@@ -151,6 +151,9 @@ export class RoomPage extends ZPage {
     if (!room) return html`<div class="toolbar"><span class="hint">No rooms reported</span></div>`;
     const lit = this.store.lightsOn(room);
     const lightsKnown = room.lights.every((l) => this.store.known('light', l.id));
+    // A shade counts as open when its reported position is above 0 (fully closed).
+    const open = room.shades.filter((sh) => (this.store.get('shade', sh.id)?.position ?? 0) > 0).length;
+    const shadesKnown = room.shades.every((sh) => this.store.known('shade', sh.id));
     const lightActions = room.lightActions ?? ['ambient', 'on', 'off'];
     const t = room.thermostatId ? this.store.get('thermostat', room.thermostatId) : undefined;
     const media = this.store.get('media', room.id);
@@ -175,7 +178,16 @@ export class RoomPage extends ZPage {
       <div class="hero">
         <h1 class=${room.name.length > 12 ? 'long' : ''}>${room.name}</h1>
         <div class="st">
-          ${room.lights.length ? html`<span>Lights are <em>${lit ? `${lit} on` : lightsKnown ? 'Off' : 'unknown'}</em></span>` : nothing}
+          ${room.lights.length
+            ? lit
+              ? html`<span><em>${lit}</em> ${lit === 1 ? 'light is' : 'lights are'} on</span>`
+              : html`<span>Lights are <em>${lightsKnown ? 'Off' : 'unknown'}</em></span>`
+            : nothing}
+          ${room.shades.length
+            ? open
+              ? html`<span><em>${open}</em> ${open === 1 ? 'shade is' : 'shades are'} open</span>`
+              : html`<span>Shades are <em>${shadesKnown ? 'Closed' : 'unknown'}</em></span>`
+            : nothing}
           ${t ? html`<span>Climate is <em>${t.power ? `${t.mode} ${t.setpoint}°` : 'Off'}</em></span>` : nothing}
           ${media?.power !== undefined ? html`<span>Media is <em>${media.power ? media.title ?? 'On' : 'Off'}</em></span>` : nothing}
           ${loading && this.store.connection === 'online' ? html`<span>Loading room…</span>` : nothing}
