@@ -19,10 +19,13 @@ namespace Control4Crestron
         private System.Collections.Generic.Dictionary<ushort, string> _panelRoomNames =
             new System.Collections.Generic.Dictionary<ushort, string>();
 
+        private int _digitalMediaInventoryGeneration = -1, _digitalMediaInventoryId;
+
         private void CachePanelRoomNames(string json, int generation)
         {
+            var items = JArray.Parse(json);
             var names = new System.Collections.Generic.Dictionary<ushort, string>();
-            foreach (JToken item in JArray.Parse(json))
+            foreach (JToken item in items)
             {
                 if (!(item is JObject) || ScalarText(item["type"]) != "8") continue;
                 ushort id;
@@ -30,7 +33,14 @@ namespace Control4Crestron
                 if (UInt16.TryParse(ScalarText(item["id"] ?? item["item_id"]), out id) &&
                     id != 0 && !String.IsNullOrWhiteSpace(name) && name.Length <= 160) names[id] = name;
             }
-            lock (_sync) if (_generation == generation) _panelRoomNames = names;
+            int digitalMedia = FindDigitalMedia(items);
+            lock (_sync)
+            {
+                if (_generation != generation) return;
+                _panelRoomNames = names;
+                _digitalMediaInventoryGeneration = generation;
+                _digitalMediaInventoryId = digitalMedia;
+            }
         }
 
         internal string PanelRoomName(ushort room)
@@ -47,7 +57,8 @@ namespace Control4Crestron
             Queue(delegate
             {
                 string stage = "read inventory";
-                int skipped = 0;
+                int skipped = 0, detailReads = 0, bulk = 0;
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                 ushort firstSkipped = 0;
                 try
                 {
@@ -68,20 +79,25 @@ namespace Control4Crestron
                         scanned++;
                         if (scanned == 1 || scanned % 25 == 0)
                             EmitMessage("Room discovery checking proxy " + id + " (candidate " + scanned + ")");
-                        stage = "request item " + id;
-                        JObject detail;
-                        try
+                        JObject detail = candidate;
+                        if (HasRoomCatalogMetadata(candidate)) bulk++;
+                        else
                         {
-                            string response = ReadWithTimeoutRetry(host, token, "/api/v1/items/" + id.ToString(CultureInfo.InvariantCulture), generation);
-                            stage = "parse item " + id;
-                            detail = ServiceDetail(response, id);
-                        }
-                        catch (Exception ex) when (ex is ArgumentException || ex is InvalidDataException ||
-                            FailureKind(ex) == "HTTP 404")
-                        {
-                            if (firstSkipped == 0) firstSkipped = id;
-                            skipped++;
-                            continue;
+                            detailReads++;
+                            stage = "request item " + id;
+                            try
+                            {
+                                string response = ReadWithTimeoutRetry(host, token, "/api/v1/items/" + id.ToString(CultureInfo.InvariantCulture), generation);
+                                stage = "parse item " + id;
+                                detail = ServiceDetail(response, id);
+                            }
+                            catch (Exception ex) when (ex is ArgumentException || ex is InvalidDataException ||
+                                FailureKind(ex) == "HTTP 404")
+                            {
+                                if (firstSkipped == 0) firstSkipped = id;
+                                skipped++;
+                                continue;
+                            }
                         }
                         if (ScalarText(detail["type"]) != "7") continue;
                         string filename = ScalarText(detail["filename"]);
@@ -105,7 +121,9 @@ namespace Control4Crestron
                     }
                     int count = 0;
                     foreach (var room in rooms.Values) count += room.Count;
-                    EmitMessage("Discovered " + count + " room devices via Director. Skipped " + skipped + (skipped == 0 ? "" : " (first item " + firstSkipped + ")") + ". Reselect a room on the panel.");
+                    EmitMessage("Discovered " + count + " room devices via Director. Skipped " + skipped +
+                        (skipped == 0 ? "" : " (first item " + firstSkipped + ")") +
+                        ". Bulk " + bulk + ", detail reads " + detailReads + ", " + stopwatch.ElapsedMilliseconds + " ms.");
                 }
                 catch (Exception ex)
                 {
@@ -121,6 +139,15 @@ namespace Control4Crestron
         {
             return value != null && (value.Type == JTokenType.String || value.Type == JTokenType.Integer)
                 ? value.ToString() : null;
+        }
+
+        private static bool HasRoomCatalogMetadata(JObject row)
+        {
+            ushort room;
+            string filename = ScalarText(row["filename"]);
+            string label = ScalarText(row["name"]);
+            return !String.IsNullOrWhiteSpace(filename) && !String.IsNullOrWhiteSpace(label) && label.Length <= 320 &&
+                UInt16.TryParse(ScalarText(row["roomId"]), NumberStyles.None, CultureInfo.InvariantCulture, out room) && room != 0;
         }
 
         public void ExportInventory()
@@ -410,22 +437,56 @@ namespace Control4Crestron
             return result;
         }
 
-        private string ReadDigitalMediaVariables(string host, string token, int generation, out int digitalMedia)
+        private static int FindDigitalMedia(JArray inventory)
         {
-            var inventory = InventoryItems(ReadWithTimeoutRetry(host, token, "/api/v1/items", generation));
-            digitalMedia = 0;
+            int digitalMedia = 0;
             foreach (var item in inventory)
             {
                 int id;
-                if (ScalarText(item["type"]) != "7" || ScalarText(item["name"]) != "Digital Media" ||
-                    !Int32.TryParse(ScalarText(item["item_id"]), out id) || id <= 0) continue;
-                if (digitalMedia != 0) throw new InvalidDataException("Ambiguous Digital Media item");
+                if (!(item is JObject) || ScalarText(item["type"]) != "7" || ScalarText(item["name"]) != "Digital Media" ||
+                    !Int32.TryParse(ScalarText(item["id"] ?? item["item_id"]), NumberStyles.None,
+                        CultureInfo.InvariantCulture, out id) || id <= 0) continue;
+                if (digitalMedia != 0 && digitalMedia != id) return -1;
                 digitalMedia = id;
             }
-            if (digitalMedia == 0 || !CurrentGeneration(generation))
-                return null;
+            return digitalMedia;
+        }
+
+        private int ResolveDigitalMedia(string host, string token, int generation, bool refresh)
+        {
+            lock (_sync)
+            {
+                if (_generation != generation) return 0;
+                if (!refresh && _digitalMediaInventoryGeneration == generation &&
+                    _digitalMediaInventoryId != 0) return _digitalMediaInventoryId;
+            }
+            int id = FindDigitalMedia(JArray.Parse(ReadWithTimeoutRetry(host, token, "/api/v1/items", generation)));
+            lock (_sync)
+            {
+                if (_generation != generation) return 0;
+                _digitalMediaInventoryGeneration = generation;
+                _digitalMediaInventoryId = id;
+            }
+            return id;
+        }
+
+        private string ReadDigitalMediaVariables(string host, string token, int generation, out int digitalMedia)
+        {
+            digitalMedia = ResolveDigitalMedia(host, token, generation, false);
+            if (digitalMedia < 0) throw new InvalidDataException("Ambiguous Digital Media item");
+            if (digitalMedia == 0 || !CurrentGeneration(generation)) return null;
             string path = "/api/v1/items/" + digitalMedia.ToString(CultureInfo.InvariantCulture) + "/variables";
-            return ReadWithTimeoutRetry(host, token, path, generation);
+            try { return ReadWithTimeoutRetry(host, token, path, generation); }
+            catch (Exception ex) when (FailureKind(ex) == "HTTP 404" && CurrentGeneration(generation))
+            {
+                int previous = digitalMedia;
+                digitalMedia = ResolveDigitalMedia(host, token, generation, true);
+                if (digitalMedia < 0) throw new InvalidDataException("Ambiguous Digital Media item");
+                if (digitalMedia == previous) throw;
+                if (digitalMedia == 0 || !CurrentGeneration(generation)) return null;
+                path = "/api/v1/items/" + digitalMedia.ToString(CultureInfo.InvariantCulture) + "/variables";
+                return ReadWithTimeoutRetry(host, token, path, generation);
+            }
         }
 
         internal static bool CanChangePanelAudioMembership(JObject snapshot, int queue, ushort room,
