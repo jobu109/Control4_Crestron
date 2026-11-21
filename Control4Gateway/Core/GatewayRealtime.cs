@@ -285,6 +285,9 @@ namespace Control4Crestron
             CaptureNowPlayingEvent(message, gen);
             RoutePlayingEvent(message, gen);
             CaptureLightProbeEvent(message, gen);
+            RouteRelayEvent(message, gen);
+            RouteExperienceButtonEvent(message, gen);
+            RouteFanEvent(message, gen);
             RouteRealtimeLight(message, gen);
             RouteRealtimeAudio(message, gen);
             ushort shade;
