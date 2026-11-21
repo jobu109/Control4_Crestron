@@ -417,6 +417,13 @@ describe('panel router adapter', () => {
     ] });
     const reading = () => store.room('81')?.experienceButtons?.[0]?.countdown;
     expect(reading()).toEqual({ running: true, remaining: 10 });
+    router.clear();
+    const press = { kind: 'experience-button', roomId: '81', id: '321', action: 'select' } as const;
+    store.send(press);
+    store.send(press);
+    expect(router.ops()).toEqual(['experience_select', 'experience_select']);
+    expect(router.last('experience_select')).toMatchObject({ room_id: 81, device_id: 321 });
+    expect(reading()).toEqual({ running: true, remaining: 10 });
     router.emit('s', J.state, JSON.stringify({ h: 5, u: 321, v: { running: true, remaining: 8 } }));
     expect(reading()).toEqual({ running: true, remaining: 8 });
     router.emit('s', J.state, JSON.stringify({ h: 5, u: 321, v: { running: true, remaining: -1 } }));

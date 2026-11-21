@@ -1,3 +1,7 @@
+**Sytrohs Home Favorites hardware acceptance (2026-11-21).** The installer confirmed that a Living Remote Find favorite survived a Sytrohs reload and sounded the remote from Home. Favorites store identities in the browser profile and resolve against the current scoped catalog. The installer also verified scene and macro favorites from Home, including distinct action types in the editor and successful activation.
+
+**Sytrohs Countdown preset cycling verified (2026-11-20).** The installer confirmed that each Countdown press sends Select and advances to the next preset configured in Composer. Sytrohs displays the remaining time reported by Director.
+
 **Sytrohs two-panel media scope verified (2026-11-20).** The installer confirmed that media start and Room Off update the Rooms list on the panel with access, while the other panel continues to show only its own scoped rooms.
 
 **Sytrohs live room media summary hardware acceptance (2026-11-20).** The installer confirmed that the Rooms list follows media start and Room Off from the Control4 app without opening the room or refreshing Sytrohs. The gateway reads Director POWER_STATE for scoped rooms and re-reads the affected room on Watch or Listen activity events.

@@ -57,9 +57,11 @@ If the processor requires sign-in, the browser must hold a processor session bef
 | Scene | `scene_activate` with the current catalog `revision` and `slot` |
 | All Zones Off | One `audio_sessions_off` request with the current session revision. The gateway removes joined rooms in scope before sending Room Off to scoped session owners, then refreshes the catalog. |
 | Experience Button | `experience_select` sends a momentary Select to a discovered Scenario, Reset Outlet, Christmas Tree, or Grounded Experience Button proxy in a scoped room. The catalog includes measured On/Off state when available. An icon_description WebSocket event triggers a REST STATE refresh and a state packet with h=3. |
-| Countdown | The Buttons sheet discovers Countdown proxies. Initial values and icon_description-triggered REST reads supply Director STATE and COUNTDOWN through the catalog and h=5 packets. The button sends Select. |
+| Countdown | The Buttons sheet discovers Countdown proxies. Initial values and icon_description-triggered REST reads supply Director STATE and COUNTDOWN through the catalog and h=5 packets. Each press sends Select and the Control4 driver advances to the next preset countdown time configured in Composer. |
 | Zone volume, mute | `audio_session_volume`, `audio_session_mute` |
 | Zone on / off | `audio_session_add` / `audio_session_remove`; the host room turns off with `audio_session_room_off` (Room Off) |
+
+On Home, open **Favorites → Edit** to pin or remove scenes, macros, and Experience Buttons from the current catalog. Pins are saved in the panel browser profile and scoped to the Web XPanel host and IP ID. Sytrohs resolves each pin against the current catalog before sending a command.
 
 ## Shown as unavailable
 

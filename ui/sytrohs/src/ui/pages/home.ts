@@ -2,12 +2,19 @@ import { css, html, nothing } from 'lit';
 import { ZPage, shared, toggle } from '../base';
 import { icon } from '../icons';
 import { HOUSE_WEATHER, type WeatherState } from '../../model/types';
+import { favoriteActions, readFavoriteKeys } from '../../model/favorites';
 import { sunTimes, validCoordinates } from '../../model/sun';
 import { humidityText, weatherOverview, windText } from '../../model/weather';
 
 export class HomePage extends ZPage {
-  static properties = { ...ZPage.properties, scenesOpen: { state: true } };
+  static properties = {
+    ...ZPage.properties, scenesOpen: { state: true }, favoritesOpen: { state: true }, editFavorites: { state: true }
+  };
   scenesOpen = false;
+  favoritesOpen = false;
+  editFavorites = false;
+  private favoriteKeys: string[] = [];
+  private favoriteStorageKey = '';
   private timer?: number;
 
   static styles = [shared, css`
@@ -33,6 +40,15 @@ export class HomePage extends ZPage {
     .clock .t { font-size: 96px; font-weight: 300; line-height: 1; letter-spacing: -1px; }
     .status { display: flex; flex-direction: column; gap: 6px; font-size: 16px; }
     .tab { position: absolute; right: 0; top: 220px; width: 44px; height: 150px; border: none; border-radius: 12px 0 0 12px; background: rgba(255,255,255,0.16); font-size: 12px; font-weight: 700; letter-spacing: 2px; writing-mode: vertical-rl; }
+    .favorites-tab { top: 386px; }
+    .favorites { gap: 16px; }
+    .favorites header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .favorites h2 { font-size: 24px; }
+    .favorite-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-bottom: 24px; }
+    .favorite { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; text-align: left; }
+    .favorite span { display: block; }
+    .favorite small { color: #a9afb6; }
+    .favorite-edit { flex: 0 0 auto; }
     .scenes { position: absolute; right: 0; top: 0; bottom: 130px; width: 620px; background: rgba(6,8,11,0.94); border-left: 1px solid rgba(255,255,255,0.12); padding: 24px 48px 0 40px; display: flex; flex-direction: column; }
     .scenes .row { flex: 1; max-height: 104px; gap: 28px; border-color: rgba(255,255,255,0.14); }
     .scenes .tile { width: 64px; height: 64px; border-radius: 12px; }
@@ -43,6 +59,11 @@ export class HomePage extends ZPage {
 
   connectedCallback(): void {
     super.connectedCallback();
+    const params = new URLSearchParams(location.search);
+    this.favoriteStorageKey = JSON.stringify(['sytrohs-favorites', params.get('host') ?? location.hostname,
+      params.get('ipId') ?? '0x03', params.get('adapter') ?? 'default']);
+    try { this.favoriteKeys = readFavoriteKeys(window.localStorage.getItem(this.favoriteStorageKey)); }
+    catch { /* This panel may block persistent browser storage. */ }
     this.timer = window.setInterval(() => this.requestUpdate(), 15000);
   }
   disconnectedCallback(): void {
@@ -53,6 +74,7 @@ export class HomePage extends ZPage {
   render() {
     const now = new Date();
     const scenes = this.store.has('scenes') ? this.store.config.scenes.slice(0, 5) : [];
+    const canShowFavorites = this.favoriteKeys.length > 0 || favoriteActions(this.store.config).length > 0;
     return html`
       <div class="side"></div>
       <div class="bar">
@@ -72,7 +94,10 @@ export class HomePage extends ZPage {
         <span class="t">${now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
         <div class="status">${this.statusLines()}</div>
       </div>
-      ${scenes.length ? html`<button type="button" class="tab" aria-expanded=${this.scenesOpen ? 'true' : 'false'} @click=${() => (this.scenesOpen = true)}>SCENES</button>` : nothing}
+      ${scenes.length ? html`<button type="button" class="tab" aria-expanded=${this.scenesOpen ? 'true' : 'false'} @click=${() => { this.favoritesOpen = false; this.scenesOpen = true; }}>SCENES</button>` : nothing}
+      ${canShowFavorites ? html`<button type="button" class="tab favorites-tab" aria-expanded=${this.favoritesOpen}
+        @click=${() => { this.scenesOpen = false; this.favoritesOpen = true; }}>FAVORITES</button>` : nothing}
+      ${this.favoritesOpen ? this.favoriteDrawer() : nothing}
       ${this.scenesOpen ? html`<section class="scenes" aria-label="Scenes">
         <button type="button" class="x" aria-label="Close scenes" @click=${() => (this.scenesOpen = false)}>${icon('chevronRight', 26, 1.8)}</button>
         ${scenes.map((s) => {
@@ -83,6 +108,51 @@ export class HomePage extends ZPage {
         <a class="all" href="#/scenes">ALL SCENES ${icon('chevronRight', 18, 1.8)}</a>
       </section>` : nothing}
     `;
+  }
+
+  private saveFavoriteKeys(keys: string[]): void {
+    this.favoriteKeys = keys;
+    try { window.localStorage.setItem(this.favoriteStorageKey, JSON.stringify(keys)); }
+    catch { /* The current session still retains its pins. */ }
+    this.requestUpdate();
+  }
+
+  private favoriteDrawer() {
+    const actions = favoriteActions(this.store.config);
+    const available = new Map(actions.map((action) => [action.key, action]));
+    const pinned = new Set(this.favoriteKeys);
+    const visible = this.favoriteKeys.flatMap((key) => {
+      const action = available.get(key);
+      return action ? [action] : [];
+    });
+    const online = this.store.connection === 'online';
+    return html`<section class="scenes favorites" aria-label="Favorites">
+      <header>
+        <button type="button" class="x" aria-label="Close favorites"
+          @click=${() => { this.favoritesOpen = false; this.editFavorites = false; }}>${icon('chevronRight', 26, 1.8)}</button>
+        <h2>Favorites</h2>
+        <button type="button" class="btn outline favorite-edit"
+          @click=${() => (this.editFavorites = !this.editFavorites)}>${this.editFavorites ? 'Done' : 'Edit'}</button>
+      </header>
+      <div class="favorite-list">
+        ${this.editFavorites ? actions.map((action) => html`
+          <button type="button" class="btn outline favorite" aria-pressed=${pinned.has(action.key)}
+            @click=${() => this.saveFavoriteKeys(pinned.has(action.key)
+              ? this.favoriteKeys.filter((key) => key !== action.key) : [...this.favoriteKeys, action.key])}>
+            <span>${action.name}<small>${action.detail}</small></span>
+            <span>${pinned.has(action.key) ? 'Remove' : 'Pin'}</span>
+          </button>`) : visible.map((action) => html`
+          <button type="button" class="btn outline favorite" ?disabled=${!online} @click=${() => {
+            const current = favoriteActions(this.store.config).find((entry) => entry.key === action.key);
+            if (this.store.connection === 'online' && current) this.send(current.command);
+          }}><span>${action.name}<small>${action.detail}</small></span></button>`)}
+        ${!this.editFavorites && !visible.length ? html`<span class="sub">No favorites available. Select Edit to pin an action.</span>` : nothing}
+        ${this.editFavorites && online && visible.length < this.favoriteKeys.length ? html`
+          <button type="button" class="btn outline" @click=${() => this.saveFavoriteKeys(this.favoriteKeys.filter((key) => available.has(key)))}>
+            Remove unavailable favorites
+          </button>` : nothing}
+      </div>
+    </section>`;
   }
 
   /** Place name, current weather with an overview, humidity, wind and today's sunrise/sunset. */
