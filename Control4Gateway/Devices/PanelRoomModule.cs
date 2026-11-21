@@ -16,12 +16,32 @@ namespace Control4Crestron
         private readonly UiSerialFrames _roomWire = new UiSerialFrames();
         private readonly UiSerialFrames _actionsWire = new UiSerialFrames();
         private readonly UiSerialFrames _audioSessionsWire = new UiSerialFrames();
+        private readonly UiSerialFrames _siteWire = new UiSerialFrames();
+        private int _siteRequest;
+        private bool _siteReady;
+        // Whole-house lights and shades for every scoped room (Lighting/Shades pages).
+        private readonly object _houseSync = new object();
+        private readonly UiSerialFrames _houseWire = new UiSerialFrames();
+        private GatewayCore _houseGateway;
+        private Dictionary<ushort, Control4_Room_Devices.Entry> _houseDevices;
+        private Dictionary<ushort, ushort> _houseRoomOf;
+        private readonly Dictionary<ushort, int?> _houseLevels = new Dictionary<ushort, int?>();
+        private EventHandler<LightStatusEventArgs> _houseLight;
+        private EventHandler<ShadeStatusEventArgs> _houseShade;
+        private bool _houseReady;
+        // Opening the whole-house view registers every scoped device, so it runs off the SIMPL+
+        // thread: a long CHANGE Request$ handler lets later requests overwrite the input unseen.
+        private readonly object _houseWork = new object();
+        private volatile int _houseRequest;
         private int _audioSessionsRequest;
         private bool _audioSessionsReady;
         private JObject _audioSessions;
         private int _audioSessionsGeneration;
         private string _audioSessionsRevision;
         private string _audioSessionsContent;
+        // Membership, volume and mute only: a new track republishes without changing the revision,
+        // so a zone command sent during a song change is not refused as stale.
+        private string _audioSessionsCore;
         private GatewayCore _audioSessionsGateway;
         private System.Threading.Timer _audioSessionsTimer;
         private bool _audioSessionsReading, _audioSessionsDirty;
@@ -55,6 +75,8 @@ namespace Control4Crestron
                 _actionRequest++;
                 _actionRevision = null;
                 CloseAudioSessions();
+                _houseRequest++; // cancels a queued open
+                lock (_houseWork) CloseHouse();
                 _gateway = gatewayId;
                 foreach (string entry in (roomIds ?? "").Split(','))
                 {
@@ -63,6 +85,273 @@ namespace Control4Crestron
                         if (_rooms.Add(id)) _roomOrder.Add(id);
                 }
             }
+        }
+
+        /// <summary>
+        /// Registers every scoped room's discovered lights and shades and publishes one catalog
+        /// (room 0, kind house_devices). Later level changes are sent as {"h":1,"u":id,"v":level}.
+        /// Registrations are reference-counted, so they coexist with the selected-room session.
+        /// </summary>
+        private void QueueHouse(bool open)
+        {
+            // Caller holds _requests; snapshot the scope so the worker never needs that lock.
+            int request = ++_houseRequest;
+            ushort gatewayId = _gateway;
+            var roomOrder = new List<ushort>(_roomOrder);
+            System.Threading.ThreadPool.QueueUserWorkItem(delegate
+            {
+                lock (_houseWork)
+                {
+                    if (request != _houseRequest) return; // superseded by a later open or close
+                    try
+                    {
+                        if (open) OpenHouse(gatewayId, roomOrder);
+                        else CloseHouse();
+                    }
+                    catch (Exception ex)
+                    {
+                        LogWarning("House view " + (open ? "open" : "close") + " failed: " + ex.Message);
+                    }
+                }
+            });
+        }
+
+        private static void LogWarning(string message)
+        {
+            try { Crestron.SimplSharp.ErrorLog.Warn("Control4 Panel Room: " + message); } catch (Exception) { }
+        }
+
+        private Action<ushort, bool> _houseRelay;
+        private readonly HashSet<ushort> _houseFanIds = new HashSet<ushort>();
+
+        private void PublishFan(ushort id, ushort? speed)
+        {
+            lock (_houseSync)
+                if (!_houseReady || !_houseFanIds.Contains(id)) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0,
+                Json = new JObject { ["h"] = 4, ["u"] = id, ["v"] = speed.HasValue ? new JValue(speed.Value) : new JValue((object)null) }
+                    .ToString(Formatting.None) });
+        }
+
+        private readonly HashSet<ushort> _houseButtonIds = new HashSet<ushort>();
+
+        private void PublishCountdown(ushort id, JObject state)
+        {
+            lock (_houseSync)
+                if (!_houseReady || !_houseButtonIds.Contains(id)) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0,
+                Json = new JObject { ["h"] = 5, ["u"] = id, ["v"] = state == null ? new JValue((object)null) : state.DeepClone() }
+                    .ToString(Formatting.None) });
+        }
+
+        private void PublishExperienceButton(ushort id, bool? on)
+        {
+            lock (_houseSync)
+                if (!_houseReady || !_houseButtonIds.Contains(id)) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0,
+                Json = new JObject { ["h"] = 3, ["u"] = id, ["v"] = on.HasValue ? new JValue(on.Value) : new JValue((object)null) }
+                    .ToString(Formatting.None) });
+        }
+        private readonly HashSet<ushort> _houseRelayIds = new HashSet<ushort>();
+
+        private void PublishRelay(ushort id, bool closed)
+        {
+            lock (_houseSync)
+                if (!_houseReady || !_houseRelayIds.Contains(id)) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0,
+                Json = new JObject { ["h"] = 2, ["u"] = id, ["v"] = closed }.ToString(Formatting.None) });
+        }
+
+        private ushort[] _housePowerRooms;
+
+        private void PublishRoomPower(ushort id, bool? power)
+        {
+            lock (_houseSync)
+                if (!_houseReady || _housePowerRooms == null || Array.IndexOf(_housePowerRooms, id) < 0) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0,
+                Json = new JObject { ["h"] = 6, ["u"] = id, ["v"] = power.HasValue ? new JValue(power.Value) : new JValue((object)null) }
+                    .ToString(Formatting.None) });
+        }
+
+        private void OpenHouse(ushort gatewayId, List<ushort> roomOrder)
+        {
+            CloseHouse();
+            var gateway = GatewayRegistry.Get(gatewayId);
+            var devices = new Dictionary<ushort, Control4_Room_Devices.Entry>();
+            var roomOf = new Dictionary<ushort, ushort>();
+            var rooms = new JArray();
+            var missingLights = new List<ushort>();
+            var missingShades = new List<ushort>();
+            var light = new EventHandler<LightStatusEventArgs>((s, a) => HouseFeedback(a.ItemId, false, a.Level, a.Valid));
+            var shade = new EventHandler<ShadeStatusEventArgs>((s, a) => HouseFeedback(a.ItemId, true, a.Position, a.Valid));
+            lock (_houseSync)
+            {
+                foreach (ushort room in roomOrder)
+                    foreach (var device in Control4_Room_Devices.Get(gatewayId, room).Values)
+                        if (!devices.ContainsKey(device.Id)) { devices.Add(device.Id, device); roomOf.Add(device.Id, room); }
+                _houseGateway = gateway;
+                _houseDevices = devices;
+                _houseRoomOf = roomOf;
+                _houseLevels.Clear();
+                _houseLight = light;
+                _houseShade = shade;
+                _houseRelay = PublishRelay;
+                _housePowerRooms = roomOrder.ToArray();
+            }
+            gateway.LightChanged += light;
+            gateway.ShadeChanged += shade;
+            gateway.RelayChanged += _houseRelay;
+            gateway.ExperienceButtonChanged += PublishExperienceButton;
+            gateway.CountdownChanged += PublishCountdown;
+            gateway.FanChanged += PublishFan;
+            gateway.PanelRoomPowerChanged += PublishRoomPower;
+            foreach (var device in devices.Values)
+            {
+                // No per-device queries here: ReadHouseLevels reads the missing ones serially.
+                if (device.Shade) { gateway.RegisterShade(device.Id, true, false); missingShades.Add(device.Id); }
+                else if (gateway.RegisterPanelLight(device.Id)) gateway.PublishCurrentLight(device.Id);
+                else missingLights.Add(device.Id);
+            }
+            lock (_houseSync)
+            {
+                bool relayReady;
+                JObject buttons, fans;
+                var relayCatalog = gateway.PanelRelays(out relayReady, out buttons, out fans);
+                foreach (ushort room in roomOrder)
+                {
+                    var relays = (JArray)relayCatalog[room.ToString(System.Globalization.CultureInfo.InvariantCulture)] ?? new JArray();
+                    foreach (JObject relay in relays) _houseRelayIds.Add((ushort)relay["id"]);
+                    var items = new JArray();
+                    foreach (var device in devices.Values)
+                    {
+                        if (roomOf[device.Id] != room) continue;
+                        int? level;
+                        _houseLevels.TryGetValue(device.Id, out level);
+                        items.Add(new JObject { ["id"] = device.Id, ["name"] = device.Name, ["shade"] = device.Shade,
+                            ["value"] = level.HasValue ? new JValue(level.Value) : new JValue((object)null) });
+                    }
+                    var roomButtons = buttons[room.ToString(System.Globalization.CultureInfo.InvariantCulture)] as JArray ?? new JArray();
+                    foreach (JObject button in roomButtons) _houseButtonIds.Add((ushort)button["id"]);
+                    var roomFans = fans[room.ToString(System.Globalization.CultureInfo.InvariantCulture)] as JArray ?? new JArray();
+                    foreach (JObject fan in roomFans) { _houseFanIds.Add((ushort)fan["id"]); fan.Remove("protocol"); }
+                    rooms.Add(new JObject { ["id"] = room, ["devices"] = items, ["relays"] = relays, ["experience_buttons"] = roomButtons, ["fans"] = roomFans });
+                }
+                _houseWire.Set(0, "house_devices", new JObject { ["room_id"] = 0, ["rooms"] = rooms, ["relay_ready"] = relayReady }.ToString(Formatting.None));
+                _houseReady = true;
+            }
+            PublishHouse(1);
+            gateway.ReadHouseLevels(missingLights, missingShades);
+            gateway.WatchPanelRoomPower(roomOrder, true);
+        }
+
+        private void CloseHouse()
+        {
+            GatewayCore gateway;
+            Dictionary<ushort, Control4_Room_Devices.Entry> devices;
+            EventHandler<LightStatusEventArgs> light;
+            EventHandler<ShadeStatusEventArgs> shade;
+            Action<ushort, bool> relay;
+            ushort[] powerRooms;
+            lock (_houseSync)
+            {
+                gateway = _houseGateway; devices = _houseDevices; light = _houseLight; shade = _houseShade;
+                _houseGateway = null; _houseDevices = null; _houseRoomOf = null; _houseLight = null; _houseShade = null;
+                _houseReady = false;
+                powerRooms = _housePowerRooms;
+                _housePowerRooms = null;
+                relay = _houseRelay;
+                _houseRelay = null;
+                _houseRelayIds.Clear();
+                _houseButtonIds.Clear();
+                _houseFanIds.Clear();
+                _houseLevels.Clear();
+            }
+            if (gateway == null) return;
+            gateway.LightChanged -= light;
+            gateway.ShadeChanged -= shade;
+            gateway.RelayChanged -= relay;
+            gateway.ExperienceButtonChanged -= PublishExperienceButton;
+            gateway.CountdownChanged -= PublishCountdown;
+            gateway.FanChanged -= PublishFan;
+            gateway.PanelRoomPowerChanged -= PublishRoomPower;
+            if (powerRooms != null) gateway.WatchPanelRoomPower(powerRooms, false);
+            foreach (var device in devices.Values)
+                if (device.Shade) gateway.UnregisterShade(device.Id);
+                else gateway.UnregisterPanelLight(device.Id);
+        }
+
+        private void HouseFeedback(ushort id, bool shade, ushort value, ushort valid)
+        {
+            string packet;
+            lock (_houseSync)
+            {
+                Control4_Room_Devices.Entry entry;
+                if (_houseDevices == null || !_houseDevices.TryGetValue(id, out entry) || entry.Shade != shade) return;
+                int? next = valid == 1 ? (int?)value : null;
+                int? previous;
+                if (_houseLevels.TryGetValue(id, out previous) && previous == next) return;
+                _houseLevels[id] = next;
+                if (!_houseReady) return; // Initial values go into the catalog itself.
+                packet = new JObject { ["h"] = 1, ["u"] = id, ["v"] = next.HasValue ? new JValue(next.Value) : new JValue((object)null) }.ToString(Formatting.None);
+            }
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = packet });
+        }
+
+        private void PublishHouse(ushort page)
+        {
+            string frame;
+            lock (_houseSync)
+            {
+                if (!_houseReady || page > _houseWire.Count) return;
+                frame = _houseWire.Read(ref page);
+            }
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = frame });
+        }
+
+        /// <summary>Command for a device in any scoped room, checked against the whole-house catalog.</summary>
+        private void HouseDeviceRequest(JObject body)
+        {
+            ushort room, id;
+            GatewayCore gateway;
+            Control4_Room_Devices.Entry device;
+            if (!Number(body["room_id"], 1, UInt16.MaxValue, out room) || !_rooms.Contains(room) ||
+                !Number(body["device_id"], 1, UInt16.MaxValue, out id)) return;
+            lock (_houseSync)
+            {
+                ushort owner;
+                gateway = _houseGateway;
+                if (gateway == null || !_houseDevices.TryGetValue(id, out device) || !_houseRoomOf.TryGetValue(id, out owner) || owner != room) return;
+            }
+            DeviceAction(gateway, device, body);
+        }
+
+        private void ReadSite()
+        {
+            int request = ++_siteRequest;
+            GatewayRegistry.Get(_gateway).ReadPanelSite((generation, result) =>
+            {
+                lock (_requests)
+                {
+                    if (request != _siteRequest) return;
+                    _siteWire.Set(0, "site", result.ToString(Formatting.None));
+                    _siteReady = true;
+                    PublishSite(1);
+                }
+            });
+        }
+
+        private void PublishSite(ushort page)
+        {
+            if (!_siteReady || page > _siteWire.Count) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = _siteWire.Read(ref page) });
         }
 
         private void OpenAudioSessions()
@@ -124,13 +413,16 @@ namespace Control4Crestron
                     if (request != _audioSessionsRequest) return;
                     _audioSessionsReading = false;
                     string content = result.ToString(Formatting.None);
-                    if (force || !_audioSessionsReady || _audioSessionsGeneration != generation ||
-                        !String.Equals(content, _audioSessionsContent, StringComparison.Ordinal))
+                    string core = AudioSessionsCore(result);
+                    bool fresh = force || !_audioSessionsReady || _audioSessionsGeneration != generation;
+                    if (fresh || !String.Equals(content, _audioSessionsContent, StringComparison.Ordinal))
                     {
                         _audioSessionsContent = content;
                         _audioSessions = result;
                         _audioSessionsGeneration = generation;
-                        _audioSessionsRevision = Guid.NewGuid().ToString("N").Substring(0, 16);
+                        if (fresh || _audioSessionsRevision == null || !String.Equals(core, _audioSessionsCore, StringComparison.Ordinal))
+                            _audioSessionsRevision = Guid.NewGuid().ToString("N").Substring(0, 16);
+                        _audioSessionsCore = core;
                         result["revision"] = _audioSessionsRevision;
                         _audioSessionsWire.Set(0, "audio_sessions", result.ToString(Formatting.None));
                         _audioSessionsReady = true;
@@ -145,6 +437,45 @@ namespace Control4Crestron
             });
         }
 
+        /// <summary>The sessions document without now-playing metadata.</summary>
+        internal static string AudioSessionsCore(JObject result)
+        {
+            var core = (JObject)result.DeepClone();
+            var sessions = core["sessions"] as JArray;
+            if (sessions != null) foreach (var session in sessions) if (session is JObject) ((JObject)session).Remove("now_playing");
+            return core.ToString(Formatting.None);
+        }
+
+        /// <summary>
+        /// After a zone command: read back now, and again shortly after. Director can apply a room's
+        /// IS_MUTED / CURRENT_VOLUME change after the command returns, and no realtime event reports
+        /// it to the sessions view, so a single immediate read can show the old value.
+        /// </summary>
+        private void ReadBackAudioSessions()
+        {
+            // Caller holds _requests.
+            ReadAudioSessions(false);
+            if (_audioSessionsTimer != null) _audioSessionsTimer.Change(1500, System.Threading.Timeout.Infinite);
+        }
+
+        private void TurnOffAllAudioZones(JObject body)
+        {
+            if (!_audioSessionsReady || body["revision"]?.Type != JTokenType.String ||
+                (string)body["revision"] != _audioSessionsRevision) return;
+            ushort[] targets = GatewayCore.ActivePanelAudioRooms(_audioSessions,
+                new List<ushort>(_rooms).ToArray());
+            if (targets.Length == 0) return;
+
+            int request = ++_audioSessionsRequest;
+            _audioSessionsReady = false;
+            _audioSessionsReading = true;
+            GatewayRegistry.Get(_gateway).TurnOffPanelAudioRooms(targets, _audioSessionsGeneration, () =>
+            {
+                lock (_requests)
+                    if (request == _audioSessionsRequest) ReadBackAudioSessions();
+            });
+        }
+
         private void ControlAudioSessionRoom(string op, JObject body)
         {
             ushort room, value;
@@ -153,15 +484,18 @@ namespace Control4Crestron
                 body["revision"].ToString() != _audioSessionsRevision || !Number(body["room_id"], 1, UInt16.MaxValue, out room) ||
                 !_rooms.Contains(room) || body["queue_id"] == null || body["queue_id"].Type != JTokenType.Integer ||
                 !Int32.TryParse(body["queue_id"].ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out queue) ||
-                !GatewayCore.PanelAudioSessionContains(_audioSessions, queue, room) ||
-                !Number(body["value"], 0, op == "audio_session_volume" ? (ushort)100 : (ushort)1, out value)) return;
+                !GatewayCore.PanelAudioSessionContains(_audioSessions, queue, room)) return;
+            // Room Off is how the host room leaves: the queue owner can't be removed from its own queue.
+            bool roomOff = op == "audio_session_room_off";
+            value = 0;
+            if (!roomOff && !Number(body["value"], 0, op == "audio_session_volume" ? (ushort)100 : (ushort)1, out value)) return;
 
-            string operation = op == "audio_session_volume" ? "SetVolume" : value == 1 ? "MuteOn" : "MuteOff";
+            string operation = roomOff ? "RoomOff" : op == "audio_session_volume" ? "SetVolume" : value == 1 ? "MuteOn" : "MuteOff";
             int request = _audioSessionsRequest;
             GatewayRegistry.Get(_gateway).ControlPanelAudioSessionRoom(room, queue, _audioSessionsGeneration, operation, value, () =>
             {
                 lock (_requests)
-                    if (request == _audioSessionsRequest) ReadAudioSessions();
+                    if (request == _audioSessionsRequest) ReadBackAudioSessions();
             });
         }
 
@@ -182,7 +516,7 @@ namespace Control4Crestron
             GatewayRegistry.Get(_gateway).ChangePanelAudioMembership(room, owner, queue, _audioSessionsGeneration, add, () =>
             {
                 lock (_requests)
-                    if (request == _audioSessionsRequest) ReadAudioSessions();
+                    if (request == _audioSessionsRequest) ReadBackAudioSessions();
             });
         }
 
@@ -327,24 +661,30 @@ namespace Control4Crestron
         private static void DeviceRequest(Session session, JObject body)
         {
             if (session.DeviceGateway == null) return;
-            ushort id, value;
+            ushort id;
             Control4_Room_Devices.Entry device;
             if (!Number(body["device_id"], 1, UInt16.MaxValue, out id) || !session.Devices.TryGetValue(id, out device)) return;
+            DeviceAction(session.DeviceGateway, device, body);
+        }
+
+        private static void DeviceAction(GatewayCore gateway, Control4_Room_Devices.Entry device, JObject body)
+        {
+            ushort value;
             if (body["action"] == null || body["action"].Type != JTokenType.String) return;
             string action = (string)body["action"];
             if (!device.Shade)
             {
                 if (action == "level" && Number(body["value"], 0, 100, out value))
-                    session.DeviceGateway.SetPanelLightLevel(id, value);
+                    gateway.SetPanelLightLevel(device.Id, value);
                 return;
             }
             switch (action)
             {
-                case "open": session.DeviceGateway.SendShadeCommand(id, "Open", 0); break;
-                case "close": session.DeviceGateway.SendShadeCommand(id, "Close", 0); break;
-                case "stop": session.DeviceGateway.SendShadeCommand(id, "Stop", 0); break;
+                case "open": gateway.SendShadeCommand(device.Id, "Open", 0); break;
+                case "close": gateway.SendShadeCommand(device.Id, "Close", 0); break;
+                case "stop": gateway.SendShadeCommand(device.Id, "Stop", 0); break;
                 case "level":
-                    if (Number(body["value"], 0, 100, out value)) session.DeviceGateway.SendShadeCommand(id, "SetLevel", value);
+                    if (Number(body["value"], 0, 100, out value)) gateway.SendShadeCommand(device.Id, "SetLevel", value);
                     break;
             }
         }
@@ -386,9 +726,7 @@ namespace Control4Crestron
             if (refresh)
             {
                 var gateway = GatewayRegistry.Get(_gateway);
-                var rooms = new JArray();
-                foreach (ushort id in _roomOrder)
-                    rooms.Add(new JObject { ["id"] = id, ["name"] = gateway.PanelRoomName(id) });
+                var rooms = gateway.PanelRoomCatalog(_roomOrder);
                 _roomWire.Set(0, "rooms", new JObject { ["room_id"] = 0, ["rooms"] = rooms }.ToString(Formatting.None));
             }
             if (_roomWire.Count == 0 || page > _roomWire.Count) return;
@@ -409,13 +747,58 @@ namespace Control4Crestron
                 if (_gateway == 0) return;
                 if (op == "audio_sessions") { OpenAudioSessions(); return; }
                 if (op == "audio_sessions_close") { CloseAudioSessions(); return; }
+                if (op == "audio_sessions_off") { TurnOffAllAudioZones(body); return; }
                 if (op == "audio_session_add" || op == "audio_session_remove")
                 { ChangeAudioSessionMembership(op == "audio_session_add", body); return; }
-                if (op == "audio_session_volume" || op == "audio_session_mute")
+                if (op == "audio_session_volume" || op == "audio_session_mute" || op == "audio_session_room_off")
                 { ControlAudioSessionRoom(op, body); return; }
                 if (op == "audio_sessions_page")
                 {
                     if (Number(body["value"], 1, UInt16.MaxValue, out number)) PublishAudioSessions(number);
+                    return;
+                }
+                if (op == "fan_speed")
+                {
+                    ushort fanRoom, fanId;
+                    if (Number(body["room_id"], 1, UInt16.MaxValue, out fanRoom) && _rooms.Contains(fanRoom) &&
+                        Number(body["device_id"], 1, UInt16.MaxValue, out fanId) && Number(body["value"], 0, 4, out number))
+                        GatewayRegistry.Get(_gateway).SetPanelFanSpeed(fanRoom, fanId, number);
+                    return;
+                }
+                if (op == "experience_select")
+                {
+                    ushort buttonRoom, buttonId;
+                    if (Number(body["room_id"], 1, UInt16.MaxValue, out buttonRoom) && _rooms.Contains(buttonRoom) &&
+                        Number(body["device_id"], 1, UInt16.MaxValue, out buttonId))
+                        GatewayRegistry.Get(_gateway).SelectExperienceButton(buttonRoom, buttonId);
+                    return;
+                }
+                if (op == "house_devices") { QueueHouse(true); return; }
+                if (op == "house_devices_close") { QueueHouse(false); return; }
+                if (op == "house_devices_page")
+                {
+                    if (Number(body["value"], 1, UInt16.MaxValue, out number)) PublishHouse(number);
+                    return;
+                }
+                if (op == "relay")
+                {
+                    ushort relayRoom, relayId;
+                    if (!Number(body["room_id"], 1, UInt16.MaxValue, out relayRoom) || !_rooms.Contains(relayRoom) ||
+                        !Number(body["device_id"], 1, UInt16.MaxValue, out relayId)) return;
+                    GatewayCore gateway;
+                    lock (_houseSync)
+                    {
+                        if (!_houseReady || !_houseRelayIds.Contains(relayId)) return;
+                        gateway = _houseGateway;
+                    }
+                    gateway?.SendRelayCommand(relayRoom, relayId, (string)body["action"]);
+                    return;
+                }
+                if (op == "house_device") { HouseDeviceRequest(body); return; }
+                if (op == "site") { ReadSite(); return; }
+                if (op == "site_page")
+                {
+                    if (Number(body["value"], 1, UInt16.MaxValue, out number)) PublishSite(number);
                     return;
                 }
                 if (op == "scenes") { DiscoverActions(); return; }

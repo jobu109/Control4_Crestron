@@ -5,6 +5,7 @@
 **/bin/
 **/obj/
 **/node_modules/
+**/.vite/
 **/packages/
 **/dist/
 **/CompilerWork/
