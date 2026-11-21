@@ -3,21 +3,31 @@ import type { Room } from '../../model/types';
 import { ZPage, iconButton, shared, slider, toggle } from '../base';
 import { icon, roomIcon } from '../icons';
 
-/** Status line under a room name, e.g. "3 lights on · Apple TV". */
-export function roomStatus(page: ZPage, room: Room): string {
+/** Measured activity for a room row, including devices reported by the house catalog. */
+export function roomStatus(page: ZPage, room: Room): { text: string; active: boolean } {
   const store = page.store;
   const parts: string[] = [];
-  const lit = store.lightsOn(room);
-  if (lit) parts.push(`${lit} ${lit === 1 ? 'light' : 'lights'} on`);
   const media = store.get('media', room.id);
-  if (media?.power) parts.push(media.title ?? 'Media on');
+  const mediaPower = media?.power ?? room.mediaPower;
+  const lit = store.lightsOn(room);
+  const shades = room.shades.map((shade) => store.get('shade', shade.id)?.position);
+  const open = shades.filter((position) => position !== undefined && position > 0).length;
+  const runningFans = (room.fans ?? []).filter((fan) => fan.speed !== undefined && fan.speed > 0);
+  if (mediaPower) parts.push(media?.title ?? 'Media on');
+  if (lit) parts.push(`${lit} ${lit === 1 ? 'light' : 'lights'} on`);
+  if (runningFans.length === 1) parts.push(`${runningFans[0].name} ${FAN_SPEEDS[runningFans[0].speed!]}`);
+  else if (runningFans.length) parts.push(`${runningFans.length} fans on`);
+  if (open) parts.push(`${open} ${open === 1 ? 'shade' : 'shades'} open`);
+  const active = Boolean(mediaPower || lit || runningFans.length || open);
   const t = room.thermostatId ? store.get('thermostat', room.thermostatId) : undefined;
-  if (t?.current) parts.push(`${Math.round(t.current)}°`);
-  if (parts.length) return parts.join(' · ');
-  // Only claim "All off" when the system has reported the room; otherwise say nothing.
-  const lightsKnown = room.lights.length > 0 && room.lights.every((l) => store.known('light', l.id));
-  const mediaKnown = media?.power !== undefined;
-  return lightsKnown || mediaKnown ? 'All off' : '';
+  if (t?.current !== undefined) parts.push(`${Math.round(t.current)}°`);
+  if (!parts.length) {
+    if (mediaPower === false) parts.push('Media off');
+    if (room.lights.length && room.lights.every((light) => store.known('light', light.id))) parts.push('Lights off');
+    if (room.fans?.length && room.fans.every((fan) => fan.speed === 0)) parts.push('Fans off');
+    if (shades.length && shades.every((position) => position === 0)) parts.push('Shades closed');
+  }
+  return { text: parts.join(' · '), active };
 }
 
 export class RoomsPage extends ZPage {
@@ -41,11 +51,10 @@ export class RoomsPage extends ZPage {
             <div class="head"><span class="floor">${f.name}</span><span class="sub">${rooms.length} rooms</span></div>
             <div class="list">
               ${rooms.map((r) => {
-                const status = roomStatus(this, r);
-                const active = this.store.lightsOn(r) > 0 || !!this.store.get('media', r.id)?.power;
+                const { text, active } = roomStatus(this, r);
                 return html`<a class="row" href="#/room/${encodeURIComponent(r.id)}">
                   <span class="tile ${active ? 'on' : ''}">${icon(roomIcon(r.name, r.icon), 24, 1.5)}</span>
-                  <span class="grow"><span class="name" style="display:block">${r.name}</span><span class="sub">${status}</span></span>
+                  <span class="grow"><span class="name" style="display:block">${r.name}</span><span class="sub">${text}</span></span>
                   ${icon('chevronRight', 18, 1.8)}
                 </a>`;
               })}

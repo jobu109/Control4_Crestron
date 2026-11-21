@@ -282,6 +282,7 @@ namespace Control4Crestron
             CaptureAudioFeedbackEvent(message, gen);
             CaptureMediaSessionEvent(message, gen);
             SignalAudioSessionReadback(message, gen);
+            RoutePanelRoomPowerHint(message, gen);
             CaptureNowPlayingEvent(message, gen);
             RoutePlayingEvent(message, gen);
             CaptureLightProbeEvent(message, gen);

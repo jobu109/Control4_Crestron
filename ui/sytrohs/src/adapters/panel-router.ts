@@ -207,6 +207,7 @@ export class PanelRouterAdapter implements Adapter {
     this.experienceUpdates.clear();
     this.countdownUpdates.clear();
     this.fanUpdates.clear();
+    this.roomPower.clear();
     this.received.clear();
     this.houseRequested = false;
     this.outbox = [];
@@ -224,7 +225,7 @@ export class PanelRouterAdapter implements Adapter {
       this.houseDevices.clear();
       for (const zone of store.config.audioZones) store.clearState('zone', zone.id);
       store.clearState('weather', HOUSE_WEATHER);
-      store.setConfig({ ...store.config, rooms: store.config.rooms.map((room) => ({ ...room, relays: undefined, experienceButtons: undefined, fans: undefined })) });
+      store.setConfig({ ...store.config, rooms: store.config.rooms.map((room) => ({ ...room, relays: undefined, experienceButtons: undefined, fans: undefined, mediaPower: undefined })) });
       store.setConnection('offline');
       return;
     }
@@ -254,6 +255,16 @@ export class PanelRouterAdapter implements Adapter {
       const frame = packet as unknown as WireFrame;
       if (frame.r === 0) this.onHouseFrame(frame);
       else if (this.active && frame.r === this.active.id && frame.k === 'd') this.onRoomFrame(frame, 'd');
+      return;
+    }
+    if (packet.h === 6 && validId(packet.u) && this.inScope(packet.u) &&
+        (typeof packet.v === 'boolean' || packet.v === null)) {
+      const id = String(packet.u);
+      const mediaPower = packet.v === null ? undefined : packet.v;
+      this.roomPower.set(id, mediaPower);
+      const store = this.store!;
+      store.setConfig({ ...store.config, rooms: store.config.rooms.map((room) =>
+        room.id === id ? { ...room, mediaPower } : room) });
       return;
     }
     if (packet.h === 4 && validId(packet.u) && (packet.v === null || validFanSpeed(packet.v))) {
@@ -332,6 +343,7 @@ export class PanelRouterAdapter implements Adapter {
   /** Catalog of every scoped room's lights and shades, with current levels. */
   private lastHouseDoc: Doc | null = null;
   private readonly relayUpdates = new Map<string, boolean>();
+  private readonly roomPower = new Map<string, boolean | undefined>();
   private readonly fanUpdates = new Map<string, number | undefined>();
   private readonly countdownUpdates = new Map<string, ReturnType<typeof parseCountdownState>>();
   private readonly experienceUpdates = new Map<string, boolean | undefined>();
@@ -460,19 +472,31 @@ export class PanelRouterAdapter implements Adapter {
     const store = this.store!;
     const seen = new Set<number>();
     const rooms = Array.isArray(doc.rooms) ? doc.rooms : [];
-    this.scope = rooms
-      .filter((r): r is { id: number; name: string } => !!r && validId(r.id) && typeof r.name === 'string' && r.name.trim() !== '')
+    const floors = new Map<string, typeof PANEL_FLOOR>();
+    const order = (value: unknown) => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+      ? value : Number.MAX_SAFE_INTEGER;
+    const scoped = rooms
+      .filter((r): r is { id: number; name: string; floor_id?: unknown; floor_name?: unknown; floor_order?: unknown; room_order?: unknown } =>
+        !!r && validId(r.id) && typeof r.name === 'string' && r.name.trim() !== '')
       .filter((r) => !seen.has(r.id) && !!seen.add(r.id))
-      .map((r) => ({ id: r.id, name: r.name.trim() }));
+      .map((r) => {
+        const floor = validId(r.floor_id) && typeof r.floor_name === 'string' && r.floor_name.trim()
+          ? { id: String(r.floor_id), name: r.floor_name.trim(), order: order(r.floor_order) }
+          : PANEL_FLOOR;
+        if (!floors.has(floor.id)) floors.set(floor.id, floor);
+        return { id: r.id, name: r.name.trim(), floorId: floor.id, order: order(r.room_order) };
+      });
+    this.scope = scoped.map(({ id, name }) => ({ id, name }));
     const previous = new Map(store.config.rooms.map((r) => [r.id, r]));
     const config: HouseConfig = {
       ...store.config,
-      floors: this.scope.length ? [PANEL_FLOOR] : [],
-      rooms: this.scope.map(({ id, name }): Room => {
+      floors: [...floors.values()],
+      rooms: [...scoped].sort((a, b) => a.order - b.order).map(({ id, name, floorId }): Room => {
         const key = String(id);
         const old = previous.get(key);
-        return old ? { ...old, name } : {
-          id: key, name, floorId: PANEL_FLOOR.id, lights: [], shades: [], videoSources: [], audioSources: [],
+        const mediaPower = this.roomPower.get(key);
+        return old ? { ...old, name, floorId, mediaPower } : {
+          id: key, name, floorId, mediaPower, lights: [], shades: [], videoSources: [], audioSources: [],
           lazy: true, lightActions: ['on', 'off']
         };
       })

@@ -1,6 +1,6 @@
 # Sytrohs CH5 contract (draft v0.2)
 
-Status: **draft, phase 2, not implemented on the processor.** Phase 1 runs Sytrohs on the existing Panel Room Router instead ([PANEL_ROUTER_ADAPTER.md](PANEL_ROUTER_ADAPTER.md)). This contract is how the gaps listed there would be closed: floors, whole-house light and shade state, and live status for every room. The Panel Room Router (serial joins 101–108), the Sources/Transport modules, their joins and `ui/room-media` must keep working when it is added.
+Status: **draft, phase 2, not implemented on the processor.** Phase 1 runs Sytrohs on the existing Panel Room Router instead ([PANEL_ROUTER_ADAPTER.md](PANEL_ROUTER_ADAPTER.md)). The production router already supplies Director floor grouping, whole-house light and shade feedback, and live media power for scoped rooms. This draft describes a possible second wire contract. It remains available for a future client or feature that needs a different interface. The Panel Room Router (serial joins 101–108), the Sources/Transport modules, their joins and `ui/room-media` must keep working when it is added.
 
 ## Goal
 
@@ -105,6 +105,6 @@ Additive only, on a separate branch of Control4_Crestron:
 
 ## Open questions
 
-- Confirm that Director item metadata returns `floorId`/`floorName` on the EA-5 for every room.
-- Decide where audio zones come from (Control4 rooms with Listen sources, or a parameter list).
+- Verified on the EA-5: the bulk inventory carries `floorId`, `floorName` and `roomOrder` for all 21 room records. The production router already uses this metadata.
+- Whole House Audio uses Director Digital Media room settings and current queue membership filtered by panel scope. The production router exposes this as `audio_sessions`.
 - Contract file: generate `Sytrohs.cse2j` with the Crestron Contract Editor so the signal names above resolve in CrComLib.

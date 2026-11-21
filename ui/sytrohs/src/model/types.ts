@@ -54,6 +54,7 @@ export interface Room {
   name: string;
   floorId: string;
   icon?: string;
+  mediaPower?: boolean;
   lights: Light[];
   shades: Shade[];
   experienceButtons?: Array<{ id: string; name: string; on?: boolean; kind?: 'countdown'; countdown?: CountdownState }>;

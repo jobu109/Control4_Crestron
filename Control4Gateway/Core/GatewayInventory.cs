@@ -16,40 +16,87 @@ namespace Control4Crestron
         private static readonly string[] InventoryCategories =
             { "lights", "motorization", "audio_video", "comfort", "sensors", "cameras" };
 
-        private System.Collections.Generic.Dictionary<ushort, string> _panelRoomNames =
-            new System.Collections.Generic.Dictionary<ushort, string>();
+        private System.Collections.Generic.Dictionary<ushort, JObject> _panelRooms =
+            new System.Collections.Generic.Dictionary<ushort, JObject>();
 
         private int _digitalMediaInventoryGeneration = -1, _digitalMediaInventoryId;
 
         private void CachePanelRoomNames(string json, int generation)
         {
             var items = JArray.Parse(json);
-            var names = new System.Collections.Generic.Dictionary<ushort, string>();
-            foreach (JToken item in items)
-            {
-                if (!(item is JObject) || ScalarText(item["type"]) != "8") continue;
-                ushort id;
-                string name = ScalarText(item["name"]);
-                if (UInt16.TryParse(ScalarText(item["id"] ?? item["item_id"]), out id) &&
-                    id != 0 && !String.IsNullOrWhiteSpace(name) && name.Length <= 160) names[id] = name;
-            }
+            var rooms = BuildPanelRoomCatalog(items);
             int digitalMedia = FindDigitalMedia(items);
             lock (_sync)
             {
                 if (_generation != generation) return;
-                _panelRoomNames = names;
+                _panelRooms = rooms;
                 _digitalMediaInventoryGeneration = generation;
                 _digitalMediaInventoryId = digitalMedia;
             }
+        }
+
+        internal static System.Collections.Generic.Dictionary<ushort, JObject> BuildPanelRoomCatalog(JArray items)
+        {
+            var floors = new System.Collections.Generic.Dictionary<ushort, JObject>();
+            var rooms = new System.Collections.Generic.Dictionary<ushort, JObject>();
+            foreach (var item in items)
+            {
+                ushort id;
+                if (!(item is JObject) || ScalarText(item["type"]) != "4" ||
+                    !UInt16.TryParse(ScalarText(item["id"] ?? item["item_id"]), out id) || id == 0) continue;
+                floors[id] = (JObject)item;
+            }
+            foreach (var item in items)
+            {
+                ushort id;
+                if (!(item is JObject) || ScalarText(item["type"]) != "8" ||
+                    !UInt16.TryParse(ScalarText(item["id"] ?? item["item_id"]), out id) || id == 0) continue;
+                string name = ScalarText(item["name"]);
+                if (String.IsNullOrWhiteSpace(name) || name.Length > 160) continue;
+                var room = new JObject { ["id"] = id, ["name"] = name };
+                ushort floorId;
+                if (UInt16.TryParse(ScalarText(item["floorId"]), out floorId) && floorId != 0)
+                {
+                    JObject floor;
+                    floors.TryGetValue(floorId, out floor);
+                    string floorName = ScalarText(floor?["name"]);
+                    if (String.IsNullOrWhiteSpace(floorName)) floorName = ScalarText(item["floorName"]);
+                    if (!String.IsNullOrWhiteSpace(floorName) && floorName.Length <= 160)
+                    {
+                        room["floor_id"] = floorId;
+                        room["floor_name"] = floorName;
+                        ushort floorOrder;
+                        if (UInt16.TryParse(ScalarText(floor?["floorOrder"]), out floorOrder))
+                            room["floor_order"] = floorOrder;
+                    }
+                }
+                ushort roomOrder;
+                if (UInt16.TryParse(ScalarText(item["roomOrder"]), out roomOrder)) room["room_order"] = roomOrder;
+                rooms[id] = room;
+            }
+            return rooms;
         }
 
         internal string PanelRoomName(ushort room)
         {
             lock (_sync)
             {
-                string name;
-                return _panelRoomNames.TryGetValue(room, out name) ? name : "Room " + room;
+                JObject entry;
+                return _panelRooms.TryGetValue(room, out entry) ? (string)entry["name"] : "Room " + room;
             }
+        }
+
+        internal JArray PanelRoomCatalog(System.Collections.Generic.IEnumerable<ushort> scope)
+        {
+            var result = new JArray();
+            lock (_sync)
+                foreach (ushort room in scope)
+                {
+                    JObject entry;
+                    result.Add(_panelRooms.TryGetValue(room, out entry) ? entry.DeepClone() :
+                        new JObject { ["id"] = room, ["name"] = "Room " + room });
+                }
+            return result;
         }
 
         private int _relayGeneration = -1;
@@ -537,7 +584,8 @@ namespace Control4Crestron
                     EmitMessage("Exporting inventory JSON");
                     var errors = new JArray();
                     var groups = new JObject();
-                    JArray all = InventoryItems(Request(host, token, "GET", "/api/v1/items", null));
+                    string rawInventory = Request(host, token, "GET", "/api/v1/items", null);
+                    JArray all = InventoryItems(rawInventory);
                     foreach (string category in InventoryCategories)
                     {
                         if (!CurrentGeneration(gen)) return;
@@ -587,6 +635,7 @@ namespace Control4Crestron
                         inventory["media_sessions_probe"] = InspectMediaSessions(all, host, token, gen);
                         inventory["media_sessions_events"] = RotateMediaSessionCapture(gen);
                         inventory["live_room_item_detail_probe"] = ProbeRoomItems(host, token, gen);
+                        inventory["floor_layout_probe"] = ProbeFloorLayout(rawInventory);
                         inventory["light_feedback_probe"] = ProbeLightFeedback(host, token, gen);
                         inventory["site_weather_probe"] = ProbeSiteAndWeather(all, host, token, gen);
                         inventory["experience_button_probe"] = ProbeDeviceCommandsAndVariables(host, token, gen,
@@ -1658,6 +1707,26 @@ namespace Control4Crestron
             return result;
         }
 
+        private static JObject ProbeFloorLayout(string response)
+        {
+            var floors = new JArray();
+            var rooms = new JArray();
+            foreach (var row in JArray.Parse(response))
+            {
+                var item = row as JObject;
+                if (item == null) continue;
+                string type = ScalarText(item["type"]);
+                if (type != "4" && type != "8") continue;
+                var entry = new JObject();
+                CopyInventoryField(item, entry, item["id"] == null ? "item_id" : "id");
+                foreach (string field in new[] { "name", "typeName", "parentId", "floorId", "floorName", "floorOrder", "roomOrder" })
+                    CopyInventoryField(item, entry, field);
+                if (type == "4") floors.Add(entry);
+                else rooms.Add(entry);
+            }
+            return new JObject { ["floors"] = floors, ["rooms"] = rooms };
+        }
+
         private JArray ProbeRoomItems(string host, string token, int generation)
         {
             var result = new JArray();
@@ -1683,7 +1752,7 @@ namespace Control4Crestron
                     CopyInventoryField(item, entry, "room_name");
                     CopyInventoryField(item, entry, "parent_id");
                     CopyInventoryField(item, entry, "location_id");
-                    foreach (string field in new[] { "roomId", "locationId", "parentId", "driver_id", "driverId", "type" })
+                    foreach (string field in new[] { "roomId", "locationId", "parentId", "driver_id", "driverId", "type", "floorId", "floorName", "floorOrder", "roomOrder" })
                         CopyInventoryField(item, entry, field);
                     entry.Remove("stage");
                 }

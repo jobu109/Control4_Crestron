@@ -166,6 +166,18 @@ namespace Control4Crestron
                 Json = new JObject { ["h"] = 2, ["u"] = id, ["v"] = closed }.ToString(Formatting.None) });
         }
 
+        private ushort[] _housePowerRooms;
+
+        private void PublishRoomPower(ushort id, bool? power)
+        {
+            lock (_houseSync)
+                if (!_houseReady || _housePowerRooms == null || Array.IndexOf(_housePowerRooms, id) < 0) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0,
+                Json = new JObject { ["h"] = 6, ["u"] = id, ["v"] = power.HasValue ? new JValue(power.Value) : new JValue((object)null) }
+                    .ToString(Formatting.None) });
+        }
+
         private void OpenHouse(ushort gatewayId, List<ushort> roomOrder)
         {
             CloseHouse();
@@ -189,6 +201,7 @@ namespace Control4Crestron
                 _houseLight = light;
                 _houseShade = shade;
                 _houseRelay = PublishRelay;
+                _housePowerRooms = roomOrder.ToArray();
             }
             gateway.LightChanged += light;
             gateway.ShadeChanged += shade;
@@ -196,6 +209,7 @@ namespace Control4Crestron
             gateway.ExperienceButtonChanged += PublishExperienceButton;
             gateway.CountdownChanged += PublishCountdown;
             gateway.FanChanged += PublishFan;
+            gateway.PanelRoomPowerChanged += PublishRoomPower;
             foreach (var device in devices.Values)
             {
                 // No per-device queries here: ReadHouseLevels reads the missing ones serially.
@@ -232,6 +246,7 @@ namespace Control4Crestron
             }
             PublishHouse(1);
             gateway.ReadHouseLevels(missingLights, missingShades);
+            gateway.WatchPanelRoomPower(roomOrder, true);
         }
 
         private void CloseHouse()
@@ -241,11 +256,14 @@ namespace Control4Crestron
             EventHandler<LightStatusEventArgs> light;
             EventHandler<ShadeStatusEventArgs> shade;
             Action<ushort, bool> relay;
+            ushort[] powerRooms;
             lock (_houseSync)
             {
                 gateway = _houseGateway; devices = _houseDevices; light = _houseLight; shade = _houseShade;
                 _houseGateway = null; _houseDevices = null; _houseRoomOf = null; _houseLight = null; _houseShade = null;
                 _houseReady = false;
+                powerRooms = _housePowerRooms;
+                _housePowerRooms = null;
                 relay = _houseRelay;
                 _houseRelay = null;
                 _houseRelayIds.Clear();
@@ -260,6 +278,8 @@ namespace Control4Crestron
             gateway.ExperienceButtonChanged -= PublishExperienceButton;
             gateway.CountdownChanged -= PublishCountdown;
             gateway.FanChanged -= PublishFan;
+            gateway.PanelRoomPowerChanged -= PublishRoomPower;
+            if (powerRooms != null) gateway.WatchPanelRoomPower(powerRooms, false);
             foreach (var device in devices.Values)
                 if (device.Shade) gateway.UnregisterShade(device.Id);
                 else gateway.UnregisterPanelLight(device.Id);
@@ -706,9 +726,7 @@ namespace Control4Crestron
             if (refresh)
             {
                 var gateway = GatewayRegistry.Get(_gateway);
-                var rooms = new JArray();
-                foreach (ushort id in _roomOrder)
-                    rooms.Add(new JObject { ["id"] = id, ["name"] = gateway.PanelRoomName(id) });
+                var rooms = gateway.PanelRoomCatalog(_roomOrder);
                 _roomWire.Set(0, "rooms", new JObject { ["room_id"] = 0, ["rooms"] = rooms }.ToString(Formatting.None));
             }
             if (_roomWire.Count == 0 || page > _roomWire.Count) return;

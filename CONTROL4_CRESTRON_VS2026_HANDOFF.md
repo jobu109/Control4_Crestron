@@ -1,3 +1,11 @@
+**Sytrohs two-panel media scope verified (2026-11-20).** The installer confirmed that media start and Room Off update the Rooms list on the panel with access, while the other panel continues to show only its own scoped rooms.
+
+**Sytrohs live room media summary hardware acceptance (2026-11-20).** The installer confirmed that the Rooms list follows media start and Room Off from the Control4 app without opening the room or refreshing Sytrohs. The gateway reads Director POWER_STATE for scoped rooms and re-reads the affected room on Watch or Listen activity events.
+
+**Sytrohs Rooms list live device summary verified (2026-11-20).** The installer confirmed that device feedback updates the room row while staying on the Rooms list, without opening the room. The summary uses the house catalog for lighting, fans, and shades. Media activity for unopened rooms is pending.
+
+**Sytrohs floor grouping hardware acceptance (2026-11-20).** The installer confirmed that the EA-5 rooms in panel scope appear under Main and follow Composer room order. The Panel Room Router publishes floor and room metadata from the existing Director bulk inventory. Multi-floor grouping and the unassigned-room fallback passed in fixtures.
+
 **Sytrohs Reset Outlet Experience Button hardware acceptance (2026-11-20).** The installer confirmed Sub in the Living Room Buttons sheet, including initial Director On/Off state, the programmed reset from Sytrohs, and live label and highlight through the reset without a manual refresh.
 
 **Sytrohs Grounded Experience Button hardware acceptance (2026-11-20).** The installer confirmed Emma Grounded in the Master Bed Buttons sheet, including initial Director On/Off state, activation from Sytrohs, and live state label and highlight after Composer restored the original state.

@@ -65,9 +65,9 @@ If the processor requires sign-in, the browser must hold a processor session bef
 
 The adapter does not invent state. Controls are disabled or hidden when the router cannot carry them out:
 
-- **Floors.** The router has no floor data, so every scoped room is listed under one "Rooms" group.
+- **Floors.** The room catalog groups scoped rooms using Director floor names and order from the initial inventory. Rooms use Director room order within the floor. Rooms without floor metadata appear under "Rooms".
 - **Lighting and Shades overview pages** use the router's whole-house view. `house_devices` (sent on connect) registers every scoped room's discovered lights and shades and returns a framed `house_devices` catalog (room 0) with current levels. Later level changes arrive on State$ as `{"h":1,"u":<id>,"v":<level>}`. Commands for a room that isn't open use `house_device` with `room_id`, `device_id` and `action`/`value`, checked against the catalog. `house_devices_close` releases the registrations, which are reference-counted alongside the open room's session. The tiles appear only when the catalog reports devices, and an empty catalog is re-requested up to 6 times, 10 seconds apart, in case Director discovery is still running.
-- **Room status in the Rooms list** is shown only for the room that was last opened.
+- **Room status in the Rooms list** uses live lighting, shade, and fan feedback from the house device catalog. The gateway reads scoped room POWER_STATE once and refreshes the affected room on Watch/Listen activity events. The room list receives h=6 packets with measured power. Track and source detail still come from the focused room session.
 - **Ambient lighting** is hidden because the router has no room lighting scene. Room lights On and Off send per-light levels.
 - **Lights** all get a level slider, because the router only accepts level commands. Switch-only loads may simply go to 0 or 100.
 - **Transport keys** that the room does not advertise are disabled.

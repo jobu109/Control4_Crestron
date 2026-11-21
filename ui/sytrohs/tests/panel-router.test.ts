@@ -357,6 +357,37 @@ describe('panel router adapter', () => {
     expect(router.ops()).toEqual(['audio_sessions_close']);
   });
 
+  it('updates only scoped room summary power without selecting the room', () => {
+    router.connect();
+    router.doc(J.state, 0, 'rooms', { room_id: 0, rooms: [{ id: 81, name: 'Den' }, { id: 82, name: 'Office' }] });
+    router.clear();
+    router.emit('s', J.state, JSON.stringify({ h: 6, u: 82, v: true }));
+    router.emit('s', J.state, JSON.stringify({ h: 6, u: 83, v: true }));
+    expect(store.room('82')?.mediaPower).toBe(true);
+    expect(store.room('81')?.mediaPower).toBeUndefined();
+    expect(store.room('83')).toBeUndefined();
+    expect(store.get('media', '82')).toBeUndefined();
+    expect(router.ops()).toEqual([]);
+    router.emit('s', J.state, JSON.stringify({ h: 6, u: 82, v: false }));
+    expect(store.room('82')?.mediaPower).toBe(false);
+    router.emit('s', J.state, JSON.stringify({ h: 6, u: 82, v: null }));
+    expect(store.room('82')?.mediaPower).toBeUndefined();
+  });
+
+  it('groups scoped rooms by Director floor and honors Composer room order', () => {
+    router.connect();
+    router.doc(J.state, 0, 'rooms', { room_id: 0, rooms: [
+      { id: 81, name: 'Upper Den', floor_id: 12, floor_name: 'Upper', floor_order: 2, room_order: 3 },
+      { id: 82, name: 'Living', floor_id: 11, floor_name: 'Main', floor_order: 1, room_order: 4 },
+      { id: 83, name: 'Entry', floor_id: 11, floor_name: 'Main', floor_order: 1, room_order: 1 },
+      { id: 84, name: 'Unknown Floor', floor_id: 13 }
+    ] });
+    expect(store.sortedFloors().filter((floor) => floor.id !== 'panel').map((floor) => floor.name)).toEqual(['Main', 'Upper']);
+    expect(store.roomsOnFloor('11').map((room) => room.name)).toEqual(['Entry', 'Living']);
+    expect(store.roomsOnFloor('12').map((room) => room.name)).toEqual(['Upper Den']);
+    expect(store.roomsOnFloor('panel').map((room) => room.name)).toEqual(['Unknown Floor']);
+  });
+
   it('selects only Experience Buttons from the reported room catalog', () => {
     router.connect();
     router.doc(J.state, 0, 'rooms', { room_id: 0, rooms: [{ id: 81, name: 'Den' }] });

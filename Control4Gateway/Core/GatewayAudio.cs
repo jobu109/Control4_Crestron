@@ -96,6 +96,142 @@ namespace Control4Crestron
             foreach (ushort id in ids) QueryAudio(id);
         }
 
+        internal event Action<ushort, bool?> PanelRoomPowerChanged;
+        private readonly Dictionary<ushort, int> _panelRoomPowerWatchers = new Dictionary<ushort, int>();
+        private readonly Dictionary<ushort, bool?> _panelRoomPower = new Dictionary<ushort, bool?>();
+        private readonly HashSet<ushort> _pendingPanelRoomPower = new HashSet<ushort>();
+        private int _panelRoomPowerGeneration = -1;
+        private object _panelRoomPowerWork;
+
+        internal void WatchPanelRoomPower(IEnumerable<ushort> rooms, bool watch)
+        {
+            var cached = new Dictionary<ushort, bool?>();
+            lock (_sync)
+            {
+                ResetPanelRoomPowerGeneration();
+                foreach (ushort room in rooms)
+                {
+                    int count;
+                    _panelRoomPowerWatchers.TryGetValue(room, out count);
+                    if (watch)
+                    {
+                        _panelRoomPowerWatchers[room] = count + 1;
+                        bool? power;
+                        if (_panelRoomPower.TryGetValue(room, out power) && power.HasValue) cached[room] = power;
+                        else _pendingPanelRoomPower.Add(room);
+                    }
+                    else if (count > 1) _panelRoomPowerWatchers[room] = count - 1;
+                    else
+                    {
+                        _panelRoomPowerWatchers.Remove(room);
+                        _pendingPanelRoomPower.Remove(room);
+                        _panelRoomPower.Remove(room);
+                    }
+                }
+            }
+            foreach (var entry in cached) PublishPanelRoomPower(entry.Key, entry.Value);
+            StartPanelRoomPowerRead();
+        }
+
+        // Called with _sync held. Observers belong to panels, but measurements belong to the connection.
+        private void ResetPanelRoomPowerGeneration()
+        {
+            if (_panelRoomPowerGeneration == _generation) return;
+            _panelRoomPowerGeneration = _generation;
+            _panelRoomPower.Clear();
+            _pendingPanelRoomPower.Clear();
+            _panelRoomPowerWork = null;
+        }
+
+        private void RoutePanelRoomPowerHint(JToken message, int generation)
+        {
+            if (!(message is JObject) || ScalarText(message["evtName"]) != "OnDataToUI" ||
+                ScalarText(message["iddevice"]) != "7") return;
+            var activity = (message["data"] as JObject)?["active_state_changed"] as JObject;
+            ushort room;
+            if (activity == null || activity["active"]?.Type != JTokenType.Boolean ||
+                !UInt16.TryParse(ScalarText(activity["room_id"]), out room)) return;
+            string kind = ScalarText(activity["type"]);
+            if (kind != "watch" && kind != "listen") return;
+            lock (_sync)
+            {
+                if (_generation != generation || !_online || !_panelRoomPowerWatchers.ContainsKey(room)) return;
+                ResetPanelRoomPowerGeneration();
+                _pendingPanelRoomPower.Add(room);
+            }
+            StartPanelRoomPowerRead();
+        }
+
+        private void PublishPanelRoomPower(ushort room, bool? power)
+        {
+            var handler = PanelRoomPowerChanged;
+            if (handler != null) SafeEvent(delegate { handler(room, power); });
+        }
+
+        private void StartPanelRoomPowerRead()
+        {
+            object work;
+            int generation;
+            lock (_sync)
+            {
+                if (!_online || _panelRoomPowerWork != null || _pendingPanelRoomPower.Count == 0) return;
+                generation = _generation;
+                work = new object();
+                _panelRoomPowerWork = work;
+            }
+            Queue(delegate
+            {
+                try
+                {
+                    while (CurrentGeneration(generation))
+                    {
+                        ushort room;
+                        lock (_sync)
+                        {
+                            if (!ReferenceEquals(_panelRoomPowerWork, work) || _pendingPanelRoomPower.Count == 0) return;
+                            using (var rooms = _pendingPanelRoomPower.GetEnumerator())
+                            {
+                                rooms.MoveNext();
+                                room = rooms.Current;
+                            }
+                            _pendingPanelRoomPower.Remove(room);
+                        }
+                        bool? power = null;
+                        try
+                        {
+                            string host, token;
+                            if (!GetConnection(out host, out token) || !CurrentGeneration(generation)) return;
+                            string path = "/api/v1/items/" + room.ToString(CultureInfo.InvariantCulture) + "/variables?varnames=POWER_STATE";
+                            ushort value;
+                            if (TryAudioVariable(ReadWithTimeoutRetry(host, token, path, generation), "POWER_STATE", out value))
+                                power = value != 0;
+                        }
+                        catch (Exception ex)
+                        {
+                            if (!CurrentGeneration(generation)) return;
+                            InvalidateRejectedToken(ex);
+                            EmitMessage("Room " + room + " media summary read failed: " + FailureKind(ex));
+                        }
+                        lock (_sync)
+                        {
+                            if (_generation != generation || !_online) return;
+                            if (!_panelRoomPowerWatchers.ContainsKey(room)) continue;
+                            bool? previous;
+                            if (_panelRoomPower.TryGetValue(room, out previous) && previous == power) continue;
+                            _panelRoomPower[room] = power;
+                        }
+                        PublishPanelRoomPower(room, power);
+                    }
+                }
+                finally
+                {
+                    lock (_sync)
+                        if (ReferenceEquals(_panelRoomPowerWork, work)) _panelRoomPowerWork = null;
+                    StartPanelRoomPowerRead();
+                }
+            });
+        }
+
         public void QueryAudio(ushort roomId)
         {
             AudioQueryWork work;
