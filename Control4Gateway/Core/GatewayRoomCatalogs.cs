@@ -14,6 +14,8 @@ namespace Control4Crestron
         private sealed class ServicePresetList
         {
             internal ushort DriverId;
+            internal TuneInPage TuneIn;
+            internal Dictionary<string, TuneInAction> TuneInActions;
             internal JObject Public;
             internal Dictionary<string, string> Selectors;
         }
@@ -39,6 +41,158 @@ namespace Control4Crestron
             if (raw == null || !UInt16.TryParse(raw.ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out id) || id != expectedId) throw new InvalidDataException("Service identity mismatch");
             return item;
         }
+        private static bool IsTuneInSource(JObject item)
+        {
+            return String.Equals(ScalarText(item["protocolFilename"]), "TuneIn.c4z", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private sealed class TuneInPage
+        {
+            internal string Screen, Url, Name, Navigator;
+            internal int Sequence, Depth;
+            internal bool Busy;
+            internal TuneInPage Parent;
+        }
+
+        private sealed class TuneInAction
+        {
+            internal TuneInPage Destination;
+            internal string Args;
+            internal string StationId, Logo;
+        }
+
+        private static void AddTuneInAction(JArray items, Dictionary<string, TuneInAction> actions,
+            string name, TuneInPage destination, string args)
+        {
+            string id = (items.Count + 1).ToString(CultureInfo.InvariantCulture);
+            actions.Add(id, new TuneInAction { Destination = destination, Args = args });
+            items.Add(new JObject { ["id"] = id, ["name"] = name, ["label_available"] = true });
+        }
+
+        private static Dictionary<string, TuneInAction> BuildTuneInMenu(JObject data, TuneInPage page,
+            out JArray items, out bool truncated)
+        {
+            var list = data["List"] as JObject;
+            if (list == null) throw new InvalidDataException("Unknown TuneIn menu response");
+            var row = list["item"];
+            if (row != null && row.Type != JTokenType.Null && !(row is JObject) && !(row is JArray))
+                throw new InvalidDataException("Unknown TuneIn menu rows");
+
+            items = new JArray();
+            var actions = new Dictionary<string, TuneInAction>(StringComparer.Ordinal);
+            truncated = row is JArray && ((JArray)row).Count > 2048;
+            if (page.Parent != null) AddTuneInAction(items, actions, "\u2039 Back to " + page.Parent.Name, page.Parent, null);
+            else AddTuneInAction(items, actions, "My Favorites \u203a",
+                new TuneInPage { Parent = page, Screen = "MyFavorites", Name = "My Favorites", Depth = 1 }, null);
+            int visited = 0;
+            foreach (JToken value in row as JArray ?? (row is JObject ? new JArray(row.DeepClone()) : new JArray()))
+            {
+                if (++visited > 2048) break;
+                var entry = value as JObject;
+                string name = ScalarText(entry?["text"])?.Trim();
+                if (String.IsNullOrEmpty(name)) continue;
+                if (name.Length > 140) name = name.Substring(0, 140);
+                string url = ScalarText(entry["URL"]);
+                if (page.Depth < 12 && TuneInUrl(url, "/Browse.ashx") != null &&
+                    (String.Equals(ScalarText(entry["default_action"]), "Browse", StringComparison.OrdinalIgnoreCase) ||
+                    String.Equals(entry["folder"]?.ToString(), "true", StringComparison.OrdinalIgnoreCase)))
+                {
+                    AddTuneInAction(items, actions, name + " \u203a", new TuneInPage {
+                        Parent = page, Screen = page.Screen, Url = url, Name = name, Depth = page.Depth + 1
+                    }, BuildTuneInRowArgs(entry));
+                    continue;
+                }
+                string args = BuildTuneInStationArgs(entry);
+                if (args == null) continue;
+                AddTuneInAction(items, actions, name, null, args);
+                TuneInAction action = actions[items.Count.ToString(CultureInfo.InvariantCulture)];
+                action.StationId = TuneInGuideId(entry);
+                action.Logo = TuneInArtwork(entry["image"]);
+            }
+            return actions;
+        }
+
+        private void PublishTuneInMenu(string host, string token, ushort room, ushort proxy, ushort driver,
+            int generation, Func<bool> current, TuneInPage target, string navigator, int sequence)
+        {
+            JObject data = RequestTuneInMenu(host, token, room, proxy, generation, current,
+                navigator, sequence, target.Screen, target.Url);
+            if (data == null) return;
+            var page = new TuneInPage { Screen = target.Screen, Url = target.Url, Name = target.Name,
+                Parent = target.Parent, Depth = target.Depth, Navigator = navigator, Sequence = sequence };
+            JArray items; bool truncated;
+            var actions = BuildTuneInMenu(data, page, out items, out truncated);
+            var catalog = new JObject {
+                ["room_id"] = room, ["kind"] = "service_presets", ["scope"] = "service_saved_items",
+                ["driver_id"] = driver, ["source_id"] = proxy, ["revision"] = Guid.NewGuid().ToString("N"),
+                ["items"] = items, ["total"] = items.Count, ["selection_supported"] = items.Count > 0,
+                ["truncated"] = truncated, ["unnamed"] = 0, ["omitted"] = 0
+            };
+            lock (_sync)
+            {
+                if (!current()) return;
+                foreach (TuneInAction action in actions.Values)
+                {
+                    if (String.IsNullOrEmpty(action.Logo)) continue;
+                    string key = TuneInLogoKey(proxy, action.StationId);
+                    if (_tuneInLogos.Count >= 2048 && !_tuneInLogos.ContainsKey(key)) _tuneInLogos.Clear();
+                    _tuneInLogos[key] = action.Logo;
+                }
+                _servicePresetLists[room] = new ServicePresetList { DriverId = driver, TuneIn = page, Public = catalog, TuneInActions = actions };
+                _roomCatalogHistory.Enqueue((JObject)catalog.DeepClone());
+                while (_roomCatalogHistory.Count > 4) _roomCatalogHistory.Dequeue();
+                PublishRoomCatalog(room, "service_presets", catalog);
+            }
+            EmitMessage("Room " + room + " TuneIn menu loaded (" + items.Count + " choices)");
+        }
+
+        private void SelectTuneInAction(ushort room, ServicePresetList list, TuneInAction action)
+        {
+            int generation, epoch, sequence;
+            AudioRoom registration;
+            TuneInPage page = list.TuneIn;
+            lock (_sync)
+            {
+                if (!ServiceListCurrent(room, list) || page.Busy || !_audioRooms.TryGetValue(room, out registration)) return;
+                generation = _generation;
+                epoch = _feedbackEpoch;
+                sequence = page.Sequence += action.Destination != null && action.Args != null ? 2 : 1;
+                page.Busy = true;
+            }
+            Func<bool> current = () => InspectionCurrent(room, registration, generation, epoch) && ServiceListCurrent(room, list);
+            Queue(delegate
+            {
+                try
+                {
+                    string host, token;
+                    if (!GetConnection(out host, out token)) return;
+                    ushort proxy = (ushort)list.Public["source_id"];
+                    lock (_sync) { if (!current()) return; }
+                    if (action.Args != null)
+                        SendTuneInNavigator(host, token, room, proxy, page.Navigator,
+                            action.Destination != null ? sequence - 1 : sequence, "BrowseCommand", action.Args);
+                    if (action.Destination != null)
+                        PublishTuneInMenu(host, token, room, proxy, list.DriverId, generation, current,
+                            action.Destination, action.Args == null ? Guid.NewGuid().ToString("N") : page.Navigator,
+                            action.Args == null ? 1 : sequence);
+                    else
+                    {
+                        lock (_sync) { if (!InspectionCurrent(room, registration, generation, epoch)) return; }
+                        InvalidateRoomSource(room, new AudioQueryWork { Generation = generation, Epoch = epoch, Configuration = registration });
+                        QueryAudio(room);
+                        EmitMessage("Room " + room + " TuneIn station selection accepted; refreshing measured room state");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    lock (_sync) { if (!current()) return; }
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("TuneIn selection failed: " + FailureKind(ex));
+                }
+                finally { lock (_sync) page.Busy = false; }
+            });
+        }
+
         internal static ushort ServiceDriverCandidate(string json, ushort sourceId, out JObject report)
         {
             JObject item = ServiceDetail(json, sourceId);
@@ -134,6 +288,13 @@ namespace Control4Crestron
                             if (driverId == 0) throw new InvalidDataException("No explicit protocol relationship");
                             string driverDetail = Request(host, token, "GET", "/api/v1/items/" + driverId, null);
                             if (!ServiceDriverIdentity(driverDetail, driverId)) { mapping["reason"] = "candidate_not_protocol_type"; throw new InvalidDataException("Candidate is not a protocol driver"); }
+                            if (IsTuneInSource(ServiceDetail(detail, sourceId)))
+                            {
+                                PublishTuneInMenu(host, token, id, sourceId, driverId, gen,
+                                    () => CatalogWorkCurrent(id, registration, gen, epoch, work),
+                                    new TuneInPage { Screen = "Browse", Name = "Browse" }, Guid.NewGuid().ToString("N"), 1);
+                                return;
+                            }
                             driverCommands = Request(host, token, "GET", "/api/v1/items/" + driverId + "/commands", null);
                             mapping["driver_commands"] = BuildCommandMetadataReport(driverCommands, 200, driverId);
                             mapping["status"] = "verified_relationship";
@@ -201,13 +362,15 @@ namespace Control4Crestron
         }
         private void SelectListedServicePreset(ushort roomId, string revision, string mediaId)
         {
-            ServicePresetList list; string selector;
+            ServicePresetList list; string selector = null; TuneInAction action = null;
             lock (_sync)
             {
-                if (!_online || !_servicePresetLists.TryGetValue(roomId, out list) || (string)list.Public["revision"] != revision || !list.Selectors.TryGetValue(mediaId, out selector))
+                if (!_online || !_servicePresetLists.TryGetValue(roomId, out list) || (string)list.Public["revision"] != revision ||
+                    !(list.TuneIn != null ? list.TuneInActions.TryGetValue(mediaId, out action) : list.Selectors.TryGetValue(mediaId, out selector)))
                 { EmitMessage("Service preset selection rejected: stale or unavailable list/item"); return; }
             }
-            SelectServicePresetCore(roomId, list.DriverId, selector, list);
+            if (action != null) SelectTuneInAction(roomId, list, action);
+            else SelectServicePresetCore(roomId, list.DriverId, selector, list);
         }
         private static string RoomCatalogPath(ushort id, string kind)
         {

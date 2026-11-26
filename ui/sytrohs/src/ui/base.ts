@@ -5,8 +5,39 @@ import { icon } from './icons';
 
 export const GREEN = '#2EB85C';
 
+/** Raised square controls, including icon faces inside larger tap targets. */
+export const squareButtonStyles = css`
+  :is(.neu-square, button.btn.square, a.sq, button.sq, button > .tile, a > .tile) {
+    border: 1px solid #3e444f; border-radius: var(--square-radius, 12px);
+    background: #2c3038; color: #c4cbd4;
+    box-shadow: 4px 4px 8px #0d1014, -3px -3px 7px #424957;
+    transition: box-shadow .18s, color .18s, transform .08s;
+  }
+  :is(.neu-square.primary, a.sq.solid, button.sq.solid) { color: #f3f6f9; }
+  :is(.neu-square.selected, button.btn.square.on, .neu-square.on, .neu-square.sel, button > .tile.on, a > .tile.on),
+  :is(a.neu-square, a.sq, button.sq:enabled, button.btn.square:enabled, button.neu-square:enabled):active,
+  :is(button:enabled, a):active > .tile {
+    background: #292e36; color: var(--square-accent, #04dcb9);
+    box-shadow: inset 3px 3px 7px #171a20, inset -3px -3px 7px #3e4450, 0 0 5px var(--square-glow, #04dcb955);
+  }
+  :is(a.neu-square, a.sq, button.sq:enabled, button.btn.square:enabled, button.neu-square:enabled):active,
+  :is(button:enabled, a):active > .tile { transform: translateY(1px); }
+  :is(.neu-square, button.btn.square, a.sq, button.sq):focus-visible {
+    outline: 2px solid var(--square-accent, #a5fff1); outline-offset: 3px;
+  }
+  :is(button.btn.square, button.neu-square, button.sq):disabled { opacity: 0.45; cursor: default; }
+`;
+
 /** Styles every page shares. Values come from the approved Sytrohs mockups. */
 export const shared = css`
+  :host { color-scheme: dark; }
+  * { scrollbar-width: thin; scrollbar-color: #535d69 transparent; }
+  @supports selector(::-webkit-scrollbar) { * { scrollbar-width: auto; scrollbar-color: auto; } }
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-track, *::-webkit-scrollbar-corner { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: #535d69; border-radius: 8px; }
+  *::-webkit-scrollbar-thumb:hover { background: #697583; }
+  *::-webkit-scrollbar-button, *::-webkit-scrollbar-button:single-button { display: none; width: 0; height: 0; }
   :host {
     position: absolute;
     inset: 0;
@@ -34,6 +65,15 @@ export const shared = css`
   .btn.sel { background: #fff; color: #0b0d10; font-weight: 700; }
   .btn.on { background: var(--green); color: #0b0d10; font-weight: 700; }
   .btn.outline { background: rgba(0,0,0,0.3); border: 1.5px solid rgba(255,255,255,0.85); color: #fff; font-weight: 700; }
+  .rocker { display: flex; align-items: stretch; gap: 4px; padding: 5px; border: 0; border-radius: 999px;
+    background: #2c3038; box-shadow: 5px 5px 12px #171a20, -5px -5px 12px #444b57; }
+  .rocker > button.btn { flex: 1 1 0; min-width: 0; width: auto; padding: 0 12px; border: 0; border-radius: 999px;
+    background: transparent; color: #d8dde6; font-weight: 800; display: flex; align-items: center;
+    justify-content: center; gap: 8px; text-align: center; }
+  .rocker > button.btn.sel, .rocker > button.btn:enabled:active { color: #35e0c0;
+    text-shadow: 0 0 8px #35e0c0; box-shadow: inset 5px 5px 11px #171a20, inset -3px -3px 8px #444b57, inset 0 0 20px #35e0c045; }
+  .rocker > button.btn:focus-visible { outline: 2px solid #a5fff1; outline-offset: -2px; }
+  .rocker > button.btn:disabled { opacity: 0.45; cursor: default; }
   .btn.square { width: 56px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 300; }
   .tile { width: 48px; height: 48px; flex-shrink: 0; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid rgba(255,255,255,0.85); color: #fff; }
   .tile.on { background: #fff; border-color: #fff; color: #0b0d10; }
@@ -58,7 +98,8 @@ export const shared = css`
   input[type='range']::-moz-range-thumb { width: 28px; height: 28px; border-radius: 14px; background: #fff; border: none; }
   input[type='range']:disabled { opacity: 0.45; }
   .scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.55); }
-  .close { width: 76px; height: 76px; border-radius: 38px; border: 2px solid #fff; background: transparent; display: flex; align-items: center; justify-content: center; }
+  .close { width: 76px; height: 76px; --square-radius: 50%; --square-accent: #fff; --square-glow: #ffffff55; display: flex; align-items: center; justify-content: center; }
+  ${squareButtonStyles}
 `;
 
 /** Base class for pages: re-renders whenever the store changes. */

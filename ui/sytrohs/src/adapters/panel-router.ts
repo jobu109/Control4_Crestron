@@ -54,9 +54,9 @@ export const PANEL_FLOOR = { id: 'panel', name: 'Rooms', order: 1 };
 
 const ZONE_STEP = 5;
 
-interface Device { id: number; name: string; shade: boolean }
+interface Device { id: number; name: string; shade: boolean; dimmable?: boolean }
 interface RoomFeedback { [field: string]: number }
-interface NowPlaying { valid: boolean; title?: string; artist?: string; album?: string; artwork?: string; station?: string; playback_action?: string }
+interface NowPlaying { valid: boolean; title?: string; artist?: string; album?: string; artwork?: string; station_artwork?: string; station?: string; playback_action?: string }
 interface Catalog { kind: string; valid: boolean; revision: string; items: Array<{ id: string; name: string }>; selection_supported: boolean; source_id?: number; shuffle?: boolean }
 interface SessionRoom { id: number; name?: string; volume?: number; muted?: boolean }
 interface AudioSession {
@@ -91,13 +91,13 @@ class ActiveRoom {
 
 type Doc = Record<string, unknown>;
 interface HouseCollectors {
-  rooms: FrameCollector<Doc>; scenes: FrameCollector<Doc>; audio_sessions: FrameCollector<Doc>; site: FrameCollector<Doc>;
+  rooms: FrameCollector<Doc>; scenes: FrameCollector<Doc>; audio_sessions: FrameCollector<Doc>; video_sessions: FrameCollector<Doc>; site: FrameCollector<Doc>;
   house_devices: FrameCollector<Doc>;
 }
 
 const PAGE_OPS: Record<string, string> = {
   d: 'device_page', a: 'audio_page', v: 'video_page', m: 'media_page', n: 'playing_page',
-  rooms: 'rooms_page', scenes: 'scenes_page', audio_sessions: 'audio_sessions_page', site: 'site_page',
+  rooms: 'rooms_page', scenes: 'scenes_page', audio_sessions: 'audio_sessions_page', video_sessions: 'video_sessions_page', site: 'site_page',
   house_devices: 'house_devices_page'
 };
 
@@ -137,6 +137,50 @@ export class PanelRouterAdapter implements Adapter {
   private scenes: Scene[] = [];
   private sessions: AudioSessions | null = null;
   private sessionsOpen = false;
+  private securityZones = new FrameCollector<Doc>(0, 'sec_zones');
+  private keypadFrames = new FrameCollector<Doc>(0, 'sec_key');
+  private keypadRequest?: { partition: number; action: string; pin: string };
+  private keypadTimer?: ReturnType<typeof setTimeout>;
+
+  sendSecurityKeypad(partition: number, action: string, pin: string): void {
+    if (!this.online || this.view !== 'security' || !globalThis.crypto?.subtle || this.keypadRequest) return;
+    this.keypadFrames = new FrameCollector<Doc>(0, 'sec_key');
+    this.keypadRequest = { partition, action, pin };
+    this.keypadTimer = setTimeout(() => { this.keypadRequest = undefined; this.keypadResult('unavailable'); }, 12000);
+    this.keypadResult('pending');
+    this.request('sec_key');
+  }
+
+  private keypadResult(result: string): void {
+    const store = this.store!;
+    store.setConfig({ ...store.config, securityKeypadResult: result });
+  }
+
+  private async sendEncryptedKeypad(doc: Doc): Promise<void> {
+    const pending = this.keypadRequest;
+    if (!pending || typeof doc.challenge !== 'string' || !/^[a-f0-9]{32}$/.test(doc.challenge) ||
+        typeof doc.n !== 'string' || typeof doc.e !== 'string') return;
+    try {
+      const key = await crypto.subtle.importKey('jwk', { kty: 'RSA', n: doc.n, e: doc.e },
+        { name: 'RSA-OAEP', hash: 'SHA-1' }, false, ['encrypt']);
+      const clear = new TextEncoder().encode([doc.challenge, pending.partition, pending.action, pending.pin].join('|'));
+      let encrypted: ArrayBuffer;
+      try { encrypted = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, key, clear); }
+      finally { clear.fill(0); }
+      if (this.keypadRequest !== pending || !this.online || this.view !== 'security') return;
+      const encoded = btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+      this.request('sec_a', { c: doc.challenge, d: encoded.slice(0, 172) });
+      this.request('sec_b', { c: doc.challenge, d: encoded.slice(172) });
+      pending.pin = '';
+    } catch {
+      clearTimeout(this.keypadTimer);
+      this.keypadRequest = undefined;
+      this.keypadResult('unavailable');
+    }
+  }
+
+  private securityZonePanel?: number;
+  private securityZoneChanges = new Map<string, boolean>();
   private siteTimer: ReturnType<typeof setInterval> | undefined;
   /** Whole-house lights and shades of every scoped room: device id -> owning room and kind. */
   private houseDevices = new Map<number, Device & { room: number }>();
@@ -175,6 +219,9 @@ export class PanelRouterAdapter implements Adapter {
   }
 
   dispose(): void {
+    clearTimeout(this.keypadTimer);
+    this.keypadRequest = undefined;
+    if (this.online && this.view === "security") this.request("security_zones_close");
     clearInterval(this.siteTimer);
     clearTimeout(this.houseTimer);
     clearTimeout(this.initialTimer);
@@ -190,10 +237,26 @@ export class PanelRouterAdapter implements Adapter {
   }
 
   setView(view: string): void {
+    if (this.online && this.view === "security" && view !== "security") this.request("security_zones_close");
     this.view = view;
+    if (view !== 'security') {
+      clearTimeout(this.keypadTimer);
+      this.keypadRequest = undefined;
+    }
+    this.refreshSecurity();
     if (!this.online) return;
     if (view === 'audio') this.openSessions();
     else if (this.sessionsOpen) this.closeSessions();
+  }
+
+  private refreshSecurity(): void {
+    if (!this.online || this.view !== 'security') return;
+    this.securityZones = new FrameCollector<Doc>(0, 'sec_zones');
+    this.securityZonePanel = undefined;
+    this.securityZoneChanges.clear();
+    this.store!.setConfig({ ...this.store!.config, securityZones: undefined, securityKeypadResult: undefined });
+    this.request('security_zones');
+    this.request('security');
   }
 
   // ---- incoming ----
@@ -202,6 +265,8 @@ export class PanelRouterAdapter implements Adapter {
     const store = this.store;
     if (!store || online === this.online) return;
     this.online = online;
+    clearTimeout(this.keypadTimer);
+    this.keypadRequest = undefined;
     this.house = houseCollectors();
     this.relayUpdates.clear();
     this.experienceUpdates.clear();
@@ -217,6 +282,7 @@ export class PanelRouterAdapter implements Adapter {
     this.initialTries = 0;
     if (!online) {
       this.sessionsOpen = false;
+      this.refreshSecurity();
       clearInterval(this.siteTimer);
       this.siteTimer = undefined;
       clearTimeout(this.houseTimer);
@@ -226,6 +292,7 @@ export class PanelRouterAdapter implements Adapter {
       for (const zone of store.config.audioZones) store.clearState('zone', zone.id);
       store.clearState('weather', HOUSE_WEATHER);
       store.setConfig({ ...store.config, rooms: store.config.rooms.map((room) => ({ ...room, relays: undefined, experienceButtons: undefined, fans: undefined, mediaPower: undefined })) });
+      store.setConfig({ ...store.config, securityStatus: undefined, securityZones: undefined });
       store.setConnection('offline');
       return;
     }
@@ -233,6 +300,7 @@ export class PanelRouterAdapter implements Adapter {
     this.request('rooms');
     this.request('scenes');
     this.request('site');
+    this.refreshSecurity();
     this.houseTries = 0;
     // house_devices follows the room list (onRooms): it is the heaviest request and its level
     // updates share State$ with the startup documents.
@@ -251,9 +319,55 @@ export class PanelRouterAdapter implements Adapter {
   private onState(raw: string): void {
     const packet = this.parse(raw);
     if (!packet || !this.online) return;
+    if (this.view === 'security' && validId(packet.security_zone) && validId(packet.panel) &&
+        typeof packet.open === 'boolean') {
+      const store = this.store!;
+      const id = packet.security_zone;
+      const open = packet.open;
+      if (this.securityZoneChanges.size < 1024) this.securityZoneChanges.set(packet.panel + ":" + id, open);
+      if (packet.panel === this.securityZonePanel && store.config.securityZones) store.setConfig({ ...store.config,
+        securityZones: store.config.securityZones.map((zone) => zone.id === id ? { ...zone, open } : zone) });
+      return;
+    }
+    if (typeof packet.security_keypad === 'string') {
+      if (this.view === 'security' && this.keypadRequest) {
+        clearTimeout(this.keypadTimer);
+        this.keypadRequest = undefined;
+        this.keypadResult(packet.security_keypad);
+      }
+      return;
+    }
+    if (packet.security === true) {
+      const store = this.store!;
+      const mode = packet.mode === 'disarmed' || packet.mode === 'home' || packet.mode === 'away' ? packet.mode : undefined;
+      store.setConfig({ ...store.config, securityStatus: {
+        partition: validId(packet.partition) ? packet.partition : undefined, mode,
+        alarm: typeof packet.alarm === 'boolean' ? packet.alarm : undefined,
+        open: typeof packet.open === 'number' && Number.isInteger(packet.open) && packet.open >= 0 && packet.open <= 65535 ? packet.open : undefined,
+        multiple: packet.multiple === true
+      } });
+      return;
+    }
     if (packet.w === 1) {
       const frame = packet as unknown as WireFrame;
-      if (frame.r === 0) this.onHouseFrame(frame);
+      if (frame.r === 0 && frame.k === 'sec_key') {
+        if (this.view !== 'security' || !this.keypadRequest) return;
+        const key = this.collect(this.keypadFrames, frame, 'sec_key_page', false);
+        if (key) void this.sendEncryptedKeypad(key);
+        return;
+      }
+      if (frame.r === 0 && frame.k === 'sec_zones') {
+        if (this.view !== 'security') return;
+        const doc = this.collect(this.securityZones, frame, 'security_zones_page', false);
+        if (!doc || !validId(doc.panel) || !Array.isArray(doc.zones)) return;
+        const store = this.store!;
+        this.securityZonePanel = doc.panel;
+        store.setConfig({ ...store.config, securityZones: doc.zones.slice(0, 256)
+          .filter((zone) => zone && validId(zone.id) && typeof zone.name === 'string')
+          .map((zone) => ({ id: zone.id, name: zone.name, open: this.securityZoneChanges.get(doc.panel + ":" + zone.id) ??
+            (typeof zone.open === 'boolean' ? zone.open : undefined) })) });
+      }
+      else if (frame.r === 0) this.onHouseFrame(frame);
       else if (this.active && frame.r === this.active.id && frame.k === 'd') this.onRoomFrame(frame, 'd');
       return;
     }
@@ -310,13 +424,13 @@ export class PanelRouterAdapter implements Adapter {
       return;
     }
     if (packet.h === 1 && Number.isInteger(packet.u)) {
-      this.onHouseValue(packet.u as number, packet.v);
+      this.onHouseValue(packet.u as number, packet.v, packet.dim);
       return;
     }
     const room = this.active;
     if (!room || packet.r !== room.id) return;
     if (Number.isInteger(packet.u)) {
-      this.onDeviceValue(room, packet.u as number, packet.v);
+      this.onDeviceValue(room, packet.u as number, packet.v, packet.dim);
       return;
     }
     let changed = false;
@@ -336,6 +450,13 @@ export class PanelRouterAdapter implements Adapter {
     if (frame.k === 'rooms') this.onRooms(doc);
     else if (frame.k === 'scenes') this.onScenes(doc);
     else if (frame.k === 'audio_sessions') this.onSessions(doc);
+    else if (frame.k === 'video_sessions') {
+      const store = this.store!;
+      store.setConfig({ ...store.config, videoSessions: {
+        sessions: Array.isArray(doc.sessions) ? doc.sessions : [],
+        status: typeof doc.status === 'string' ? doc.status : undefined
+      } });
+    }
     else if (frame.k === 'site') this.onSite(doc);
     else if (frame.k === 'house_devices') this.onHouseDevices(doc);
   }
@@ -360,9 +481,9 @@ export class PanelRouterAdapter implements Adapter {
       const shades: Shade[] = [];
       for (const d of r.devices) {
         if (!d || !validId(d.id) || typeof d.name !== 'string' || typeof d.shade !== 'boolean' || next.has(d.id)) continue;
-        next.set(d.id, { id: d.id, name: d.name, shade: d.shade, room: r.id });
+        next.set(d.id, { id: d.id, name: d.name, shade: d.shade, dimmable: typeof d.dimmable === "boolean" ? d.dimmable : undefined, room: r.id });
         if (d.shade) shades.push({ id: String(d.id), name: d.name, positionable: true });
-        else lights.push({ id: String(d.id), name: d.name, dimmable: true });
+        else lights.push({ id: String(d.id), name: d.name, dimmable: d.dimmable !== false });
       }
       const relays = (Array.isArray(r.relays) ? r.relays : [])
         .filter((relay: Doc) => relay && validId(relay.id) && typeof relay.name === 'string')
@@ -403,7 +524,7 @@ export class PanelRouterAdapter implements Adapter {
     }
   }
 
-  private onHouseValue(id: number, value: unknown): void {
+  private onHouseValue(id: number, value: unknown, dimmable?: unknown): void {
     const device = this.houseDevices.get(id);
     if (!device) return;
     const store = this.store!;
@@ -414,7 +535,11 @@ export class PanelRouterAdapter implements Adapter {
     }
     const level = value as number;
     if (device.shade) store.putState('shade', key, { position: level });
-    else store.putState('light', key, { on: level > 0, level });
+    else {
+      const capability = typeof dimmable === 'boolean' ? dimmable : device.dimmable ?? store.get('light', key)?.dimmable;
+      if (typeof capability === 'boolean') device.dimmable = capability;
+      store.putState('light', key, { on: level > 0, level, dimmable: capability });
+    }
   }
 
   /** Location (coordinates, optional name) and weather from the gateway's site document. */
@@ -516,8 +641,14 @@ export class PanelRouterAdapter implements Adapter {
     const revision = doc.revision;
     this.sceneRevision = revision;
     this.scenes = doc.actions
-      .filter((a): a is { slot: number; name: string; kind?: string } => !!a && Number.isInteger(a.slot) && a.slot > 0 && typeof a.name === 'string')
-      .map((a) => ({ id: `${revision}:${a.slot}`, name: a.name, description: typeof a.kind === 'string' ? humanize(a.kind) : undefined }));
+      .filter((a): a is { slot: number; name: string; kind?: string; room_ids?: unknown } => !!a && Number.isInteger(a.slot) && a.slot > 0 && typeof a.name === 'string')
+      .map((a) => ({
+        id: `${revision}:${a.slot}`, name: a.name,
+        description: typeof a.kind === 'string' ? humanize(a.kind) : undefined,
+        roomIds: a.kind === 'light' && Array.isArray(a.room_ids)
+          ? a.room_ids.filter(validId).map(String)
+          : undefined
+      }));
     const store = this.store!;
     store.setConfig(this.withServices({ ...store.config, scenes: this.scenes }));
   }
@@ -557,16 +688,15 @@ export class PanelRouterAdapter implements Adapter {
     const shades: Shade[] = [];
     for (const d of doc.devices) {
       if (!d || !validId(d.id) || typeof d.name !== 'string' || typeof d.shade !== 'boolean') continue;
-      room.devices.set(d.id, { id: d.id, name: d.name, shade: d.shade });
-      // The router only accepts level commands for lights, so every light gets a level slider.
+      room.devices.set(d.id, { id: d.id, name: d.name, shade: d.shade, dimmable: typeof d.dimmable === "boolean" ? d.dimmable : undefined });
       if (d.shade) shades.push({ id: String(d.id), name: d.name, positionable: true });
-      else lights.push({ id: String(d.id), name: d.name, dimmable: true });
+      else lights.push({ id: String(d.id), name: d.name, dimmable: d.dimmable !== false });
       this.onDeviceValue(room, d.id, d.value);
     }
     this.store!.updateRoom(String(room.id), { lights, shades });
   }
 
-  private onDeviceValue(room: ActiveRoom, id: number, value: unknown): void {
+  private onDeviceValue(room: ActiveRoom, id: number, value: unknown, dimmable?: unknown): void {
     const device = room.devices.get(id);
     if (!device) return;
     const store = this.store!;
@@ -578,7 +708,11 @@ export class PanelRouterAdapter implements Adapter {
     }
     const level = value as number;
     if (device.shade) store.putState('shade', key, { position: level });
-    else store.putState('light', key, { on: level > 0, level });
+    else {
+      const capability = typeof dimmable === 'boolean' ? dimmable : device.dimmable ?? store.get('light', key)?.dimmable;
+      if (typeof capability === 'boolean') device.dimmable = capability;
+      store.putState('light', key, { on: level > 0, level, dimmable: capability });
+    }
   }
 
   private onSources(room: ActiveRoom, kind: 'a' | 'v', doc: Record<string, unknown>): void {
@@ -664,6 +798,7 @@ export class PanelRouterAdapter implements Adapter {
       if (np.artist) state.artist = np.artist;
       if (np.album) state.album = np.album;
       if (np.artwork) state.artUrl = np.artwork;
+      if (np.station_artwork) state.stationArtUrl = np.station_artwork;
       if (np.station) state.station = np.station;
       if (np.playback_action === 'play' || np.playback_action === 'pause') state.playbackAction = np.playback_action;
     }
@@ -736,9 +871,9 @@ export class PanelRouterAdapter implements Adapter {
     if (this.houseDevices.size && config.rooms.some((r) => r.lights.length)) services.push('lighting');
     if (this.houseDevices.size && config.rooms.some((r) => r.shades.length)) services.push('shades');
     if (config.rooms.length) services.push('media');
-    if (config.audioZones.length) services.push('audio');
+    if (config.rooms.length || config.audioZones.length) services.push('audio');
     if (config.scenes.length) services.push('scenes');
-    return { ...config, services };
+    return { ...config, services, videoSessionsEnabled: true };
   }
 
   // ---- outgoing ----
@@ -746,6 +881,16 @@ export class PanelRouterAdapter implements Adapter {
   send(c: Command): void {
     if (!this.online) return;
     switch (c.kind) {
+      case 'video-sessions':
+      case 'video-session-watch': {
+        const store = this.store!;
+        if (c.kind === 'video-session-watch' && !store.config.videoSessions?.sessions.some((session) =>
+          session.room === c.room && session.source === c.source && session.targets.some((target) => target.id === c.target))) return;
+        store.setConfig({ ...store.config, videoSessions: undefined });
+        if (c.kind === 'video-sessions') this.request('video_sessions');
+        else this.request('video_session_watch', { room_id: c.room, target: c.target, source: c.source });
+        return;
+      }
       case 'zones-off':
         if (this.sessions?.sessions.some((session) => session.room_ids.length))
           this.request('audio_sessions_off', { revision: this.sessions.revision });
@@ -1041,6 +1186,7 @@ function houseCollectors(): HouseCollectors {
     rooms: new FrameCollector<Doc>(0, 'rooms'),
     scenes: new FrameCollector<Doc>(0, 'scenes'),
     audio_sessions: new FrameCollector<Doc>(0, 'audio_sessions'),
+    video_sessions: new FrameCollector<Doc>(0, 'video_sessions'),
     site: new FrameCollector<Doc>(0, 'site'),
     house_devices: new FrameCollector<Doc>(0, 'house_devices')
   };

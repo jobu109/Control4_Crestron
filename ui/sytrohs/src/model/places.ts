@@ -24,7 +24,7 @@ export function parsePlaces(text: string): PlaceTable {
   const region: number[] = [];
   const lat: number[] = [];
   const lon: number[] = [];
-  for (const line of text.split('\n')) {
+  for (const line of text.split(/\r?\n/)) {
     if (!line || line.startsWith('#')) continue;
     if (line.startsWith('@')) { regions.push(line.slice(1)); continue; }
     const [name, r, la, lo] = line.split('\t');

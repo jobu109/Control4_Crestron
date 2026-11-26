@@ -15,6 +15,8 @@ abstract class OverviewPage extends ZPage {
     .row { height: 66px; gap: 12px; }
     .row a { flex: 1; display: flex; align-items: center; gap: 16px; min-width: 0; }
     .row .btn { width: 170px; }
+    .row .rocker { flex: 0 0 352px; }
+    .row .rocker > .btn { width: auto; height: 42px; }
     .spacer { width: 170px; flex-shrink: 0; }
     .floor { font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--soft); display: block; }
     .more { align-self: center; margin-top: 10px; height: 52px; padding: 0 24px; border: none; background: transparent; font-size: 16px; font-weight: 700; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
@@ -24,6 +26,7 @@ abstract class OverviewPage extends ZPage {
   protected abstract columns: string;
   protected abstract actions(room: Room): unknown;
   protected detail(_room: Room): string { return ''; }
+  protected roomRoute(room: Room): string { return '#/room/' + encodeURIComponent(room.id); }
 
   render() {
     const all = this.rooms();
@@ -33,7 +36,7 @@ abstract class OverviewPage extends ZPage {
     return html`<section>
       <div class="head label"><span>Room</span><span>${this.columns}</span></div>
       ${rows.map((r) => html`<div class="row">
-        <a href="#/room/${encodeURIComponent(r.id)}">
+        <a href=${this.roomRoute(r)}>
           <span class="tile">${icon(roomIcon(r.name, r.icon), 26, 1.5)}</span>
           <span><span class="floor">${this.store.floorName(r.floorId)}${this.detail(r) ? ` · ${this.detail(r)}` : ''}</span><span class="name" style="font-size:19px">${r.name}</span></span>
         </a>
@@ -47,6 +50,7 @@ abstract class OverviewPage extends ZPage {
 
 export class LightingPage extends OverviewPage {
   protected columns = 'Lighting scenes';
+  protected roomRoute(room: Room): string { return super.roomRoute(room) + '/lighting'; }
   protected rooms() { return this.store.config.rooms.filter((r) => r.lights.length); }
   protected actions(r: Room) {
     const lit = this.store.lightsOn(r);
@@ -55,8 +59,11 @@ export class LightingPage extends OverviewPage {
     const send = (action: 'ambient' | 'on' | 'off') => this.send({ kind: 'room-lights', id: r.id, action });
     return html`
       ${dimmable ? html`<button type="button" class="btn ${lit && !all ? 'sel' : ''}" @click=${() => send('ambient')}>AMBIENT</button>` : html`<span class="spacer"></span>`}
-      <button type="button" class="btn ${all ? 'sel' : ''}" @click=${() => send('on')}>ALL ON</button>
-      <button type="button" class="btn ${lit ? '' : 'sel'}" @click=${() => send('off')}>ALL OFF</button>`;
+      <div class="rocker" role="group" aria-label=${r.name + ' lights'}>
+        <button type="button" class="btn ${all ? 'sel' : ''}" @click=${() => send('on')}>ALL ON</button>
+        <button type="button" class="btn ${!lit && r.lights.every((light) => this.store.known('light', light.id)) ? 'sel' : ''}"
+          @click=${() => send('off')}>ALL OFF</button>
+      </div>`;
   }
 }
 

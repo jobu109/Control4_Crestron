@@ -1,7 +1,9 @@
 import { css, html, nothing } from 'lit';
+import { keyed } from 'lit/directives/keyed.js';
 import type { AudioZone, MediaAction, Room, RoomMediaState, Source, ZoneAction, ZoneState } from '../../model/types';
 import { ZPage, iconButton, shared, slider } from '../base';
 import { icon } from '../icons';
+import { sourceIcon } from '../source-icons';
 import { availablePads, padTabs, remote, remoteStyles, type Pad } from '../remote';
 
 export class MediaPage extends ZPage {
@@ -19,25 +21,33 @@ export class MediaPage extends ZPage {
 
   static styles = [shared, remoteStyles, css`
     .rooms, .tabs { display: flex; gap: 8px; }
-    .tabs { gap: 4px; padding: 4px; border-radius: 12px; background: var(--panel); border: 1px solid rgba(255,255,255,0.18); }
     .tabs .btn { height: 40px; padding: 0 26px; display: flex; align-items: center; gap: 8px; background: transparent; }
-    .tabs .btn.sel { background: #fff; }
+    .tabs.rocker > .btn { white-space: nowrap; }
     .rooms .btn { height: 44px; }
     .content { display: flex; gap: 20px; }
     .now { flex: 1.2; padding: 28px; display: flex; flex-direction: column; gap: 24px; }
-    .art { width: 160px; height: 160px; flex-shrink: 0; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; color: var(--soft); background-size: cover; background-position: center; }
+    .art { width: 160px; height: 160px; flex-shrink: 0; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; color: var(--soft); position: relative; overflow: hidden; }
+    .art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #0b0d10; }
     .title { font-size: 34px; font-weight: 700; }
     .transport { display: flex; justify-content: center; align-items: center; gap: 20px; }
     .transport .btn { width: 64px; height: 64px; padding: 0; display: flex; align-items: center; justify-content: center; }
     .transport .main { width: 80px; height: 80px; }
+    .sessions-link { align-self: center; height: 42px; display: inline-flex; align-items: center; gap: 9px; }
+    .sessions-link:active { background: #b7ddff; color: #0b0d10; }
     .vol { display: flex; align-items: center; gap: 14px; }
     .vol .btn { width: 52px; height: 52px; padding: 0; display: flex; align-items: center; justify-content: center; }
     .sources { flex: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-    .grid { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 14px; overflow-y: auto; }
+    .grid { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(84px, max-content); align-content: start; min-height: 0; gap: 14px; padding-right: 8px; overflow-y: auto; }
     .src { border-radius: 16px; padding: 16px 18px; display: flex; align-items: center; gap: 16px; text-align: left; background: var(--panel); border: 1px solid var(--line); min-height: 84px; }
+    .src .source-logo { width: 34px; height: 34px; object-fit: contain; }
     .src.active { border: 2px solid #fff; background: rgba(8,10,13,0.8); }
     .src .tile { width: 56px; height: 56px; border-radius: 12px; }
     .empty { padding: 30px; color: var(--soft); font-size: 16px; }
+    button:is(.btn, .src, .back):enabled:active:not(.rocker > button) {
+      background: #b7ddff;
+      color: #0b0d10;
+      box-shadow: inset 0 0 0 2px #e5f3ff;
+    }
     .btn:disabled { opacity: 0.35; cursor: default; }
     .presets { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 64px; gap: 10px; overflow-y: auto; }
     .presets .btn { height: 64px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -72,16 +82,19 @@ export class MediaPage extends ZPage {
     const sources = this.tab === 'video' ? room.videoSources : room.audioSources;
     const st: Partial<RoomMediaState> = this.store.get('media', room.id) ?? {};
     const active = sources.find((s) => s.id === st.activeSourceId);
+    const progress = this.tab === 'audio' ? st.progress : undefined;
     const can = (action: MediaAction) => !st.actions || st.actions.includes(action);
     const m = (action: MediaAction) => this.send({ kind: 'media', id: room.id, action });
     const volume = st.volume;
+    const showSessions = this.tab === 'audio' && this.store.has('audio') && st.power === true &&
+      !room.videoSources.some((source) => source.id === st.activeSourceId) && !!(active || st.title || st.station);
     const main: MediaAction = st.playbackAction === 'play' ? 'play' : 'pause';
     return html`
       <div class="toolbar">
         <div class="rooms" role="group" aria-label="Room">
           ${rooms.slice(0, 5).map((r) => html`<button type="button" class="btn ${r.id === room.id ? 'sel' : ''}" @click=${() => { this.roomId = r.id; this.browsing = ''; }}>${r.name}</button>`)}
         </div>
-        <div class="tabs" role="tablist" aria-label="Media type">
+        <div class="tabs rocker" role="tablist" aria-label="Media type">
           ${(['video', 'audio'] as const).map((t) => html`<button type="button" role="tab" aria-selected=${this.tab === t ? 'true' : 'false'} class="btn ${this.tab === t ? 'sel' : ''}" @click=${() => (this.tab = t)}>
             ${icon(t === 'video' ? 'media' : 'music', 18, 1.7)}${t.toUpperCase()}</button>`)}
         </div>
@@ -89,33 +102,46 @@ export class MediaPage extends ZPage {
       <div class="content">
         <section class="panel now" aria-label="Now playing">
           <div style="display:flex;gap:24px;align-items:center">
-            <div class="art" style=${st.artUrl ? `background-image:url('${st.artUrl}')` : ''}>${st.artUrl ? nothing : icon(this.tab === 'video' ? 'media' : 'music', 52, 1.2)}</div>
+            <div class="art">
+              ${icon(this.tab === 'video' ? 'media' : 'music', 52, 1.2)}
+              ${this.tab === 'audio' && st.artUrl ? keyed(JSON.stringify([room.id, st.artUrl, st.stationArtUrl]), html`
+                <img src=${st.artUrl} alt="" referrerpolicy="no-referrer"
+                  @error=${(event: Event) => {
+                    const img = event.currentTarget as HTMLImageElement;
+                    const fallback = st.stationArtUrl;
+                    if (fallback && img.getAttribute('src') !== fallback) img.src = fallback;
+                    else img.hidden = true;
+                  }}>
+              `) : nothing}
+            </div>
             <div class="grow" style="display:flex;flex-direction:column;gap:6px">
-              <span class="label">${this.tab === 'video' ? 'Now watching' : 'Now playing'}</span>
-              <span class="title">${st.power === undefined ? '—' : st.power ? st.title ?? active?.name ?? 'On' : 'Off'}</span>
-              <span style="font-size:15px;color:#e6e8eb">${[st.artist, st.album].filter(Boolean).join(' · ') || room.name}</span>
-              ${st.station ? html`<span class="sub">Playing from · ${st.station}</span>` : nothing}
+              <span class="label">${this.tab === 'video' ? 'Selected source' : 'Now playing'}</span>
+              <span class="title">${st.power === undefined ? '—' : st.power
+                ? (this.tab === 'video' ? active?.name : st.title) ?? active?.name ?? 'On' : 'Off'}</span>
+              <span style="font-size:15px;color:#e6e8eb">${(this.tab === 'audio' && [st.artist, st.album].filter(Boolean).join(' · ')) || room.name}</span>
+              ${this.tab === 'audio' && st.station ? html`<span class="sub">Playing from · ${st.station}</span>` : nothing}
             </div>
             ${iconButton('power', st.power ? 'Turn room media off' : 'Room media is off', () => m('off'), `btn square ${st.power ? 'on' : ''}`)}
           </div>
-          ${st.progress ? html`<div class="progress">
-            <div class="bar"><div style="width:${Math.min(100, (st.progress.position / Math.max(1, st.progress.duration)) * 100)}%"></div></div>
-            <span class="times"><span>${clock(st.progress.position)}</span><span>${clock(st.progress.duration)}</span></span>
+          ${progress ? html`<div class="progress">
+            <div class="bar"><div style="width:${Math.min(100, (progress.position / Math.max(1, progress.duration)) * 100)}%"></div></div>
+            <span class="times"><span>${clock(progress.position)}</span><span>${clock(progress.duration)}</span></span>
           </div>` : nothing}
           <div class="transport">
-            ${this.tab === 'audio' && st.shuffle !== undefined ? html`<button type="button" class="btn ${st.shuffle ? 'sel' : 'outline'} shuffle" aria-label="Shuffle" aria-pressed=${st.shuffle ? 'true' : 'false'}
+            ${this.tab === 'audio' && st.shuffle !== undefined ? html`<button type="button" class="btn neu-square shuffle ${st.shuffle ? 'selected' : ''}" aria-label="Shuffle" aria-pressed=${st.shuffle ? 'true' : 'false'}
               @click=${() => this.send({ kind: 'media', id: room.id, action: 'shuffle', value: !st.shuffle })}>${icon('shuffle', 20, 1.8)}</button>` : nothing}
-            <button type="button" class="btn outline" aria-label="Previous" ?disabled=${!can('previous')} @click=${() => m('previous')}>${icon('previous', 24)}</button>
-            <button type="button" class="btn sel main" aria-label=${main === 'play' ? 'Play' : 'Pause'} ?disabled=${!can(main)} @click=${() => m(main)}>${icon(main, 30, 2.2)}</button>
-            <button type="button" class="btn outline" aria-label="Next" ?disabled=${!can('next')} @click=${() => m('next')}>${icon('next', 24)}</button>
+            <button type="button" class="btn neu-square" aria-label="Previous" ?disabled=${!can('previous')} @click=${() => m('previous')}>${icon('previous', 24)}</button>
+            <button type="button" class="btn neu-square primary main" aria-label=${main === 'play' ? 'Play' : 'Pause'} ?disabled=${!can(main)} @click=${() => m(main)}>${icon(main, 30, 2.2)}</button>
+            <button type="button" class="btn neu-square" aria-label="Next" ?disabled=${!can('next')} @click=${() => m('next')}>${icon('next', 24)}</button>
           </div>
+          ${showSessions ? html`<a class="btn outline sessions-link" href="#/audio">${icon('music', 18)} Sessions</a>` : nothing}
           <div style="flex:1"></div>
           <div class="vol">
-            <button type="button" class="btn ${st.mute ? 'sel' : ''}" aria-label=${st.mute ? 'Unmute' : 'Mute'} @click=${() => m(st.mute ? 'unmute' : 'mute')}>${icon('mute', 22)}</button>
-            <button type="button" class="btn" aria-label="Volume down" ?disabled=${!can('volume-down')} @click=${() => m('volume-down')} style="font-size:26px">−</button>
+            <button type="button" class="btn neu-square ${st.mute ? 'sel' : ''}" aria-label=${st.mute ? 'Unmute' : 'Mute'} @click=${() => m(st.mute ? 'unmute' : 'mute')}>${icon('mute', 22)}</button>
+            <button type="button" class="btn neu-square" aria-label="Volume down" ?disabled=${!can('volume-down')} @click=${() => m('volume-down')} style="font-size:26px">−</button>
             <div class="grow">${slider(volume ?? 0, (v) => this.send({ kind: 'media', id: room.id, action: 'volume', value: v }), 'Volume', volume === undefined)}</div>
             <span style="width:36px;text-align:right;font-weight:700">${volume ?? '—'}</span>
-            <button type="button" class="btn" aria-label="Volume up" ?disabled=${!can('volume-up')} @click=${() => m('volume-up')} style="font-size:26px">+</button>
+            <button type="button" class="btn neu-square" aria-label="Volume up" ?disabled=${!can('volume-up')} @click=${() => m('volume-up')} style="font-size:26px">+</button>
           </div>
         </section>
         <section class="sources" aria-label="${this.tab} sources">
@@ -145,7 +171,7 @@ export class MediaPage extends ZPage {
     const showRemote = this.showRemote && pads.length > 0;
     const header = pads.length
       ? html`<span style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span class="pads" role="tablist" aria-label="Watch view">
+          <span class="tabs rocker" role="tablist" aria-label="Watch view">
             ${(['sources', 'remote'] as const).map((v) => html`<button type="button" role="tab" class="btn ${(v === 'remote') === showRemote ? 'sel' : ''}"
               aria-selected=${(v === 'remote') === showRemote ? 'true' : 'false'} @click=${() => (this.showRemote = v === 'remote')}>${v.toUpperCase()}</button>`)}
           </span>
@@ -166,11 +192,12 @@ export class MediaPage extends ZPage {
   }
 
   private sourceCard(room: Room, s: Source, isActive: boolean) {
+    const logo = sourceIcon(s);
     return html`<button type="button" class="src ${isActive ? 'active' : ''}" @click=${() => {
       if (s.kind === 'audio') this.browsing = s.id;
       this.send({ kind: 'media', id: room.id, action: 'source', value: s.id });
     }}>
-      <span class="tile ${isActive ? 'on' : ''}">${icon(s.kind === 'video' ? 'media' : 'music', 26)}</span>
+      <span class="tile ${isActive ? 'on' : ''}">${logo ? html`<img class="source-logo" src=${logo} alt="" />` : icon(s.kind === 'video' ? 'media' : 'music', 26)}</span>
       <span><span class="name" style="display:block;font-size:16px">${s.name}</span><span class="sub">${isActive ? 'Playing' : s.detail ?? ''}</span></span>
     </button>`;
   }
@@ -186,14 +213,18 @@ export function clock(seconds: number): string {
 }
 
 export class AudioPage extends ZPage {
-  static properties = { ...ZPage.properties, openId: { state: true } };
+  static properties = { ...ZPage.properties, openId: { state: true }, video: { state: true } };
+  private video = false;
   openId: string | null = null;
 
   static styles = [shared, css`
     .content { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(160px, 1fr); gap: 12px; left: 40px; right: 40px; top: 160px; height: 572px; overflow-y: auto; }
+    .video-sessions { display: flex; flex-direction: column; gap: 12px; }
+    .video-session { padding: 18px 22px; display: grid; gap: 12px; }
+    .video-targets { display: flex; flex-wrap: wrap; gap: 8px; }
+    .video-targets button { height: 42px; }
     .zone { border-radius: 6px; background: rgba(60,64,70,0.55); padding: 0 28px; display: flex; align-items: center; gap: 28px; }
-    .pwr { width: 96px; height: 96px; flex-shrink: 0; border: none; border-radius: 18px; background: rgba(255,255,255,0.14); display: flex; align-items: center; justify-content: center; }
-    .pwr.on { background: #1F9D4B; }
+    .pwr { width: 96px; height: 96px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
     .open { border: none; background: transparent; padding: 0; text-align: left; display: flex; align-items: center; gap: 14px; min-width: 0; }
     .open .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
     .zname { font-size: 32px; font-weight: 400; }
@@ -206,19 +237,40 @@ export class AudioPage extends ZPage {
     .ctl .btn { width: 44px; height: 44px; padding: 0; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 300; }
     .ctl.off { opacity: 0.45; }
     .sheet { position: absolute; left: 140px; right: 140px; top: 100px; bottom: 56px; border-radius: 16px; background: rgba(8,10,13,0.96); border: 1px solid var(--line); padding: 30px 40px; display: flex; flex-direction: column; gap: 26px; }
-    .close { position: absolute; left: 604px; bottom: 20px; background: #0b0d10; }
+    .close { position: absolute; left: 604px; bottom: 20px; }
     button:disabled { opacity: 0.35; cursor: default; }
   `];
 
   render() {
     const zones = this.store.config.audioZones;
+    const online = this.store.connection === 'online';
+    const showVideo = this.video && this.store.config.videoSessionsEnabled;
+    const data = this.store.config.videoSessions;
     const open = zones.find((z) => z.id === this.openId);
     return html`
       <div class="toolbar" style="left:40px;right:40px">
-        <span class="hint">Tap zone to launch controls</span>
-        <button type="button" class="btn outline" @click=${() => this.send({ kind: 'zones-off' })}>ALL ZONES OFF</button>
+        ${this.store.config.videoSessionsEnabled ? html`<div class="rocker" role="group" aria-label="Session type">
+          <button type="button" class="btn ${showVideo ? '' : 'sel'}" aria-pressed=${!showVideo}
+            @click=${() => (this.video = false)}>Audio</button>
+          <button type="button" class="btn ${showVideo ? 'sel' : ''}" aria-pressed=${!!showVideo}
+            @click=${() => { if (!this.video) { this.video = true; this.openId = null; this.send({ kind: 'video-sessions' }); } }}>Video</button>
+        </div>` : html`<span class="hint">Tap zone to launch controls</span>`}
+        ${showVideo ? html`<button type="button" class="btn neu-square" ?disabled=${!online}
+          @click=${() => this.send({ kind: 'video-sessions' })}>Refresh</button>`
+          : html`<button type="button" class="btn outline" @click=${() => this.send({ kind: 'zones-off' })}>ALL ZONES OFF</button>`}
       </div>
-      <section class="content" aria-label="Audio zones">${zones.map((z) => this.zone(z))}</section>
+      ${showVideo ? html`<section class="content video-sessions" aria-label="Video sessions">
+        ${data?.status ? html`<p role="status">${data.status}</p>` : nothing}
+        ${!online ? html`<p>Control4 is offline.</p>` : !data ? html`<p>Checking video sessions…</p>`
+          : !data.sessions.length && !data.status ? html`<p>No active video sources found.</p>` : nothing}
+        ${(data?.sessions ?? []).map((session) => html`<article class="panel video-session">
+          <strong>${session.room_name} · ${session.source_name}</strong>
+          ${session.targets.length ? html`<span class="label">Also watch in</span>
+            <div class="video-targets">${session.targets.map((target) => html`<button type="button" class="btn neu-square" ?disabled=${!online}
+              @click=${() => this.send({ kind: 'video-session-watch', room: session.room, source: session.source, target: target.id })}>
+              ${target.name}</button>`)}</div>` : html`<span>No other room can be added to this source.</span>`}
+        </article>`)}
+      </section>` : html`<section class="content" aria-label="Audio zones">${zones.map((z) => this.zone(z))}</section>`}
       ${open ? this.sheet(open) : nothing}
     `;
   }
@@ -231,7 +283,7 @@ export class AudioPage extends ZPage {
     const vol = typeof st.volume === 'number' ? st.volume : undefined;
     const power = st.power ? 'off' : 'on';
     return html`<div class="zone">
-      <button type="button" class="pwr ${st.power ? 'on' : ''}" aria-label="${st.power ? 'Turn off' : 'Turn on'} ${z.name}" ?disabled=${!can(power)} @click=${() => send(power)}>${icon('power', 56)}</button>
+      <button type="button" class="pwr neu-square ${st.power ? 'on' : ''}" aria-label="${st.power ? 'Turn off' : 'Turn on'} ${z.name}" ?disabled=${!can(power)} @click=${() => send(power)}>${icon('power', 56)}</button>
       <div class="grow" style="display:flex;flex-direction:column;gap:14px">
         <button type="button" class="open" aria-label="Open ${z.name} controls" @click=${() => (this.openId = z.id)}>
           <span class="txt">
@@ -241,11 +293,11 @@ export class AudioPage extends ZPage {
           ${st.power && st.track?.artwork ? html`<img class="art" src=${st.track.artwork} alt="" loading="lazy" referrerpolicy="no-referrer" @error=${(e: Event) => ((e.target as HTMLElement).style.visibility = 'hidden')} />` : nothing}
         </button>
         <div class="ctl ${st.power ? '' : 'off'}">
-          <button type="button" class="btn ${st.mute ? 'sel' : ''}" aria-label="${st.mute ? 'Unmute' : 'Mute'} ${z.name}" ?disabled=${!can(st.mute ? 'unmute' : 'mute')} @click=${() => send(st.mute ? 'unmute' : 'mute')}>${icon('mute', 20, 1.7)}</button>
-          <button type="button" class="btn" aria-label="${z.name} volume down" ?disabled=${!can('volume-down')} @click=${() => send('volume-down')}>−</button>
+          <button type="button" class="btn neu-square ${st.mute ? 'sel' : ''}" aria-label="${st.mute ? 'Unmute' : 'Mute'} ${z.name}" ?disabled=${!can(st.mute ? 'unmute' : 'mute')} @click=${() => send(st.mute ? 'unmute' : 'mute')}>${icon('mute', 20, 1.7)}</button>
+          <button type="button" class="btn neu-square" aria-label="${z.name} volume down" ?disabled=${!can('volume-down')} @click=${() => send('volume-down')}>−</button>
           <div class="grow">${slider(vol ?? 0, (v) => this.send({ kind: 'zone', id: z.id, action: 'volume', value: v }), `${z.name} volume`, !can('volume'))}</div>
           <span style="width:28px;text-align:right;font-weight:700">${vol ?? '—'}</span>
-          <button type="button" class="btn" aria-label="${z.name} volume up" ?disabled=${!can('volume-up')} @click=${() => send('volume-up')}>+</button>
+          <button type="button" class="btn neu-square" aria-label="${z.name} volume up" ?disabled=${!can('volume-up')} @click=${() => send('volume-up')}>+</button>
         </div>
       </div>
     </div>`;
@@ -284,7 +336,7 @@ export class AudioPage extends ZPage {
           <span style="width:44px;text-align:right;font-weight:700;font-size:18px">${st.volume}</span>
         </div>
       </section>
-      <button type="button" class="close" aria-label="Close controls" @click=${() => (this.openId = null)}>${icon('close', 34, 1.4)}</button>`;
+      <button type="button" class="close neu-square primary" aria-label="Close controls" @click=${() => (this.openId = null)}>${icon('close', 34, 1.4)}</button>`;
   }
 }
 

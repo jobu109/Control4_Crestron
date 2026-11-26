@@ -131,14 +131,16 @@ namespace Control4Crestron
                 foreach (ushort id in new List<ushort>(_roomModules.Keys)) PublishRoomDiscovery(id);
             }
         }
-        public void DiscoverRooms()
+        public void DiscoverRooms() { DiscoverRooms(false); }
+
+        private void DiscoverRooms(bool forVideoSessions)
         {
             object work;
             int gen, epoch;
             lock (_sync)
             {
                 if (!_online) { EmitMessage("Connect before discovering room sources"); return; }
-                if (_roomModules.Count == 0 || _roomDiscoveryWork != null) return;
+                if ((!forVideoSessions && _roomModules.Count == 0) || _roomDiscoveryWork != null) return;
                 gen = _generation; epoch = _feedbackEpoch;
                 work = new object(); _roomDiscoveryWork = work;
             }
@@ -174,6 +176,116 @@ namespace Control4Crestron
                 finally { lock (_sync) { if (Object.ReferenceEquals(work, _roomDiscoveryWork)) _roomDiscoveryWork = null; } }
             });
         }
+        internal void ReadPanelVideoSessions(ushort[] scope, Dictionary<ushort, HashSet<int>> exclusions,
+            ushort origin, ushort destination, int source, Func<bool> current, Action<JObject> completed)
+        {
+            int generation, epoch;
+            lock (_sync)
+            {
+                generation = _generation; epoch = _feedbackEpoch;
+                if (_online && (_roomDiscovery == null || _roomDiscoveryGeneration != generation || _roomDiscoveryEpoch != epoch))
+                    DiscoverRooms(true);
+            }
+            Queue(delegate
+            {
+                var sessions = new JArray();
+                var result = new JObject { ["sessions"] = sessions };
+                bool selecting = destination != 0;
+                try
+                {
+                    string host, token;
+                    if (!current()) return; if (!GetConnection(out host, out token)) { result["status"] = "Control4 is offline."; return; }
+                    var watch = new Dictionary<ushort, Dictionary<int, string>>();
+                    lock (_sync)
+                    {
+                        if (_generation != generation || _feedbackEpoch != epoch) return;
+                        if (_roomDiscovery != null && _roomDiscoveryGeneration == generation && _roomDiscoveryEpoch == epoch &&
+                            (string)_roomDiscovery["source_discovery_status"] == "discovered")
+                            foreach (JObject room in (JArray)_roomDiscovery["rooms"])
+                            {
+                                ushort id = (ushort)(int)room["room_id"];
+                                if (Array.IndexOf(scope, id) < 0) continue;
+                                var sources = new Dictionary<int, string>();
+                                HashSet<int> excluded;
+                                exclusions.TryGetValue(id, out excluded);
+                                foreach (JObject item in (JArray)room["watch_sources"])
+                                {
+                                    int itemId = (int)item["source_id"];
+                                    if (itemId > 0 && (excluded == null || !excluded.Contains(itemId)))
+                                        sources[itemId] = (string)item["name"];
+                                }
+                                if (sources.Count != 0) watch[id] = sources;
+                            }
+                    }
+                    if (watch.Count == 0 && !selecting) result["status"] = "No Watch sources are available in the configured rooms.";
+                    if (selecting)
+                    {
+                        if (!watch.ContainsKey(origin) || !watch[origin].ContainsKey(source) ||
+                            !watch.ContainsKey(destination) || !watch[destination].ContainsKey(source) ||
+                            ReadPanelVideoSource(host, token, origin) != source)
+                        {
+                            result["status"] = "The source changed or is no longer available in that room.";
+                        }
+                        else if (current())
+                        {
+                            lock (_sync) if (!_online || _generation != generation || _feedbackEpoch != epoch) return;
+                            Request(host, token, "POST", "/api/v1/items/" + destination + "/commands",
+                                BuildAudioCommand("SelectVideoSource", source));
+                            result["status"] = "Source selection sent to " + PanelRoomName(destination) + ".";
+                            QueryAudio(destination);
+                        }
+                    }
+
+                    var active = new Dictionary<ushort, int>();
+                    foreach (ushort room in watch.Keys)
+                    {
+                        if (!current() || !CurrentGeneration(generation)) return;
+                        try { active[room] = ReadPanelVideoSource(host, token, room); }
+                        catch (Exception ex)
+                        {
+                            InvalidateRejectedToken(ex);
+                            EmitMessage("Video Sessions room " + room + " read failed: " + FailureKind(ex));
+                        }
+                    }
+                    foreach (var room in active)
+                    {
+                        string name;
+                        if (!watch[room.Key].TryGetValue(room.Value, out name)) continue;
+                        var targets = new JArray();
+                        foreach (ushort target in scope)
+                        {
+                            if (target == room.Key || !watch.ContainsKey(target) || !watch[target].ContainsKey(room.Value)) continue;
+                            int selected;
+                            if (active.TryGetValue(target, out selected) && selected == room.Value) continue;
+                            targets.Add(new JObject { ["id"] = (int)target, ["name"] = PanelRoomName(target) });
+                        }
+                        sessions.Add(new JObject { ["room"] = (int)room.Key, ["room_name"] = PanelRoomName(room.Key),
+                            ["source"] = room.Value, ["source_name"] = name, ["targets"] = targets });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Video Sessions failed: " + FailureKind(ex));
+                    result["status"] = selecting ? "Video source selection failed." : "Video sessions could not be read.";
+                }
+                finally
+                {
+                    lock (_sync)
+                        if (_generation != generation || _feedbackEpoch != epoch)
+                            result = new JObject { ["status"] = "Control4 connection changed. Refresh to try again." };
+                    if (current()) completed(result);
+                }
+            });
+        }
+
+        private int ReadPanelVideoSource(string host, string token, ushort room)
+        {
+            var state = ParseRoomSourceState(Request(host, token, "GET", "/api/v1/items/" + room +
+                "/variables?varnames=POWER_STATE,CURRENT_VIDEO_DEVICE", null), room);
+            return state.VideoValid == 1 ? state.VideoId : 0;
+        }
+
         internal void PublishRoomDiscovery(ushort roomId)
         {
             lock (_sync)

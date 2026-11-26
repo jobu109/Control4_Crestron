@@ -10,7 +10,7 @@ import type { CrComLibLike } from '../src/adapters/crestron';
 /** Page request op -> stream kind, as handled by PanelRoomModule.Request. */
 const PAGE_KIND: Record<string, string> = {
   device_page: 'd', audio_page: 'a', video_page: 'v', media_page: 'm', playing_page: 'n',
-  rooms_page: 'rooms', scenes_page: 'scenes', audio_sessions_page: 'audio_sessions', site_page: 'site',
+  rooms_page: 'rooms', scenes_page: 'scenes', audio_sessions_page: 'audio_sessions', video_sessions_page: 'video_sessions', site_page: 'site',
   house_devices_page: 'house_devices'
 };
 
@@ -101,7 +101,7 @@ describe('panel router adapter', () => {
     expect(router.ops().slice(4)).toEqual(['house_devices']);
     expect(store.config.floors).toEqual([PANEL_FLOOR]);
     expect(store.config.rooms.map((r) => [r.id, r.name, r.lazy])).toEqual([['13', 'Living Room', true], ['212', 'Kitchen', true]]);
-    expect(store.config.services).toEqual(['media']);
+    expect(store.config.services).toEqual(['media', 'audio']);
     expect(store.roomsOnFloor(PANEL_FLOOR.id)).toHaveLength(2);
   });
 
@@ -113,6 +113,17 @@ describe('panel router adapter', () => {
     expect(router.last('room')).toMatchObject({ op: 'room', room_id: 212 });
     store.focusRoom('999');
     expect(router.requests.filter((r) => r.op === 'room')).toHaveLength(1);
+  });
+
+  it('keeps legacy dimmers visible and updates explicit switch capability without a level change', () => {
+    openLivingRoom();
+    expect(store.room('13')?.lights.find((light) => light.id === '437')?.dimmable).toBe(true);
+    router.plain(J.state, { r: 13, u: 437, v: 40, dim: false });
+    expect(store.get('light', '437')).toEqual({ on: true, level: 40, dimmable: false });
+    router.plain(J.state, { r: 13, u: 437, v: 0 });
+    expect(store.get('light', '437')?.dimmable).toBe(false);
+    router.plain(J.state, { r: 13, u: 437, v: 0, dim: true });
+    expect(store.get('light', '437')?.dimmable).toBe(true);
   });
 
   it('loads devices with measured levels and sends device commands', () => {
@@ -280,11 +291,38 @@ describe('panel router adapter', () => {
     expect(store.get('media', '13')?.shuffle).toBeUndefined();
   });
 
+  it('retains scene room assignments when scenes arrive ahead of rooms', () => {
+    router.connect();
+    router.doc(J.state, 0, 'scenes', {
+      room_id: 0, revision: 'aaaa', actions: [
+        { slot: 1, kind: 'light', name: 'Living Room Evening', room_ids: [13, 'invalid'] },
+        { slot: 2, kind: 'macro', name: 'House Off', room_ids: [13] }
+      ]
+    });
+    router.doc(J.state, 0, 'rooms', ROOMS);
+    expect(store.config.scenes[0].roomIds).toEqual(['13']);
+    expect(store.config.scenes[1].roomIds).toBeUndefined();
+  });
+  it('lists video sessions and sends only a listed matching Watch destination', () => {
+    router.connect();
+    router.doc(J.state, 0, 'rooms', ROOMS);
+    router.clear();
+    store.send({ kind: 'video-sessions' });
+    router.doc(J.state, 0, 'video_sessions', { room_id: 0, sessions: [
+      { room: 13, room_name: 'Living Room', source: 1713, source_name: 'Apple TV', targets: [{ id: 212, name: 'Kitchen' }] }
+    ] });
+    store.send({ kind: 'video-session-watch', room: 13, source: 1713, target: 89 });
+    store.send({ kind: 'video-session-watch', room: 13, source: 1713, target: 212 });
+    expect(router.requests.filter((request) => request.op !== 'video_sessions_page')).toEqual([
+      { op: 'video_sessions', q: expect.any(Number) },
+      { op: 'video_session_watch', room_id: 13, source: 1713, target: 212, q: expect.any(Number) }
+    ]);
+  });
   it('publishes scenes and runs them only with the current revision', () => {
     router.connect();
     router.doc(J.state, 0, 'rooms', ROOMS);
     router.doc(J.state, 0, 'scenes', { room_id: 0, revision: 'aaaa', actions: [{ slot: 1, kind: 'advanced_lighting', name: 'House Off' }, { slot: 2, kind: 'macros', name: 'House Off' }] });
-    expect(store.config.services).toEqual(['media', 'scenes']);
+    expect(store.config.services).toEqual(['media', 'audio', 'scenes']);
     expect(store.config.scenes).toEqual([
       { id: 'aaaa:1', name: 'House Off', description: 'Advanced lighting' },
       { id: 'aaaa:2', name: 'House Off', description: 'Macros' }
@@ -463,7 +501,7 @@ describe('panel router adapter', () => {
     router.doc(J.state, 0, 'rooms', ROOMS);
     expect(store.room('212')!.lights.map((l) => l.id)).toEqual(['602']);
     expect(store.room('13')!.shades.map((s) => s.id)).toEqual(['226']);
-    expect(store.config.services).toEqual(['lighting', 'shades', 'media']);
+    expect(store.config.services).toEqual(['lighting', 'shades', 'media', 'audio']);
     expect(store.get('light', '437')).toEqual({ on: true, level: 40 });
     expect(store.known('light', '602')).toBe(false);
     expect(store.known('light', '5')).toBe(false);
@@ -514,7 +552,7 @@ describe('panel router adapter', () => {
     router.doc(J.state, 0, 'rooms', ROOMS);
     router.doc(J.state, 0, 'audio_sessions', { room_id: 0, available: false });
     expect(store.config.audioZones).toEqual([]);
-    expect(store.config.services).toEqual(['media']);
+    expect(store.config.services).toEqual(['media', 'audio']);
   });
 
   it('clears the previous room and ignores its late frames after a room switch', () => {

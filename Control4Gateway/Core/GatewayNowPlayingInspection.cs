@@ -13,12 +13,14 @@ namespace Control4Crestron
         private sealed class NowPlayingCapture
         {
             internal int Generation, Epoch, SourceId, Bytes;
+            internal bool Video;
             internal AudioRoom Registration;
             internal DateTime Until;
             internal HashSet<int> Devices = new HashSet<int>();
             internal JObject Report;
         }
         private readonly Dictionary<ushort, NowPlayingCapture> _nowPlayingCaptures = new Dictionary<ushort, NowPlayingCapture>();
+        private readonly List<JObject> _previousVideoCaptures = new List<JObject>();
         private static string NowPlayingLabel(JToken value)
         {
             if (value == null || value.Type != JTokenType.String) return null;
@@ -173,20 +175,28 @@ namespace Control4Crestron
             lock (_sync)
             {
                 AudioRoom registration;
-                if (!_online || !_roomModules.ContainsKey(roomId) || !_audioRooms.TryGetValue(roomId, out registration) || registration.SourceState == null || registration.SourceState.AudioValid == 0 || registration.SourceState.AudioId <= 0 || registration.SourceState.AudioId > UInt16.MaxValue)
-                { EmitMessage("Select a playing audio service and wait for measured source feedback before metadata inspection"); return; }
+                if (!_online || !_roomModules.ContainsKey(roomId) || !_audioRooms.TryGetValue(roomId, out registration))
+                { EmitMessage("Connect and initialize the room before metadata inspection"); return; }
+                var state = registration.SourceState;
+                bool video = state != null && state.VideoValid == 1 && state.VideoId > 0;
+                int sourceId = state == null ? 0 : video ? state.VideoId : state.AudioValid == 1 ? state.AudioId : 0;
+                if (sourceId <= 0 || sourceId > UInt16.MaxValue)
+                { EmitMessage("Select a source and wait for measured source feedback before metadata inspection"); return; }
                 if (_nowPlayingCaptures.ContainsKey(roomId) && DateTime.UtcNow < _nowPlayingCaptures[roomId].Until && NowPlayingCurrent(roomId, _nowPlayingCaptures[roomId]))
                 { EmitMessage("Now-playing capture already active; change tracks then Export_Inventory"); return; }
                 if (!_nowPlayingCaptures.ContainsKey(roomId) && _nowPlayingCaptures.Count >= 4)
                 {
                     ushort oldest = 0; DateTime until = DateTime.MaxValue;
                     foreach (var existing in _nowPlayingCaptures) if (existing.Value.Until < until) { oldest = existing.Key; until = existing.Value.Until; }
+                    RetainVideoCapture(_nowPlayingCaptures[oldest]);
                     _nowPlayingCaptures.Remove(oldest);
                 }
-                capture = new NowPlayingCapture { Generation = _generation, Epoch = _feedbackEpoch, Registration = registration, SourceId = registration.SourceState.AudioId, Until = DateTime.UtcNow.AddSeconds(60) };
+                capture = new NowPlayingCapture { Generation = _generation, Epoch = _feedbackEpoch, Registration = registration, SourceId = sourceId, Video = video, Until = DateTime.UtcNow.AddSeconds(60) };
                 capture.Devices.Add(roomId); capture.Devices.Add(capture.SourceId);
                 capture.Report = new JObject(new JProperty("room_id", roomId), new JProperty("source_id", capture.SourceId), new JProperty("generated_utc", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)),
-                    new JProperty("capture_seconds", 60), new JProperty("variables", new JArray()), new JProperty("events", new JArray()), new JProperty("dropped_events", 0));
+                    new JProperty("source_kind", video ? "video" : "audio"), new JProperty("capture_seconds", 60), new JProperty("variables", new JArray()), new JProperty("events", new JArray()), new JProperty("dropped_events", 0));
+                NowPlayingCapture prior;
+                if (_nowPlayingCaptures.TryGetValue(roomId, out prior)) RetainVideoCapture(prior);
                 _nowPlayingCaptures[roomId] = capture;
             }
             Queue(delegate
@@ -207,7 +217,7 @@ namespace Control4Crestron
                         {
                             string json = Request(host, token, "GET", "/api/v1/items/" + device + "/variables", null);
                             observation = InspectNowPlayingVariables(json);
-                            if (device == roomId)
+                            if (device == roomId && !capture.Video)
                                 foreach (JToken variable in (JArray)JToken.Parse(json))
                                 {
                                     var entry = variable as JObject; if (entry == null) continue;
@@ -224,7 +234,7 @@ namespace Control4Crestron
                             capture.Devices.Add(device); ((JArray)capture.Report["variables"]).Add(observation);
                         }
                     }
-                    EmitMessage("Now-playing variables recorded; 60s event capture active. Change track, then Export_Inventory");
+                    EmitMessage("Now-playing " + (capture.Video ? "video" : "audio") + " variables recorded; change content, then Export_Inventory after 60s");
                 }
                 catch (Exception ex) { lock (_sync) { if (!NowPlayingCurrent(roomId, capture)) return; } InvalidateRejectedToken(ex); EmitMessage("Now-playing inspection failed: " + FailureKind(ex)); }
             });
@@ -234,8 +244,17 @@ namespace Control4Crestron
             NowPlayingCapture current;
             return InspectionCurrent(roomId, capture.Registration, capture.Generation, capture.Epoch) &&
                 _nowPlayingCaptures.TryGetValue(roomId, out current) && Object.ReferenceEquals(current, capture) &&
-                (capture.Registration.SourceState == null || capture.Registration.SourceState.AudioValid == 0 || capture.Registration.SourceState.AudioId == capture.SourceId);
+                InspectionSourceCurrent(capture);
         }
+        private static bool InspectionSourceCurrent(NowPlayingCapture capture)
+        {
+            var state = capture.Registration.SourceState;
+            if (state == null) return !capture.Video;
+            if (capture.Video) return state.VideoValid == 1 && state.VideoId == capture.SourceId;
+            return (state.VideoValid == 0 || state.VideoId == 0) &&
+                (state.AudioValid == 0 || state.AudioId == capture.SourceId);
+        }
+
         private void CaptureNowPlayingEvent(JToken message, int generation)
         {
             if (!(message is JObject)) return;
@@ -246,7 +265,7 @@ namespace Control4Crestron
                 {
                     NowPlayingCapture capture = entry.Value;
                     if (generation != capture.Generation || DateTime.UtcNow > capture.Until || !capture.Devices.Contains(device) || !NowPlayingCurrent(entry.Key, capture)) continue;
-                    if (capture.Registration.SourceState != null && capture.Registration.SourceState.AudioValid == 1 && capture.Registration.SourceState.AudioId != capture.SourceId) continue;
+                    if (!capture.Video && capture.Registration.SourceState?.AudioValid != 1) continue;
                     var events = (JArray)capture.Report["events"];
                     JObject evt = message["data"] is JObject ? message["data"]["EVENT"] as JObject : null;
                     if (evt != null && (string)evt["NAME"] == "ProgressChanged")
@@ -267,7 +286,23 @@ namespace Control4Crestron
                     events.Add(observation); capture.Bytes += size;
                 }
         }
+        // Keep prior video sources available for a single diagnostic export.
+        private void RetainVideoCapture(NowPlayingCapture capture)
+        {
+            if (!capture.Video || capture.Generation != _generation) return;
+            _previousVideoCaptures.Add(capture.Report);
+            if (_previousVideoCaptures.Count > 8) _previousVideoCaptures.RemoveAt(0);
+        }
+
         private JArray NowPlayingReports()
-        { var reports = new JArray(); lock (_sync) foreach (NowPlayingCapture capture in _nowPlayingCaptures.Values) reports.Add(capture.Report.DeepClone()); return reports; }
+        {
+            var reports = new JArray();
+            lock (_sync)
+            {
+                foreach (JObject report in _previousVideoCaptures) reports.Add(report.DeepClone());
+                foreach (NowPlayingCapture capture in _nowPlayingCaptures.Values) reports.Add(capture.Report.DeepClone());
+            }
+            return reports;
+        }
     }
 }

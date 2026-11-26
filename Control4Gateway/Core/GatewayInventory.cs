@@ -13,6 +13,14 @@ namespace Control4Crestron
         public event EventHandler<GatewayMessageEventArgs> SetupReportExported;
         public event EventHandler<GatewayMessageEventArgs> SetupJsonExported;
         private int _inventoryExportPending;
+        private int[] _securityPartitions = new int[0];
+        private int _securityInventoryGeneration = -1;
+        private int[] _securityPanelItems = new int[0];
+        private int _securityZoneRosterProbePending;
+        private JObject _securitySocketCapture;
+        private DateTime _securityCaptureUntil;
+        private int _securityCaptureGeneration;
+        private int _securityCaptureBytes;
         private static readonly string[] InventoryCategories =
             { "lights", "motorization", "audio_video", "comfort", "sensors", "cameras" };
 
@@ -26,10 +34,36 @@ namespace Control4Crestron
             var items = JArray.Parse(json);
             var rooms = BuildPanelRoomCatalog(items);
             int digitalMedia = FindDigitalMedia(items);
+            var partitions = new System.Collections.Generic.List<int>();
+            var panelItems = new System.Collections.Generic.List<int>();
+            var rosterProxies = new System.Collections.Generic.List<int>();
+            foreach (JObject item in System.Linq.Enumerable.OfType<JObject>(items))
+            {
+                int id;
+                string name = ScalarText(item["name"]) ?? "";
+                if (partitions.Count < 12 && ScalarText(item["type"]) == "7" &&
+                    (name.Equals("Security System", StringComparison.OrdinalIgnoreCase) ||
+                     name.StartsWith("Security System ", StringComparison.OrdinalIgnoreCase)) &&
+                    TrySourceId(item["id"] ?? item["item_id"], out id) && id > 0)
+                    partitions.Add(id);
+                if (panelItems.Count < 12 &&
+                    (name.StartsWith("IQPanel", StringComparison.OrdinalIgnoreCase) ||
+                     name.Equals("Security Panel", StringComparison.OrdinalIgnoreCase)) &&
+                    TrySourceId(item["id"] ?? item["item_id"], out id) && id > 0)
+                {
+                    panelItems.Add(id);
+                    if (name.Equals("Security Panel", StringComparison.OrdinalIgnoreCase) && ScalarText(item["type"]) == "7")
+                        rosterProxies.Add(id);
+                }
+            }
             lock (_sync)
             {
                 if (_generation != generation) return;
                 _panelRooms = rooms;
+                _securityPartitions = partitions.ToArray();
+                _securityPanelItems = panelItems.ToArray();
+                _securityRosterProxies = rosterProxies.ToArray();
+                _securityInventoryGeneration = generation;
                 _digitalMediaInventoryGeneration = generation;
                 _digitalMediaInventoryId = digitalMedia;
             }
@@ -400,6 +434,18 @@ namespace Control4Crestron
             }
         }
 
+        private static bool IsKnownDimmerDriver(string name, string model, string filename)
+        {
+            if (String.Equals(name, "Keypad Dimmer", StringComparison.OrdinalIgnoreCase) ||
+                String.Equals(name, "Forward Phase Dimmer", StringComparison.OrdinalIgnoreCase) ||
+                String.Equals(name, "Essential Forward Phase Dimmer", StringComparison.OrdinalIgnoreCase)) return true;
+
+            const string modelPattern = @"(?:^|[^A-Za-z0-9])(?:FPD|KD)[-_ ]?120(?:$|[^A-Za-z0-9])";
+            return System.Text.RegularExpressions.Regex.IsMatch(
+                String.Join(" ", name, model, filename), modelPattern,
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+        }
+
         private void DiscoverAuthenticatedRoomDevices(int generation, string host, string token, string json)
         {
             Queue(delegate
@@ -421,6 +467,7 @@ namespace Control4Crestron
                     var fans = new JObject();
                     var fanDrivers = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
                     var experienceDrivers = new System.Collections.Generic.Dictionary<string, bool>(StringComparer.Ordinal);
+                    var dimmerDrivers = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
                     foreach (var driver in candidates)
                     {
                         if (!(driver is JObject) || ScalarText(driver["type"]) != "6") continue;
@@ -428,6 +475,9 @@ namespace Control4Crestron
                         string driverId = ScalarText(driver["id"] ?? driver["item_id"]);
                         if (!String.IsNullOrEmpty(driverId) && ExperienceButtonDrivers.Contains(filename))
                             experienceDrivers[driverId] = String.Equals(filename, "timer_countdown.c4z", StringComparison.OrdinalIgnoreCase);
+                        if (!String.IsNullOrEmpty(driverId) && IsKnownDimmerDriver(
+                            ScalarText(driver["name"]), ScalarText(driver["model"]), filename))
+                            dimmerDrivers.Add(driverId);
                         if (String.Equals(filename, "fan_speed_controller.c4i", StringComparison.OrdinalIgnoreCase))
                             fanDrivers.Add(driverId);
                     }
@@ -514,7 +564,11 @@ namespace Control4Crestron
                         System.Collections.Generic.Dictionary<ushort, Control4_Room_Devices.Entry> devices;
                         if (!rooms.TryGetValue(room, out devices))
                             rooms.Add(room, devices = new System.Collections.Generic.Dictionary<ushort, Control4_Room_Devices.Entry>());
-                        devices.Add(id, new Control4_Room_Devices.Entry { Id = id, Name = label, Shade = shade });
+                        devices.Add(id, new Control4_Room_Devices.Entry
+                        {
+                            Id = id, Name = label, Shade = shade,
+                            KnownDimmer = !shade && dimmerDrivers.Contains(ScalarText(detail["protocolId"]))
+                        });
                     }
                     stage = "publish catalog";
                     lock (_sync)
@@ -564,6 +618,389 @@ namespace Control4Crestron
                 UInt16.TryParse(ScalarText(row["roomId"]), NumberStyles.None, CultureInfo.InvariantCulture, out room) && room != 0;
         }
 
+        internal void BeginSecuritySocketCapture()
+        {
+            lock (_sync)
+            {
+                if (!_online || _securityInventoryGeneration != _generation ||
+                    (_securityPartitions.Length == 0 && _securityPanelItems.Length == 0))
+                {
+                    EmitMessage("Security WebSocket capture unavailable. Connect with the security panel in inventory.");
+                    return;
+                }
+                _securityCaptureGeneration = _generation;
+                _securityCaptureUntil = DateTime.UtcNow.AddSeconds(90);
+                _securityCaptureBytes = 0;
+                _securitySocketCapture = new JObject
+                {
+                    ["started_utc"] = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
+                    ["watch_ids"] = new JArray(System.Linq.Enumerable.Concat(_securityPanelItems, _securityPartitions)),
+                    ["events"] = new JArray(),
+                    ["dropped"] = 0
+                };
+            }
+            EmitMessage("Security WebSocket capture started (90 seconds)");
+        }
+
+        internal event Action<JObject> SecurityZonesReceived;
+        private event Action<bool> SecurityRefreshRequested;
+        private int[] _securityRosterProxies = new int[0];
+
+        internal void RequestSecurityZones()
+        {
+            int generation;
+            int[] proxies;
+            lock (_sync)
+            {
+                generation = _generation;
+                proxies = _securityInventoryGeneration == generation ? _securityRosterProxies : new int[0];
+            }
+            if (proxies.Length == 0) return;
+            Queue(delegate
+            {
+                string host, token;
+                if (!CurrentGeneration(generation) || !GetConnection(out host, out token)) return;
+                foreach (int id in proxies)
+                {
+                    if (!CurrentGeneration(generation)) return;
+                    try
+                    {
+                        Request(host, token, "POST", "/api/v1/items/" + id.ToString(CultureInfo.InvariantCulture) +
+                            "/commands", "{\"command\":\"GET_ALL_ZONE_INFO\",\"tParams\":{}}");
+                    }
+                    catch (Exception ex)
+                    {
+                        InvalidateRejectedToken(ex);
+                        EmitMessage("Security zone list request failed: " + FailureKind(ex));
+                    }
+                }
+            });
+        }
+
+        private void RouteSecurityZoneEvent(JToken message, int generation)
+        {
+            var handler = SecurityZonesReceived;
+            var packet = message as JObject;
+            int id;
+            if (handler == null || packet == null || ScalarText(packet["evtName"]) != "OnDataToUI" ||
+                !TrySourceId(packet["iddevice"], out id) || !(packet["data"] is JObject)) return;
+            bool panel;
+            lock (_sync)
+            {
+                if (_generation != generation || _securityInventoryGeneration != generation) return;
+                panel = Array.IndexOf(_securityRosterProxies, id) >= 0;
+                if (!panel && Array.IndexOf(_securityPartitions, id) < 0) return;
+            }
+            var data = (JObject)packet["data"];
+            if (!panel && (data["partition_state"] is JObject || data["zone_state"] is JObject))
+            {
+                SignalSecurityRefresh(false);
+                return;
+            }
+            var roster = (data["all_zones"] as JObject)?["zone_info"] as JArray;
+            if (panel && roster != null && roster.Count <= 256)
+            {
+                var rows = new JArray();
+                foreach (JObject zone in System.Linq.Enumerable.OfType<JObject>(roster))
+                {
+                    int zoneId;
+                    if (!TrySourceId(zone["id"], out zoneId) || zoneId == 0 ||
+                        zone["name"]?.Type != JTokenType.String || (bool?)zone["hide_from_ui"] == true) continue;
+                    string name = PlayingText(zone["name"]);
+                    if (String.IsNullOrEmpty(name)) continue;
+                    var row = new JObject { ["id"] = zoneId, ["name"] = name };
+                    if (zone["open"]?.Type == JTokenType.Boolean) row["open"] = (bool)zone["open"];
+                    rows.Add(row);
+                }
+                SafeEvent(delegate { handler(new JObject { ["room_id"] = 0, ["panel"] = id, ["zones"] = rows }); });
+            }
+            else if (panel && data["zone_state"] is JObject)
+            {
+                var state = (JObject)data["zone_state"];
+                int zoneId;
+                if (!TrySourceId(state["id"], out zoneId) || zoneId == 0 || state["open"]?.Type != JTokenType.Boolean) return;
+                SafeEvent(delegate { handler(new JObject { ["security_zone"] = zoneId, ["panel"] = id, ["open"] = (bool)state["open"] }); });
+            }
+        }
+
+        private void SignalSecurityRefresh(bool reconnect)
+        {
+            var handler = SecurityRefreshRequested;
+            if (handler != null) SafeEvent(delegate { handler(reconnect); });
+        }
+
+        internal void SubscribeSecurityRefresh(Action<bool> handler) { SecurityRefreshRequested += handler; }
+        internal void UnsubscribeSecurityRefresh(Action<bool> handler) { SecurityRefreshRequested -= handler; }
+
+        internal void ProbeSecurityZoneRoster()
+        {
+            if (System.Threading.Interlocked.CompareExchange(ref _securityZoneRosterProbePending, 1, 0) != 0) return;
+            Queue(delegate
+            {
+                try
+                {
+                    string host, token;
+                    if (!GetConnection(out host, out token)) return;
+                    int generation;
+                    int[] candidates;
+                    lock (_sync)
+                    {
+                        generation = _generation;
+                        candidates = _securityInventoryGeneration == generation ? _securityPanelItems : new int[0];
+                    }
+                    BeginSecuritySocketCapture();
+                    if (candidates.Length == 0) return;
+                    var results = new JArray();
+                    foreach (int id in candidates)
+                    {
+                        if (!CurrentGeneration(generation)) return;
+                        var result = new JObject { ["item_id"] = id };
+                        results.Add(result);
+                        try
+                        {
+                            var body = new JObject { ["command"] = "GET_ALL_ZONE_INFO", ["tParams"] = new JObject() };
+                            string reply = Request(host, token, "POST", "/api/v1/items/" +
+                                id.ToString(CultureInfo.InvariantCulture) + "/commands", body.ToString(Formatting.None));
+                            if (reply.Length <= 65536)
+                            {
+                                int budget = 384;
+                                JToken payload = new JValue(reply);
+                                try { payload = JToken.Parse(reply); } catch (JsonReaderException) { }
+                                result["response"] = NowPlayingShape(payload, "", 0, ref budget);
+                            }
+                            else result["oversize"] = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            InvalidateRejectedToken(ex);
+                            result["error"] = FailureKind(ex);
+                        }
+                    }
+                    lock (_sync)
+                        if (_securitySocketCapture != null && _securityCaptureGeneration == generation)
+                            _securitySocketCapture["roster_probe"] = results;
+                    EmitMessage("Security zone roster probe complete. Export inventory.");
+                }
+                finally { System.Threading.Interlocked.Exchange(ref _securityZoneRosterProbePending, 0); }
+            });
+        }
+
+        private void CaptureSecuritySocketEvent(JToken message, int generation)
+        {
+            var packet = message as JObject;
+            int id;
+            if (packet == null || !TrySourceId(packet["iddevice"], out id)) return;
+            lock (_sync)
+            {
+                if (_securitySocketCapture == null || generation != _securityCaptureGeneration ||
+                    generation != _generation || DateTime.UtcNow > _securityCaptureUntil ||
+                    (Array.IndexOf(_securityPartitions, id) < 0 && Array.IndexOf(_securityPanelItems, id) < 0)) return;
+                var events = (JArray)_securitySocketCapture["events"];
+                if (events.Count >= 32 || _securityCaptureBytes >= 65536)
+                {
+                    _securitySocketCapture["dropped"] = (int)_securitySocketCapture["dropped"] + 1;
+                    return;
+                }
+                int budget = 256;
+                var observation = new JObject
+                {
+                    ["item_id"] = id,
+                    ["event_type"] = MediaMetadataName(packet["evtName"]) ?? "unrecognized",
+                    ["data"] = NowPlayingShape(packet["data"], "", 0, ref budget)
+                };
+                int size = observation.ToString(Formatting.None).Length;
+                if (_securityCaptureBytes + size <= 65536)
+                {
+                    events.Add(observation);
+                    _securityCaptureBytes += size;
+                }
+                else _securitySocketCapture["dropped"] = (int)_securitySocketCapture["dropped"] + 1;
+            }
+        }
+
+        internal void ReadPanelSecurity(Action<JObject> completed)
+        {
+            int generation;
+            int[] partitions;
+            lock (_sync)
+            {
+                generation = _generation;
+                partitions = _securityInventoryGeneration == generation ? _securityPartitions : new int[0];
+            }
+            Queue(delegate
+            {
+                var packet = new JObject { ["security"] = true };
+                try
+                {
+                    string host, token;
+                    if (!GetConnection(out host, out token) || !CurrentGeneration(generation)) return;
+                    foreach (int id in partitions)
+                    {
+                        if (!CurrentGeneration(generation)) return;
+                        string json = Request(host, token, "GET", "/api/v1/items/" +
+                            id.ToString(CultureInfo.InvariantCulture) + "/variables", null);
+                        var variables = JArray.Parse(json);
+                        if (SecurityNumber(variables, "IS_ACTIVE", 1) != 1) continue;
+                        if (packet["partition"] != null)
+                        {
+                            packet = new JObject { ["security"] = true, ["multiple"] = true };
+                            break;
+                        }
+                        packet["partition"] = id;
+                        int? disarmed = SecurityNumber(variables, "DISARMED_STATE", 1);
+                        int? home = SecurityNumber(variables, "HOME_STATE", 1);
+                        int? away = SecurityNumber(variables, "AWAY_STATE", 1);
+                        if (disarmed == 1 && home == 0 && away == 0) packet["mode"] = "disarmed";
+                        else if (disarmed == 0 && home == 1 && away == 0) packet["mode"] = "home";
+                        else if (disarmed == 0 && home == 0 && away == 1) packet["mode"] = "away";
+                        int? alarm = SecurityNumber(variables, "ALARM_STATE", 1);
+                        if (alarm.HasValue) packet["alarm"] = alarm.Value == 1;
+                        int? open = SecurityNumber(variables, "OPEN_ZONE_COUNT", UInt16.MaxValue);
+                        if (open.HasValue) packet["open"] = open.Value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    packet = new JObject { ["security"] = true };
+                    EmitMessage("Security status read failed: " + FailureKind(ex));
+                }
+                finally
+                {
+                    if (!CurrentGeneration(generation)) packet = new JObject { ["security"] = true };
+                    completed(packet);
+                }
+            });
+        }
+
+        internal void ExecuteSecurityKeypad(ushort partition, string action, string pin, Action<string> completed)
+        {
+            string expected = action == "Stay" ? "home" : action == "Away" ? "away" : action == "Disarm" ? "disarmed" : null;
+            if (expected == null || pin == null || pin.Length > 10 ||
+                (action == "Disarm" && pin.Length == 0) ||
+                !System.Text.RegularExpressions.Regex.IsMatch(pin, @"^[0-9]*$"))
+            {
+                completed("invalid");
+                return;
+            }
+            int generation;
+            lock (_sync) generation = _generation;
+            ReadPanelSecurity(snapshot =>
+            {
+                if (!CurrentGeneration(generation) || (int?)snapshot["partition"] != partition)
+                {
+                    completed("unavailable");
+                    return;
+                }
+                if ((string)snapshot["mode"] == expected) { completed("confirmed"); return; }
+                string host, token;
+                if (!GetConnection(out host, out token)) { completed("unavailable"); return; }
+                string result = "failed";
+                try
+                {
+                    var parameters = new JObject { ["InterfaceID"] = "Sytrohs", ["UserCode"] = pin };
+                    if (action != "Disarm")
+                    {
+                        parameters["ArmType"] = action;
+                        parameters["Bypass"] = "False";
+                    }
+                    var request = new JObject {
+                        ["command"] = action == "Disarm" ? "PARTITION_DISARM" : "PARTITION_ARM",
+                        ["tParams"] = parameters
+                    };
+                    if (CurrentGeneration(generation))
+                    {
+                        Request(host, token, "POST", "/api/v1/items/" +
+                            partition.ToString(CultureInfo.InvariantCulture) + "/commands", request.ToString(Formatting.None));
+                        result = "sent";
+                    }
+                }
+                catch (Exception ex) { InvalidateRejectedToken(ex); }
+                finally { completed(result); }
+            });
+        }
+
+        private static int? SecurityNumber(JArray variables, string field, int maximum)
+        {
+            JToken value;
+            int number;
+            if (!SourceVariable(variables, field, out value)) return null;
+            if (maximum == 1 && value.Type == JTokenType.Boolean) return (bool)value ? 1 : 0;
+            return Int32.TryParse(ScalarText(value), NumberStyles.None, CultureInfo.InvariantCulture, out number) &&
+                number >= 0 && number <= maximum ? (int?)number : null;
+        }
+
+        private JArray InspectSecurityInventory(JArray items, string host, string token, int generation)
+        {
+            var results = new JArray();
+            bool hasIqPanel = System.Linq.Enumerable.Any(items, item =>
+                ((string)item["name"] ?? "").IndexOf("IQPanel", StringComparison.OrdinalIgnoreCase) >= 0);
+            if (!hasIqPanel) return results;
+            foreach (JObject item in System.Linq.Enumerable.OfType<JObject>(items))
+            {
+                if (!CurrentGeneration(generation) || results.Count >= 12) break;
+                string name = (string)item["name"] ?? "";
+                int id;
+                if ((!name.StartsWith("IQPanel", StringComparison.OrdinalIgnoreCase) &&
+                     !name.Equals("Security Panel", StringComparison.OrdinalIgnoreCase) &&
+                     !name.StartsWith("Security System", StringComparison.OrdinalIgnoreCase)) ||
+                    !TrySourceId(item["item_id"], out id) || id == 0) continue;
+                var observation = new JObject { ["item_id"] = id, ["name"] = name };
+                results.Add(observation);
+                try
+                {
+                    string json = Request(host, token, "GET", "/api/v1/items/" +
+                        id.ToString(CultureInfo.InvariantCulture) + "/variables", null);
+                    observation["variables"] = InspectNowPlayingVariables(json);
+                    var states = new JObject();
+                    var variables = JArray.Parse(json);
+                    foreach (string field in new[] { "ARMED", "ARM_STATE", "ARMED_STATE", "ARMING_STATE",
+                        "PARTITION_STATE", "PARTITION_STATUS", "ALARM_STATE", "ALARM_STATUS", "READY", "IS_READY",
+                        "HOME_STATE", "AWAY_STATE", "DISARMED_STATE", "IS_ACTIVE", "OPEN_ZONE_COUNT", "ARMED_TYPE" })
+                    {
+                        JToken value;
+                        if (!SourceVariable(variables, field, out value)) continue;
+                        int numeric;
+                        int maximum = field == "OPEN_ZONE_COUNT" ? UInt16.MaxValue : 1;
+                        if (value.Type == JTokenType.Boolean && field != "OPEN_ZONE_COUNT")
+                            states[field] = value.DeepClone();
+                        else if ((value.Type == JTokenType.Integer || value.Type == JTokenType.String) &&
+                            Int32.TryParse(value.ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out numeric) &&
+                            numeric >= 0 && numeric <= maximum)
+                            states[field] = numeric;
+                        else if (value.Type == JTokenType.String &&
+                            System.Text.RegularExpressions.Regex.IsMatch((string)value,
+                                @"^(disarmed|armed|armed[_ -](home|away|stay|night|instant)|arm(ed)?[_ -]?(away|stay|home|night)|ready|not[_ -]ready|arming|alarm|none|normal|on|off)$",
+                                System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                            states[field] = value.DeepClone();
+                    }
+                    observation["recognized_states"] = states;
+                    if (SecurityNumber(variables, "IS_ACTIVE", 1) == 1 &&
+                        name.StartsWith("Security System", StringComparison.OrdinalIgnoreCase) &&
+                        CurrentGeneration(generation))
+                    {
+                        try
+                        {
+                            string metadata = Request(host, token, "GET", "/api/v1/items/" +
+                                id.ToString(CultureInfo.InvariantCulture) + "/commands", null);
+                            observation["keypad_command_metadata"] = BuildCommandMetadataReport(metadata, 200, id);
+                        }
+                        catch (Exception ex)
+                        {
+                            InvalidateRejectedToken(ex);
+                            observation["keypad_metadata_error"] = FailureKind(ex);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    observation["error"] = FailureKind(ex);
+                }
+            }
+            return results;
+        }
+
         public void ExportInventory()
         { ExportInventoryInternal(false); }
         public void ExportSetupReport()
@@ -611,6 +1048,13 @@ namespace Control4Crestron
                     inventory["room_media_inspections"] = RoomMediaInspectionReports();
                     inventory["room_now_playing_inspections"] = NowPlayingReports();
                     inventory["room_media_catalogs"] = RoomCatalogReports();
+                    inventory["security_inspection"] = InspectSecurityInventory(all, host, token, gen);
+                    lock (_sync)
+                        if (_securitySocketCapture != null && _securityCaptureGeneration == gen)
+                            inventory["security_websocket_capture"] = _securitySocketCapture.DeepClone();
+                    lock (_sync)
+                        if (_lightingSceneOwnership != null && _lightingSceneOwnershipGeneration == _generation)
+                            inventory["lighting_scene_ownership"] = _lightingSceneOwnership.DeepClone();
                     if (setup)
                     {
                         EmitMessage("Setup report: discovering room Watch/Listen sources");
@@ -1294,6 +1738,34 @@ namespace Control4Crestron
                 ["rooms"] = rooms, ["sessions"] = sessions };
         }
 
+        private JObject _lightingSceneOwnership;
+        private int _lightingSceneOwnershipGeneration;
+
+        internal static JObject DescribeLightingSceneOwnership(JArray options, string idField, string displayField)
+        {
+            var scenes = new JArray();
+            foreach (JObject row in System.Linq.Enumerable.Take(System.Linq.Enumerable.OfType<JObject>(options), 128))
+            {
+                var fields = new JObject();
+                foreach (JProperty field in System.Linq.Enumerable.Take(row.Properties(), 48))
+                {
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(field.Name, "^[A-Za-z_][A-Za-z0-9_]{0,63}$") || SensitiveMediaKey(field.Name)) continue;
+                    int budget = 48;
+                    JObject shape = NowPlayingShape(field.Value, field.Name, 0, ref budget);
+                    int roomId;
+                    string key = field.Name.Replace("_", "").ToLowerInvariant();
+                    if ((key == "roomid" || key == "room") &&
+                        Int32.TryParse(ScalarText(field.Value), NumberStyles.None, CultureInfo.InvariantCulture, out roomId) && roomId > 0)
+                        shape["room_candidate_id"] = roomId;
+                    fields[field.Name] = shape;
+                }
+                scenes.Add(new JObject { ["name"] = PlayingText(new JValue(SceneOptionName(row, idField, displayField))),
+                    ["fields"] = fields });
+            }
+            return new JObject { ["generated_utc"] = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
+                ["scene_count"] = options.Count, ["scenes"] = scenes };
+        }
+
         internal sealed class PanelAction
         {
             internal string Name, Kind, Command, Parameter;
@@ -1445,6 +1917,16 @@ namespace Control4Crestron
                         throw new InvalidDataException("Invalid scene list size");
                     var options = JToken.Parse(data) as JArray;
                     if (options == null) throw new InvalidDataException("Expected scene list");
+                    if (kind == "light")
+                    {
+                        JObject report = DescribeLightingSceneOwnership(options, field, display);
+                        lock (_sync)
+                        {
+                            if (_generation != generation) return;
+                            _lightingSceneOwnership = report;
+                            _lightingSceneOwnershipGeneration = generation;
+                        }
+                    }
                     var found = new System.Collections.Generic.Dictionary<string, PanelAction>(StringComparer.Ordinal);
                     var conflicts = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
                     foreach (var option in options)
@@ -1628,6 +2110,310 @@ namespace Control4Crestron
             return value != null && System.Text.RegularExpressions.Regex.IsMatch(value.Trim(),
                 "^(lock|locked|unlock|unlocked|locking|unlocking|open|closed|jammed|enabled|disabled|unknown|not[- _]locked)$",
                 System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        }
+
+        private sealed class TuneInBrowse
+        {
+            internal int Generation;
+            internal ushort Proxy, Protocol;
+            internal int Sequence;
+            internal bool WaitForContent;
+            internal JToken EmptyReply;
+            internal readonly System.Threading.ManualResetEvent Completed = new System.Threading.ManualResetEvent(false);
+            internal JToken Data;
+        }
+
+        private readonly System.Collections.Generic.Dictionary<string, TuneInBrowse> _tuneInBrowses =
+            new System.Collections.Generic.Dictionary<string, TuneInBrowse>(StringComparer.Ordinal);
+
+        private void CaptureTuneInBrowseResponse(JToken message, int generation)
+        {
+            if (!(message is JObject) || ScalarText(message["evtName"]) != "OnDataToUI") return;
+            ushort item;
+            if (!UInt16.TryParse(ScalarText(message["iddevice"]), out item)) return;
+            var response = (message["data"] as JObject)?["RESPONSE"] as JObject;
+            string navigator = ScalarText(response?["NAVID"]);
+            if (navigator == null) return;
+            lock (_sync)
+            {
+                TuneInBrowse browse;
+                if (_generation != generation || !_tuneInBrowses.TryGetValue(navigator, out browse) ||
+                    browse.Generation != generation || (browse.Proxy != item && (browse.Protocol == 0 || browse.Protocol != item)) || browse.Data != null ||
+                    ScalarText(response["SEQ"]) != browse.Sequence.ToString(System.Globalization.CultureInfo.InvariantCulture)) return;
+                JToken data = response["DATA"] ?? new JValue((string)null);
+                if (browse.WaitForContent && (data.Type == JTokenType.Null ||
+                    data.Type == JTokenType.String && String.IsNullOrWhiteSpace(data.ToString())))
+                {
+                    browse.EmptyReply = data;
+                    return;
+                }
+                browse.Data = data;
+                browse.Completed.Set();
+            }
+        }
+
+        private JObject RequestTuneInMenu(string host, string token, ushort room, ushort proxy, int generation,
+            Func<bool> current, string navigator, int sequence, string screen, string url)
+        {
+            var args = new System.Xml.Linq.XElement("args",
+                new System.Xml.Linq.XElement("arg", new System.Xml.Linq.XAttribute("name", "screen"), screen));
+            if (url != null)
+                args.Add(new System.Xml.Linq.XElement("arg", new System.Xml.Linq.XAttribute("name", "URL"), url));
+            return WaitForNavigatorData(proxy, 0, generation, current, navigator, sequence, 8000, false, () =>
+                SendTuneInNavigator(host, token, room, proxy, navigator, sequence, "GetBrowseMenu",
+                    args.ToString(System.Xml.Linq.SaveOptions.DisableFormatting))) as JObject;
+        }
+
+        private JToken WaitForNavigatorData(ushort proxy, ushort protocol, int generation, Func<bool> current,
+            string navigator, int sequence, int timeoutMs, bool waitForContent, Action send)
+        {
+            var browse = new TuneInBrowse { Generation = generation, Proxy = proxy, Protocol = protocol, Sequence = sequence, WaitForContent = waitForContent };
+            bool registered = false;
+            try
+            {
+                lock (_sync)
+                {
+                    if (!current()) return null;
+                    _tuneInBrowses.Add(navigator, browse);
+                    registered = true;
+                }
+                send();
+                browse.Completed.WaitOne(timeoutMs);
+                lock (_sync)
+                {
+                    if (!current()) return null;
+                    JToken reply = browse.Data ?? browse.EmptyReply;
+                    if (reply == null) throw new TimeoutException("Navigator callback");
+                    return reply;
+                }
+            }
+            finally
+            {
+                if (registered) lock (_sync) _tuneInBrowses.Remove(navigator);
+                browse.Completed.Dispose();
+            }
+        }
+
+        internal static JObject DescribeAmazonNavigatorData(JToken data)
+        {
+            int budget = 256;
+            if (data.Type != JTokenType.String) return NowPlayingShape(data, "", 0, ref budget);
+            string text = data.ToString();
+            var report = new JObject { ["type"] = "String", ["length"] = text.Length };
+            if (text.Length > 262144) { report["format"] = "too_large"; return report; }
+            string decoded = System.Net.WebUtility.HtmlDecode(text).Trim().TrimStart('\uFEFF').TrimStart();
+            report["html_encoded"] = !String.Equals(text, System.Net.WebUtility.HtmlDecode(text), StringComparison.Ordinal);
+            if (decoded.Length == 0) { report["format"] = "empty"; return report; }
+            if (decoded[0] == '<')
+            {
+                report["format"] = "xml";
+                var tags = new JArray();
+                var seen = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+                foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(
+                    decoded, @"<([A-Za-z_][A-Za-z_0-9.-]{0,63})(?=[\s/>])"))
+                {
+                    string tag = match.Groups[1].Value;
+                    if (!SensitiveMediaKey(tag) && seen.Add(tag)) tags.Add(tag);
+                    if (tags.Count >= 40) break;
+                }
+                report["xml_tags"] = tags;
+                return report;
+            }
+            if (decoded[0] == '{' || decoded[0] == '[' || decoded[0] == '"')
+            {
+                try
+                {
+                    JToken json = JToken.Parse(decoded);
+                    report["format"] = "json";
+                    report["decoded_shape"] = NowPlayingShape(json, "", 0, ref budget);
+                }
+                catch (Newtonsoft.Json.JsonReaderException) { report["format"] = "invalid_json"; }
+                return report;
+            }
+            Uri uri;
+            report["format"] = Uri.TryCreate(decoded, UriKind.Absolute, out uri) &&
+                (uri.Scheme == "https" || uri.Scheme == "http") ? "url" : "opaque_text";
+            foreach (string status in new[] { "OK", "ACK", "PENDING", "SUCCESS", "ERROR", "UNSUPPORTED", "NOT_SUPPORTED", "NOT_IMPLEMENTED" })
+                if (String.Equals(decoded, status, StringComparison.OrdinalIgnoreCase)) { report["status"] = status; break; }
+            return report;
+        }
+
+        private static System.Collections.Generic.IEnumerable<JObject> AmazonDefinitionRows(JToken rows)
+        {
+            if (rows is JObject) yield return (JObject)rows;
+            var array = rows as JArray;
+            if (array == null) yield break;
+            for (int i = 0; i < Math.Min(array.Count, 32); i++)
+                if (array[i] is JObject) yield return (JObject)array[i];
+        }
+
+        internal static JArray DescribeAmazonTabs(JToken data)
+        {
+            var result = new JArray();
+            var tabs = ((data as JObject)?["Tabs"] as JObject)?["Tab"];
+            foreach (JObject tab in AmazonDefinitionRows(tabs))
+            {
+                string screen = NowPlayingLabel(tab["ScreenId"]);
+                var row = new JObject { ["screen_id"] = screen };
+                var command = tab["ScreenCommand"] as JObject;
+                if (command != null)
+                {
+                    var args = new JArray();
+                    foreach (JObject parameter in AmazonDefinitionRows((command["Params"] as JObject)?["Param"]))
+                    {
+                        string name = NowPlayingLabel(parameter["Name"]);
+                        string type = NowPlayingLabel(parameter["Type"]);
+                        JToken value = parameter["Value"];
+                        var arg = new JObject { ["name"] = name, ["type"] = type, ["has_value"] = value != null };
+                        if (value?.Type == JTokenType.String)
+                        {
+                            string text = value.ToString();
+                            arg["value_length"] = text.Length;
+                            if (String.Equals(name, "screenId", StringComparison.OrdinalIgnoreCase))
+                            {
+                                foreach (string screenId in new[] { screen, "HomeScreen", "ListScreen", "SearchScreen" })
+                                    if (screenId != null && text == screenId) { arg["screen_value"] = screenId; break; }
+                            }
+                        }
+                        args.Add(arg);
+                    }
+                    row["screen_command"] = new JObject { ["name"] = NowPlayingLabel(command["Name"]),
+                        ["type"] = NowPlayingLabel(command["Type"]), ["parameters"] = args };
+                }
+                result.Add(row);
+            }
+            return result;
+        }
+
+        internal void InspectAmazonBrowse(ushort room, ushort proxy)
+        {
+            AudioRoom registration;
+            int generation, epoch;
+            lock (_sync)
+            {
+                if (!_online || !_audioRooms.TryGetValue(room, out registration)) return;
+                generation = _generation;
+                epoch = _feedbackEpoch;
+            }
+            Func<bool> current = () => InspectionCurrent(room, registration, generation, epoch);
+            Queue(delegate
+            {
+                string phase = "source identification";
+                try
+                {
+                    string host, token;
+                    if (!GetConnection(out host, out token)) return;
+                    lock (_sync) { if (!current()) return; }
+                    string path = "/api/v1/items/" + proxy;
+                    string detail = Request(host, token, "GET", path, null);
+                    JObject mapping;
+                    ushort driver = ServiceDriverCandidate(detail, proxy, out mapping);
+                    if (driver == 0 || !ServiceDriverIdentity(Request(host, token, "GET", "/api/v1/items/" + driver, null), driver))
+                        throw new InvalidDataException("Amazon Music proxy relationship unavailable");
+                    phase = "GetTabList";
+                    string navigator = Guid.NewGuid().ToString("N");
+                    const string command = "GetTabList";
+                    var args = new JObject { ["ROOMID"] = room, ["NAVID"] = navigator, ["SEQ"] = 1, ["LOCALE"] = "en_US" };
+                    var payload = new JObject { ["async"] = true, ["command"] = command, ["tParams"] = args };
+                    JToken data = WaitForNavigatorData(proxy, driver, generation, current, navigator, 1, 15000, false, () =>
+                    {
+                        int status;
+                        Request(host, token, "POST", path + "/commands", payload.ToString(Formatting.None), out status, true);
+                        EmitMessage("Amazon Music GetTabList HTTP " + status + "; waiting for callback");
+                    });
+                    if (data == null) return;
+                    JArray tabs = DescribeAmazonTabs(data);
+                    lock (_sync)
+                    {
+                        if (!current()) return;
+                        _roomMediaInspections.Enqueue(new JObject { ["inspection_kind"] = "amazon_browse",
+                            ["room_id"] = room, ["source_id"] = proxy, ["command"] = command,
+                            ["data"] = DescribeAmazonNavigatorData(data), ["tab_definitions"] = tabs,
+                            ["generated_utc"] = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture) });
+                        while (_roomMediaInspections.Count > 4) _roomMediaInspections.Dequeue();
+                    }
+                    EmitMessage("Amazon Music tab definitions recorded (" + tabs.Count + " tabs)");
+                    phase = "Browse";
+                    args["SEQ"] = 2;
+                    args["screenId"] = "HomeScreen";
+                    payload["command"] = "Browse";
+                    JToken menu = WaitForNavigatorData(proxy, driver, generation, current, navigator, 2, 15000, true, () =>
+                    {
+                        int status;
+                        Request(host, token, "POST", path + "/commands", payload.ToString(Formatting.None), out status, true);
+                        EmitMessage("Amazon Music active-playback Browse HTTP " + status + "; waiting for menu data");
+                    });
+                    if (menu == null) return;
+                    JObject shape = DescribeAmazonNavigatorData(menu);
+                    lock (_sync)
+                    {
+                        if (!current()) return;
+                        _roomMediaInspections.Enqueue(new JObject { ["inspection_kind"] = "amazon_browse",
+                            ["room_id"] = room, ["source_id"] = proxy, ["command"] = "Browse", ["data"] = shape,
+                            ["generated_utc"] = DateTime.UtcNow.ToString("o", System.Globalization.CultureInfo.InvariantCulture) });
+                        while (_roomMediaInspections.Count > 4) _roomMediaInspections.Dequeue();
+                    }
+                    var list = (menu as JObject)?["List"] as JObject;
+                    EmitMessage(list != null ? "Amazon Music active-playback Browse returned a List; pulse Export_Inventory" :
+                        "Amazon Music active-playback Browse returned " + ((string)shape["format"] ?? menu.Type.ToString()) + "; pulse Export_Inventory");
+                }
+                catch (Exception ex)
+                {
+                    lock (_sync) { if (!current()) return; }
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Amazon Music " + phase + " test failed: " + FailureKind(ex));
+                }
+            });
+        }
+
+        private void SendTuneInNavigator(string host, string token, ushort room, ushort proxy, string navigator,
+            int sequence, string command, string args)
+        {
+            var parameters = new JObject { ["ROOMID"] = room, ["NAVID"] = navigator, ["SEQ"] = sequence, ["ARGS"] = args };
+            string payload = new JObject { ["async"] = true, ["command"] = command, ["tParams"] = parameters }.ToString(Formatting.None);
+            int status;
+            Request(host, token, "POST", "/api/v1/items/" + proxy + "/commands", payload, out status, true);
+        }
+
+        private static string TuneInGuideId(JObject row)
+        {
+            string id = ScalarText(row?["guide_id"]);
+            return String.IsNullOrEmpty(id) ? ScalarText(row?["preset_id"]) : id;
+        }
+
+        internal static string BuildTuneInStationArgs(JObject row)
+        {
+            string id = TuneInGuideId(row);
+            if (id == null || !System.Text.RegularExpressions.Regex.IsMatch(id, @"\As[1-9][0-9]{0,9}\z")) return null;
+            string url = ScalarText(row["URL"]);
+            Uri stationUrl = TuneInUrl(url, "/Tune.ashx");
+            if (stationUrl == null ||
+                !System.Text.RegularExpressions.Regex.IsMatch(stationUrl.Query, @"[?&]id=" + id + @"(?:&|$)")) return null;
+            return BuildTuneInRowArgs(row);
+        }
+
+        private static Uri TuneInUrl(string url, string path)
+        {
+            Uri uri;
+            return url != null && url.Length <= 2048 && Uri.TryCreate(url, UriKind.Absolute, out uri) &&
+                (uri.Scheme == "http" || uri.Scheme == "https") && uri.IsDefaultPort &&
+                String.Equals(uri.Host, "opml.radiotime.com", StringComparison.OrdinalIgnoreCase) &&
+                uri.UserInfo.Length == 0 && uri.Fragment.Length == 0 &&
+                String.Equals(uri.AbsolutePath, path, StringComparison.OrdinalIgnoreCase) ? uri : null;
+        }
+
+        private static string BuildTuneInRowArgs(JObject row)
+        {
+            var args = new System.Xml.Linq.XElement("args",
+                new System.Xml.Linq.XElement("arg", new System.Xml.Linq.XAttribute("name", "screen"), "MyFavorites"));
+            foreach (string name in new[] { "type", "URL", "guide_id", "item", "is_preset", "key", "text", "image" })
+            {
+                JToken value = row[name];
+                string text = value?.Type == JTokenType.Boolean ? ((bool)value ? "true" : "false") : ScalarText(value);
+                if (text != null && text.Length <= 2048)
+                    args.Add(new System.Xml.Linq.XElement("arg", new System.Xml.Linq.XAttribute("name", name), text));
+            }
+            return args.ToString(System.Xml.Linq.SaveOptions.DisableFormatting);
         }
 
         private JArray ProbeDeviceCommandsAndVariables(string host, string token, int generation, ushort[] ids)

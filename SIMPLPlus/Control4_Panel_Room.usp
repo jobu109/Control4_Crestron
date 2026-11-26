@@ -5,7 +5,7 @@
 #USER_SIMPLSHARP_LIBRARY "Control4Gateway"
 
 DIGITAL_INPUT _skip_, _skip_, _skip_;
-STRING_INPUT Request$[255];
+STRING_INPUT Request$[255], Room_Config$[64][511];
 DIGITAL_OUTPUT _skip_, _skip_, _skip_;
 STRING_OUTPUT State$, Audio$, Video$, Catalog$, Playing$, Progress$, Keys$;
 INTEGER_PARAMETER Gateway_ID;
@@ -29,8 +29,18 @@ eventhandler OnPacket(Control4_Panel_Room sender, PanelRoomPacket args)
 
 CHANGE Request$ { adapter.Request(Request$); }
 
+CHANGE Room_Config$
+{
+    INTEGER slot;
+    slot = GetLastModifiedArrayIndex();
+    adapter.SetRoomConfiguration(slot, Room_Config$[slot]);
+}
+
 FUNCTION Main()
 {
+    INTEGER slot;
     RegisterEvent(adapter, PacketReady, OnPacket);
     adapter.Initialize(Gateway_ID, Room_IDs$);
+    FOR (slot = 1 TO 64)
+        adapter.SetRoomConfiguration(slot, Room_Config$[slot]);
 }

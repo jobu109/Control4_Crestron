@@ -55,8 +55,9 @@ namespace Control4Crestron
                     if (!service && sourceId <= UInt16.MaxValue)
                     {
                         string detail = Request(host, token, "GET", "/api/v1/items/" + sourceId, null);
+                        service = IsTuneInSource(ServiceDetail(detail, (ushort)sourceId));
                         JObject mapping; ushort driver = ServiceDriverCandidate(detail, (ushort)sourceId, out mapping);
-                        if (driver > 0)
+                        if (!service && driver > 0)
                         {
                             string driverDetail = Request(host, token, "GET", "/api/v1/items/" + driver, null);
                             if (!ServiceDriverIdentity(driverDetail, driver)) throw new InvalidDataException("Candidate is not a protocol driver");

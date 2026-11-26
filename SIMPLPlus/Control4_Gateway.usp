@@ -4,7 +4,7 @@
 #ENABLE_STACK_CHECKING
 #USER_SIMPLSHARP_LIBRARY "Control4Gateway"
 
-// Four parameters reserve four leading positions in each signal direction.
+// Reserve one leading input and output position per parameter.
 DIGITAL_INPUT _skip_, _skip_, _skip_, _skip_, Authenticate, Connect, Disconnect, Export_Inventory, Export_Media_Capabilities, Export_Media_Commands, Capture_Audio_Feedback, Export_Setup_Report;
 DIGITAL_OUTPUT _skip_, _skip_, _skip_, _skip_, Connected_FB, Busy_FB, _skip_;
 STRING_OUTPUT Diagnostic$;

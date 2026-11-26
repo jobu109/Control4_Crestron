@@ -32,7 +32,7 @@ namespace Control4Crestron
         private int _busy;
         private bool _online;
         private int _generation;
-        private sealed class LightSnapshot { public ushort Level; public ushort On; public bool Measured; }
+        private sealed class LightSnapshot { public ushort Level; public ushort On; public bool Measured; public ushort Dimming; }
         public GatewayCore(ushort instanceId) { _instance = instanceId; }
         public ushort InstanceId { get { return _instance; } }
         public void Configure(string host)
@@ -183,7 +183,7 @@ namespace Control4Crestron
                     {
                         if (_generation != generation || !_online) return;
                         if (!_panelLightReferences.ContainsKey(id)) continue;
-                        cached = _lights.ContainsKey(id);
+                        cached = HasLightCapability(id);
                     }
                     if (cached) PublishCurrentLight(id);
                     else ReadLight(id, generation);
@@ -218,10 +218,20 @@ namespace Control4Crestron
                     if (_generation != gen || !_online) return;
                     int currentVersion;
                     _lightEventVersions.TryGetValue(itemId, out currentVersion);
-                    if (_feedbackEpoch != feedbackEpoch || currentVersion != eventVersion) return;
+                    if (_feedbackEpoch != feedbackEpoch) return;
+                    ushort dimming = switchState ? (ushort)1 : (ushort)2;
                     LightSnapshot previous;
-                    if (switchState && _lights.TryGetValue(itemId, out previous) && previous.Measured) return;
-                    StoreLightFeedback(itemId, level, !switchState);
+                    if (_lights.TryGetValue(itemId, out previous))
+                    {
+                        if (switchState && previous.Dimming == 2) dimming = 2;
+                        if (currentVersion != eventVersion || switchState && previous.Measured)
+                        {
+                            if (previous.Dimming != dimming) StoreLightFeedback(itemId, previous.Level, previous.Measured, dimming);
+                            return;
+                        }
+                    }
+                    if (currentVersion != eventVersion) return;
+                    StoreLightFeedback(itemId, level, !switchState, dimming);
                 }
                 EmitMessage("Light " + itemId + (switchState ? (level == 0 ? " Off" : " On") + " (LIGHT_STATE readback)" : " level " + level + "% (REST readback)"));
             }
@@ -281,18 +291,32 @@ namespace Control4Crestron
             StoreLightFeedback(id, level, true);
         }
 
-        private void StoreLightFeedback(ushort id, ushort level, bool measured)
+        // Caller holds _sync.
+        private bool HasLightCapability(ushort id)
+        {
+            LightSnapshot snapshot;
+            return _lights.TryGetValue(id, out snapshot) && snapshot.Dimming != 0;
+        }
+
+        private void StoreLightFeedback(ushort id, ushort level, bool measured, ushort dimming = 0)
         {
             if (id == 0 || level > 100) return;
-            var snapshot = new LightSnapshot { Level = level, On = (ushort)(level > 0 ? 1 : 0), Measured = measured };
-            lock (_sync) { _lights[id] = snapshot; }
+            LightSnapshot snapshot;
+            lock (_sync)
+            {
+                LightSnapshot previous;
+                if (dimming == 0 && _lights.TryGetValue(id, out previous)) dimming = previous.Dimming;
+                if (measured && level > 0 && level < 100) dimming = 2;
+                snapshot = new LightSnapshot { Level = level, On = (ushort)(level > 0 ? 1 : 0), Measured = measured, Dimming = dimming };
+                _lights[id] = snapshot;
+            }
             PublishLightSnapshot(id, snapshot);
         }
 
         private void PublishLightSnapshot(ushort id, LightSnapshot snapshot)
         {
             var handler = LightChanged;
-            if (handler != null) SafeEvent(delegate { handler(this, new LightStatusEventArgs { ItemId = id, Level = snapshot.Level, On = snapshot.On, Valid = 1 }); });
+            if (handler != null) SafeEvent(delegate { handler(this, new LightStatusEventArgs { ItemId = id, Level = snapshot.Level, On = snapshot.On, Valid = 1, Dimming = snapshot.Dimming }); });
         }
 
         public void PublishCurrentLight(ushort id)

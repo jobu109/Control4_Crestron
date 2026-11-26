@@ -13,6 +13,8 @@ namespace Control4Crestron
         public ushort On { get; set; }
         public ushort Level { get; set; }
         public ushort Valid { get; set; }
+        // 0 is unknown, 1 is on/off, 2 is dimmable.
+        public ushort Dimming { get; set; }
     }
     public sealed class GatewayMessageEventArgs : EventArgs
     {

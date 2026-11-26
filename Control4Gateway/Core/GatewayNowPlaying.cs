@@ -15,6 +15,7 @@ namespace Control4Crestron
             internal AudioRoom Registration;
             internal int Source, Generation, Epoch, Version;
             internal JObject Data;
+            internal bool TuneInReadPending;
             internal string Action = "unknown";
             internal JObject Progress;
             internal string TrackIdentity = "", TrackRevision = "";
@@ -24,9 +25,21 @@ namespace Control4Crestron
             internal DateTime Received;
             internal JObject Data;
             internal int? Index;
+            internal bool TuneIn;
         }
         private readonly Dictionary<ushort, PlayingRoom> _playingRooms = new Dictionary<ushort, PlayingRoom>();
         private readonly Dictionary<int, PlayingQueue> _playingQueues = new Dictionary<int, PlayingQueue>();
+        private readonly Dictionary<string, string> _tuneInLogos = new Dictionary<string, string>(StringComparer.Ordinal);
+        private static string TuneInLogoKey(int source, string guide)
+        { return source.ToString(CultureInfo.InvariantCulture) + ":" + guide; }
+
+        internal static void ApplyTuneInLogo(JObject station, string logo)
+        {
+            if (String.IsNullOrEmpty(logo)) return;
+            if (String.IsNullOrEmpty((string)station["artwork"])) station["artwork"] = logo;
+            else if ((string)station["artwork"] != logo) station["station_artwork"] = logo;
+        }
+
         public event EventHandler<RoomCatalogEventArgs> RoomNowPlayingChanged;
         private static string PlayingText(JToken token)
         {
@@ -90,6 +103,30 @@ namespace Control4Crestron
             if (station != null) result["station"] = PlayingText(station["title"]);
             return result;
         }
+        private static string TuneInArtwork(JToken token)
+        {
+            string safe = PlayingArtwork(token);
+            if (safe.Length != 0) return safe;
+            Uri uri;
+            if (token?.Type != JTokenType.String || !Uri.TryCreate(token.ToString(), UriKind.Absolute, out uri) ||
+                uri.Scheme != "http" || !uri.IsDefaultPort ||
+                (uri.Host != "cdn-radiotime-logos.tunein.com" && uri.Host != "cdn-albums.tunein.com")) return "";
+            return PlayingArtwork(new JValue(new UriBuilder(uri) { Scheme = "https", Port = -1 }.Uri.AbsoluteUri));
+        }
+
+        private static JObject PlayingTuneInStation(JObject current, JObject selected, int source)
+        {
+            string guide = PlayingText(current["guide_id"]);
+            if (!Regex.IsMatch(guide, @"\As[0-9]{1,16}\z") || selected == null ||
+                PlayingText(selected["guide_id"]) != guide || PlayingText(selected["itemType"]) != "station") return null;
+            JObject result = PlayingData(current, "Title", source, null);
+            result["station"] = result["title"];
+            string artwork = TuneInArtwork(current["ImageUrl"]);
+            if (artwork.Length == 0) artwork = TuneInArtwork(selected["ImageUrl"]);
+            result["artwork"] = artwork;
+            return result;
+        }
+
         // Observed QueueChanged index includes the header row. Never flatten or
         // select the first title in a queue; verify any explicit current marker.
         internal static JObject ParsePlayingQueue(JToken message, out int source)
@@ -99,7 +136,18 @@ namespace Control4Crestron
             JObject evt = message["data"] is JObject ? message["data"]["EVENT"] as JObject : null;
             if (evt == null || (string)evt["NAME"] != "QueueChanged") return null;
             JObject args = evt["ARGS"] as JObject; if (args == null) return null;
-            JArray items = args["List"] is JObject ? args["List"]["item"] as JArray : null;
+            JToken rows = (args["List"] as JObject)?["item"];
+            JObject currentStation = args["NowPlaying"] as JObject;
+            if (currentStation != null && PlayingText(currentStation["itemType"]) == "station")
+            {
+                int stationIndex;
+                if (!TrySourceId(args["NowPlayingIndex"], out stationIndex)) return null;
+                var stationRows = rows as JArray;
+                JObject stationRow = stationRows != null && stationRows.Count <= 256 && stationIndex < stationRows.Count
+                    ? stationRows[stationIndex] as JObject : stationIndex == 0 ? rows as JObject : null;
+                return PlayingTuneInStation(currentStation, stationRow, source);
+            }
+            JArray items = rows as JArray;
             if (items == null || items.Count > 256) return null;
             // Pandora's index1 identifies the station, not the song. Its explicit
             // On Now section has one current item, followed by You Just Heard.
@@ -129,6 +177,13 @@ namespace Control4Crestron
         }
         internal static JObject ParsePlayingRoom(string json, int source)
         {
+            JObject media = ReadRoomMediaInfo(json, source);
+            // Room img addressing is still unrecognized for other services.
+            return media == null ? null : PlayingData(media, "title", source, null);
+        }
+
+        private static JObject ReadRoomMediaInfo(string json, int source)
+        {
             if (String.IsNullOrEmpty(json) || json.Length > 262144) throw new InvalidDataException("Invalid now-playing response");
             JArray entries = JToken.Parse(json) as JArray; JToken value;
             if (entries == null || entries.Count > 128 || !SourceVariable(entries, "CURRENT MEDIA INFO", out value)) return null;
@@ -136,8 +191,7 @@ namespace Control4Crestron
             JObject media = value is JObject ? value["mediainfo"] as JObject : null;
             int owner;
             if (media == null || !TrySourceId(media["medSrcDev"], out owner) || owner != source) return null;
-            // Room img addressing is still unrecognized; do not guess its route.
-            return PlayingData(media, "title", source, null);
+            return media;
         }
         // The room's REST response confirms the current track but does not provide
         // a usable image URL. Restore only an image from the same measured track.
@@ -157,6 +211,73 @@ namespace Control4Crestron
                 !String.Equals(album, queueAlbum, StringComparison.OrdinalIgnoreCase)) return;
             string artwork = PlayingArtwork(queued["artwork"]);
             if (artwork.Length != 0) measured["artwork"] = artwork;
+        }
+
+        internal static JObject ReadTuneInTrack(string json, int source, JObject station)
+        {
+            JObject media = ReadRoomMediaInfo(json, source);
+            string name = PlayingText(station["station"]);
+            // The sampled TuneIn room reports its station name in artist.
+            // Require that name and measured source to match the queue before merging.
+            if (media == null || name.Length == 0 ||
+                !String.Equals(PlayingText(media["artist"]), name, StringComparison.OrdinalIgnoreCase)) return null;
+            JObject track = PlayingData(media, "title", source, null);
+            if ((bool?)track["valid"] != true) return null;
+            track["station"] = name;
+            track["artist"] = "";
+            string artwork = TuneInArtwork(media["img"]);
+            track["artwork"] = artwork.Length == 0 ? station["artwork"] : new JValue(artwork);
+            ApplyTuneInLogo(track, (string)(station["station_artwork"] ?? station["artwork"]));
+            return track;
+        }
+
+        private void RefreshTuneInTrack(ushort roomId, PlayingRoom state)
+        {
+            if (state.TuneInReadPending) return;
+            state.TuneInReadPending = true;
+            Queue(delegate
+            {
+                int version = -1;
+                try
+                {
+                    string host, token;
+                    if (!GetConnection(out host, out token)) return;
+                    JObject station;
+                    lock (_sync)
+                    {
+                        if (!PlayingCurrent(roomId, state)) return;
+                        PlayingQueue snapshot;
+                        if (!_playingQueues.TryGetValue(state.Source, out snapshot) || !snapshot.TuneIn) return;
+                        station = snapshot.Data;
+                        version = state.Version;
+                    }
+                    string json = Request(host, token, "GET", "/api/v1/items/" + roomId + "/variables?varnames=CURRENT%20MEDIA%20INFO", null);
+                    JObject track = ReadTuneInTrack(json, state.Source, station);
+                    lock (_sync)
+                    {
+                        if (track == null || !PlayingCurrent(roomId, state) || state.Version != version) return;
+                        state.Data = track;
+                        PublishPlaying(roomId, state);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    lock (_sync) { if (!PlayingCurrent(roomId, state)) return; }
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Room " + roomId + " TuneIn track read failed: " + FailureKind(ex));
+                }
+                finally
+                {
+                    lock (_sync)
+                    {
+                        state.TuneInReadPending = false;
+                        PlayingQueue latest;
+                        if (version >= 0 && state.Version != version && PlayingCurrent(roomId, state) &&
+                            _playingQueues.TryGetValue(state.Source, out latest) && latest.TuneIn)
+                            RefreshTuneInTrack(roomId, state);
+                    }
+                }
+            });
         }
 
         private void PublishPlaying(ushort roomId, PlayingRoom state)
@@ -191,7 +312,11 @@ namespace Control4Crestron
             if (_playingQueues.TryGetValue(state.Source, out cached) && (DateTime.UtcNow - cached.Received).TotalSeconds <= 10)
             { state.Data = cached.Data; state.Version++; }
             PublishPlaying(roomId, state);
-            if (state.Data != null) return;
+            if (state.Data != null)
+            {
+                if (cached.TuneIn) RefreshTuneInTrack(roomId, state);
+                return;
+            }
             Queue(delegate
             {
                 try
@@ -231,6 +356,8 @@ namespace Control4Crestron
                 if (property.Name != "NowPlayingIndex" && property.Name != "NowPlaying") indexOnly = false;
             int source; JObject data;
             try { data = ParsePlayingQueue(message, out source); } catch (Exception) { return; }
+            var station = args?["NowPlaying"] as JObject;
+            bool tuneIn = data != null && (bool?)data["valid"] == true && PlayingText(station?["itemType"]) == "station";
             if (data == null)
             {
                 JObject evt = message["data"] is JObject ? message["data"]["EVENT"] as JObject : null;
@@ -246,13 +373,28 @@ namespace Control4Crestron
                 // notification without List. It does not revoke the full snapshot.
                 if (indexOnly && _playingQueues.TryGetValue(source, out previous) && previous.Index == queueIndex &&
                     previous.Data != null && (bool)previous.Data["valid"]) return;
+                string logo;
+                if (tuneIn && _tuneInLogos.TryGetValue(TuneInLogoKey(source, TuneInGuideId(station)), out logo))
+                    ApplyTuneInLogo(data, logo);
                 if (!_playingQueues.ContainsKey(source) && _playingQueues.Count >= 32) _playingQueues.Clear();
-                _playingQueues[source] = new PlayingQueue { Received = DateTime.UtcNow, Data = data, Index = queueIndex };
+                _playingQueues[source] = new PlayingQueue { Received = DateTime.UtcNow, Data = data, Index = queueIndex, TuneIn = tuneIn };
                 foreach (var entry in _playingRooms)
                 {
                     PlayingRoom state = entry.Value;
                     if (state.Source != source || !PlayingCurrent(entry.Key, state)) continue;
-                    state.Version++; state.Data = data; PublishPlaying(entry.Key, state);
+                    // Keep the current song visible during a duplicate station notification.
+                    bool sameStation = tuneIn && state.Data != null &&
+                        (string)state.Data["station"] == (string)data["station"];
+                    state.Version++;
+                    if (!sameStation) { state.Data = data; PublishPlaying(entry.Key, state); }
+                    else if (data["artwork"] != null && (string)data["artwork"] != "")
+                    {
+                        var artworkUpdate = (JObject)state.Data.DeepClone();
+                        ApplyTuneInLogo(artworkUpdate, (string)(data["station_artwork"] ?? data["artwork"]));
+                        if (!JToken.DeepEquals(state.Data, artworkUpdate))
+                        { state.Data = artworkUpdate; PublishPlaying(entry.Key, state); }
+                    }
+                    if (tuneIn) RefreshTuneInTrack(entry.Key, state);
                 }
             }
         }
@@ -282,7 +424,7 @@ namespace Control4Crestron
         }
         private void InvalidatePlaying()
         {
-            _playingQueues.Clear(); _playingRooms.Clear();
+            _playingQueues.Clear(); _playingRooms.Clear(); _tuneInLogos.Clear();
             foreach (ushort room in _roomModules.Keys) PublishPlaying(room, null);
         }
     }

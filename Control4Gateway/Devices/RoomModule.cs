@@ -40,14 +40,26 @@ namespace Control4Crestron
         private ushort _playingValid;
         public event EventHandler<RoomMediaPageEventArgs> NowPlayingChanged;
         public event EventHandler<RoomCatalogEventArgs> ProgressChanged;
+        private bool HiddenMedia(JObject data)
+        {
+            int? source = (int?)data?["source_id"];
+            return source.HasValue && SourceExclusions != null && SourceExclusions.Contains(source.Value);
+        }
+
         private void OnProgress(object sender, RoomCatalogEventArgs args)
-        { if (_registered && args.RoomId == _roomId) { var handler = ProgressChanged; if (handler != null) handler(this, args); } }
+        {
+            if (!_registered || args.RoomId != _roomId) return;
+            var handler = ProgressChanged;
+            if (handler != null && (SourceExclusions == null || SourceExclusions.Count == 0 || !HiddenMedia(JObject.Parse(args.Json))))
+                handler(this, args);
+        }
         public void SetNowPlayingPage(ushort page)
         { lock (_browserSync) { _playingPage = page == 0 ? (ushort)1 : page; } PublishNowPlaying(); }
         private void OnNowPlaying(object sender, RoomCatalogEventArgs args)
         {
             if (!_registered || args.RoomId != _roomId) return;
-            lock (_browserSync) { _playingJson = args.Json; _playingValid = args.Valid; }
+            bool hidden = args.Valid == 1 && SourceExclusions != null && SourceExclusions.Count != 0 && HiddenMedia(JObject.Parse(args.Json));
+            lock (_browserSync) { _playingJson = hidden ? "" : args.Json; _playingValid = hidden ? (ushort)0 : args.Valid; }
             PublishNowPlaying();
         }
         private void PublishNowPlaying()
@@ -138,6 +150,17 @@ namespace Control4Crestron
             var statusHandler = SourceSlotsStatusChanged; if (statusHandler != null) statusHandler(this, status);
         }
         internal bool AutomaticServiceBrowse = true;
+        internal HashSet<int> SourceExclusions;
+
+        private JArray VisibleSources(JArray sources)
+        {
+            if (sources == null) return new JArray();
+            if (SourceExclusions == null || SourceExclusions.Count == 0) return sources;
+            var visible = new JArray();
+            foreach (JObject source in sources)
+                if (!SourceExclusions.Contains((int)source["source_id"])) visible.Add(source.DeepClone());
+            return visible;
+        }
 
         internal void Release()
         {
@@ -219,6 +242,13 @@ namespace Control4Crestron
         public void InspectServicePresets(ushort driverId, string reference)
         {
             if (_registered) _core.InspectServicePresets(_roomId, driverId, reference);
+        }
+        internal void InspectAmazonBrowse()
+        {
+            int proxy;
+            if (!_registered || !TryNamedSource("Amazon Music", false, out proxy) || proxy <= 0 || proxy > UInt16.MaxValue)
+            { Diagnostic("Amazon Music is unavailable or ambiguous in this room"); return; }
+            _core.InspectAmazonBrowse(_roomId, (ushort)proxy);
         }
         public void InspectNowPlaying()
         { if (_registered) _core.InspectNowPlaying(_roomId); }
@@ -354,6 +384,7 @@ namespace Control4Crestron
                 _mediaKind = args.Kind; _mediaPage = 1;
                 if (String.IsNullOrEmpty(args.Kind)) _lastAutoServiceSource = -1;
                 _mediaData = _mediaValid ? JObject.Parse(args.Json) : null;
+                if (HiddenMedia(_mediaData)) { _mediaValid = false; _mediaData = null; }
                 _mediaItems = _mediaData == null ? new JArray() : (JArray)_mediaData["items"];
             }
             PublishMediaPage();
@@ -399,8 +430,8 @@ namespace Control4Crestron
             {
                 var room = JObject.Parse(args.Json);
                 _roomName = (string)room["name"] ?? "";
-                _watch = room["watch_sources"] as JArray ?? new JArray();
-                _listen = room["listen_sources"] as JArray ?? new JArray();
+                _watch = VisibleSources(room["watch_sources"] as JArray);
+                _listen = VisibleSources(room["listen_sources"] as JArray);
                 _sourcesValid = true;
             }
             _audioPage = _videoPage = 1; } PublishBrowser(); PublishSourceLists(); PublishSourceSlots(); PublishSelectedSlots();

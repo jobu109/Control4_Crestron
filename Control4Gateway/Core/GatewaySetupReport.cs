@@ -76,6 +76,7 @@ namespace Control4Crestron
             };
             string sourceStatus = "unavailable";
             int omitted = 0, sourceCount = 0;
+            var sourceIconFields = new JObject();
             if (!String.IsNullOrEmpty(uiJson))
             {
                 try
@@ -103,6 +104,11 @@ namespace Control4Crestron
                         {
                             if (++sourceCount > 8192) { omitted++; break; }
                             if (!(source is JObject)) { omitted++; continue; }
+                            foreach (JProperty field in ((JObject)source).Properties())
+                                if (sourceIconFields.Count < 32 &&
+                                    System.Text.RegularExpressions.Regex.IsMatch(field.Name, "^(icon|image|logo|artwork)[A-Za-z0-9_]{0,31}$",
+                                        System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                                    sourceIconFields[field.Name] = field.Value.Type.ToString();
                             int id = SetupId(source["id"]);
                             if (id == 0) { omitted++; continue; }
                             var destination = (JArray)room[kind + "_sources"];
@@ -199,7 +205,7 @@ namespace Control4Crestron
             foreach (JObject room in rooms.Values) roomArray.Add(room);
             return new JObject(new JProperty("schema_version", 1), new JProperty("generated_utc", generated),
                 new JProperty("gateway_id", gatewayId), new JProperty("completeness", "partial"),
-                new JProperty("source_discovery_status", sourceStatus), new JProperty("omitted_source_entries", omitted),
+                new JProperty("source_icon_fields", sourceIconFields), new JProperty("source_discovery_status", sourceStatus), new JProperty("omitted_source_entries", omitted),
                 new JProperty("rooms", roomArray), new JProperty("category_candidates", candidates),
                 new JProperty("devices", devices), new JProperty("warnings", warnings), new JProperty("readable_text", text.ToString()));
         }

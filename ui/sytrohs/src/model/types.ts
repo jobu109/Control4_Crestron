@@ -80,6 +80,7 @@ export interface CountdownState {
 export type RoomLightAction = 'ambient' | 'on' | 'off';
 
 export interface Scene {
+  roomIds?: string[];
   id: string;
   name: string;
   icon?: string;
@@ -100,7 +101,28 @@ export interface Thermostat {
   fanModes: string[];
 }
 
+export interface VideoSession {
+  room: number;
+  room_name: string;
+  source: number;
+  source_name: string;
+  targets: { id: number; name: string }[];
+}
+
+export interface SecurityStatus {
+  partition?: number;
+  mode?: 'disarmed' | 'home' | 'away';
+  alarm?: boolean;
+  open?: number;
+  multiple?: boolean;
+}
+
 export interface HouseConfig {
+  securityStatus?: SecurityStatus;
+  securityKeypadResult?: string;
+  securityZones?: ReadonlyArray<{ id: number; name: string; open?: boolean }>;
+  videoSessionsEnabled?: boolean;
+  videoSessions?: { sessions: VideoSession[]; status?: string };
   name: string;
   /** Only these services get a dock tile and a page. */
   services: ServiceId[];
@@ -127,7 +149,7 @@ export const HOUSE_WEATHER = 'house';
 
 // ---- Live state, keyed by `${kind}:${id}` (see stateKey) ----
 
-export interface LightState { on: boolean; level: number }
+export interface LightState { on: boolean; level: number; dimmable?: boolean }
 export interface ShadeState { position: number; moving?: 'opening' | 'closing' }
 export interface RoomMediaState {
   power: boolean;
@@ -138,6 +160,7 @@ export interface RoomMediaState {
   artist?: string;
   album?: string;
   artUrl?: string;
+  stationArtUrl?: string;
   progress?: { position: number; duration: number };
   /** "Playing from" label (station or playlist) when the system reports one. */
   station?: string;
@@ -225,6 +248,8 @@ export function stateKey(kind: StateKind, id: string): string {
 // ---- Commands from the UI ----
 
 export type Command =
+  | { kind: 'video-sessions' }
+  | { kind: 'video-session-watch'; room: number; target: number; source: number }
   | { kind: 'fan-speed'; id: string; roomId: string; action: 'speed'; value: number }
   | { kind: 'experience-button'; id: string; roomId: string; action: 'select' }
   | { kind: 'zones-off' }

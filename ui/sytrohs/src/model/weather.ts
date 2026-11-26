@@ -36,6 +36,20 @@ function sky(w: WeatherState, daylight: boolean | undefined): string | undefined
   return 'overcast';
 }
 
+/** Artwork available for the measured sky, with no inferred precipitation type. */
+export function weatherIcon(w: WeatherState | undefined, daylight?: boolean): string | undefined {
+  if (!w) return undefined;
+  switch (sky(w, daylight)) {
+    case 'snowy': return 'snowy';
+    case 'rainy': return 'rainy';
+    case 'clear': return 'clear-night';
+    case 'sunny': return daylight === true ? 'sunny' : undefined;
+    case 'partly cloudy': return daylight === true ? 'partlycloudy' : 'cloudy';
+    case 'mostly cloudy':
+    case 'overcast': return 'cloudy';
+  }
+}
+
 /** "It's currently mild and sunny." from whichever readings are reported. */
 export function weatherOverview(w: WeatherState | undefined, daylight?: boolean): string | undefined {
   if (!w) return undefined;

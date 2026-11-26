@@ -1,0 +1,32 @@
+#SYMBOL_NAME "Control4 - Room Config"
+#CATEGORY "46" "#TSI Modules"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+
+DIGITAL_INPUT _skip_, _skip_, _skip_, Send_Config;
+DIGITAL_OUTPUT _skip_, _skip_, _skip_, _skip_;
+STRING_OUTPUT Room_Config$;
+INTEGER_PARAMETER Room_ID;
+STRING_PARAMETER Exclude_IDs$[249];
+STRING_PARAMETER Light_Scenes$[249];
+
+FUNCTION PublishConfig()
+{
+    STRING config[511];
+
+    IF (Room_ID > 0)
+    {
+        MAKESTRING(config, "%u|%s|%s", Room_ID, Exclude_IDs$, Light_Scenes$);
+        Room_Config$ = config;
+    }
+    ELSE
+        PRINT("Control4 Room Config: Room_ID must be greater than zero.\n");
+}
+
+PUSH Send_Config { PublishConfig(); }
+
+FUNCTION Main()
+{
+    WaitForInitializationComplete();
+    PublishConfig();
+}

@@ -30,6 +30,8 @@ const PADS: Array<[Pad, string, string[]]> = [
   ['playback', 'Playback', PLAYBACK]
 ];
 
+const TRANSPORT_KEYS = new Set(['Skip_Back', 'Rewind', 'Play', 'Pause', 'Fast_Forward', 'Skip_Forward', 'Stop', 'Record']);
+
 export const remoteStyles = css`
   .pads { display: flex; gap: 4px; }
   .pads .btn { height: 36px; padding: 0 14px; font-size: 12px; background: transparent; }
@@ -73,9 +75,9 @@ export function remote(keys: string[], pad: Pad, press: (key: string) => void): 
     const hasDpad = DPAD.some((k) => set.has(k));
     return html`<div class="remote">
       ${hasDpad ? html`<div class="dpad">
-        <span></span>${key('Up')}<span></span>
-        ${key('Left')}${key('Select', 'btn ok')}${key('Right')}
-        <span></span>${key('Down')}<span></span>
+        <span></span>${key('Up', 'btn neu-square')}<span></span>
+        ${key('Left', 'btn neu-square')}${key('Select', 'btn ok')}${key('Right', 'btn neu-square')}
+        <span></span>${key('Down', 'btn neu-square')}<span></span>
       </div>` : nothing}
       ${side.length ? html`<div class="side">${side.map((k) => key(k))}</div>` : nothing}
     </div>`;
@@ -88,7 +90,7 @@ export function remote(keys: string[], pad: Pad, press: (key: string) => void): 
       ${colors.length ? html`<div class="colors">${COLORS.map((k) => key(k))}</div>` : nothing}
     </div>`;
   }
-  return html`<div class="remote"><div class="keys">${PLAYBACK.filter((k) => set.has(k)).map((k) => key(k))}</div></div>`;
+  return html`<div class="remote"><div class="keys">${PLAYBACK.filter((k) => set.has(k)).map((k) => key(k, TRANSPORT_KEYS.has(k) ? 'btn neu-square' : 'btn'))}</div></div>`;
 }
 
 export function label(key: string): string {

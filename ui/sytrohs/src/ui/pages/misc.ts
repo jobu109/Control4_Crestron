@@ -1,4 +1,4 @@
-import { css, html } from 'lit';
+import { css, html, nothing } from 'lit';
 import { ALL_SERVICES } from '../../model/types';
 import { ZPage, shared } from '../base';
 import { icon } from '../icons';
@@ -118,4 +118,79 @@ export class PendingPage extends ZPage {
 
 customElements.define('z-scenes', ScenesPage);
 customElements.define('z-settings', SettingsPage);
+class SecurityPage extends ZPage {
+  static properties = { ...ZPage.properties, pin: { state: true }, target: { state: true } };
+  private pin = '';
+  private target?: 'home' | 'away' | 'disarmed';
+
+  private submit(partition: number, action: 'Stay' | 'Away' | 'Disarm'): void {
+    this.target = action === 'Stay' ? 'home' : action === 'Away' ? 'away' : 'disarmed';
+    const code = this.pin;
+    this.pin = '';
+    this.store.sendSecurityKeypad(partition, action, code);
+  }
+
+  static styles = [shared, css`
+    .status { padding: 32px; display: grid; gap: 24px; min-width: 0; }
+    dl { display: grid; grid-template-columns: 1fr auto; gap: 16px; margin: 0; }
+    dd { margin: 0; font-weight: 700; }
+    .content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+    .zones { max-height: 100%; overflow: auto; }
+    .keypad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    .keypad .code {
+      grid-column: 1 / -1; min-height: 44px; display: grid; place-items: center;
+      margin-bottom: 6px; padding: 6px 14px; border: 1px solid rgba(225, 238, 255, .24);
+      border-radius: 12px; background: linear-gradient(160deg, rgba(229, 241, 255, .16), rgba(229, 241, 255, .04));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 4px 12px rgba(0, 0, 0, .2);
+      color: #eaf2fc; letter-spacing: 5px;
+    }
+    .keypad .code.empty { color: #c1cad6; letter-spacing: 1px; }
+    .zones .open { color: #ff777d; }
+    .keypad .btn { height: 37px; padding: 0 4px; }
+    .status { max-height: 100%; overflow: auto; }
+  `];
+
+  render() {
+    const status = this.store.config.securityStatus;
+    const result = this.store.config.securityKeypadResult;
+    const pending = result === 'pending';
+    const mode = status?.mode === 'disarmed' ? 'Disarmed' : status?.mode === 'home' ? 'Armed home'
+      : status?.mode === 'away' ? 'Armed away' : 'Unknown';
+    return html`<div class="content"><section class="panel status" role="status">
+      ${this.store.connection !== 'online' ? html`<p>Security status unavailable while disconnected.</p>`
+        : !status ? html`<p>Checking security status…</p>`
+        : !status.partition ? html`<p>${status.multiple ? 'Multiple active partitions reported.' : 'Active partition status unavailable.'}</p>`
+        : html`<h2>Security System</h2><dl>
+          <dt>Arming state</dt><dd>${mode}</dd>
+          <dt>Alarm flag</dt><dd>${status.alarm === true ? 'Set' : status.alarm === false ? 'Clear' : 'Unknown'}</dd>
+          <dt>Open zones</dt><dd>${status.open ?? 'Unknown'}</dd>
+        </dl>
+        ${globalThis.crypto?.subtle ? html`<div class="keypad" role="group" aria-label="Security keypad">
+          <div class="code ${this.pin ? '' : 'empty'}" aria-label="${this.pin.length} digits entered">${this.pin ? '•'.repeat(this.pin.length) : 'User code'}</div>
+          ${['1','2','3','4','5','6','7','8','9','Clear','0','Delete'].map((key) => html`
+            <button type="button" class="btn neu-square" ?disabled=${pending} @click=${() => {
+              if (key === 'Clear') this.pin = '';
+              else if (key === 'Delete') this.pin = this.pin.slice(0, -1);
+              else if (this.pin.length < 10) this.pin += key;
+            }}>${key}</button>`)}
+          ${(['Stay','Away','Disarm'] as const).map((action) => html`
+            <button type="button" class="btn neu-square" ?disabled=${pending || (action === 'Disarm' && !this.pin)}
+              @click=${() => this.submit(status.partition!, action)}>${action === 'Disarm' ? action : 'Arm ' + action}</button>`)}
+        </div>` : html`<p>Keypad requires a secure browser context.</p>`}
+        ${this.target && result ? html`<p>${result === 'confirmed' || (result === 'sent' && status.mode === this.target)
+          ? 'Partition state confirmed.' : result === 'sent' ? 'Request sent. Waiting for partition confirmation.'
+          : pending ? 'Sending request…' : 'Security request could not be confirmed.'}</p>` : nothing}
+        ` }
+    </section>
+    ${this.store.connection === 'online' && this.store.config.securityZones?.length ? html`
+      <section class="panel status zones" aria-label="Security zones">
+        <h2>Zones</h2><dl>${this.store.config.securityZones.map((zone) => html`
+          <dt>${zone.id} · ${zone.name}</dt><dd class=${zone.open === true ? 'open' : ''}>${zone.open === true ? 'Open' : zone.open === false ? 'Closed' : 'Unknown'}</dd>
+        `)}</dl>
+      </section>` : nothing}
+    </div>`;
+  }
+}
+
 customElements.define('z-pending', PendingPage);
+customElements.define('z-security', SecurityPage);

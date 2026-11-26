@@ -28,12 +28,28 @@ if($first['title'].ToString() -ne 'Circle The Drain' -or $first['source_id'].ToS
 $next=$json.Replace('"NowPlayingIndex":1','"NowPlayingIndex":2').Replace('"current":true,','')
 if((Read-Queue $next)['title'].ToString() -ne 'White Wine Spritzer'){throw 'Index changed without updating current song'}
 foreach($bad in @($json.Replace('"NowPlayingIndex":1','"NowPlayingIndex":0'),$json.Replace('"NowPlayingIndex":1','"NowPlayingIndex":99'),$json.Replace('"NowPlayingIndex":1','"NowPlayingIndex":2'),$json.Replace('"QueueChanged"','"DashboardChanged"'))){if($null -ne (Read-Queue $bad)){throw 'Ambiguous/header/out-of-range/other event accepted'}}
+$station='{"itemType":"station","guide_id":"s456","Title":"Example Radio","ImageUrl":"http://cdn-radiotime-logos.tunein.com/s456q.png"}'
+foreach($rows in @($station, "[$station]")){
+ $event='{"iddevice":20,"evtName":"OnDataToUI","data":{"EVENT":{"NAME":"QueueChanged","ARGS":{"NowPlayingIndex":0,"NowPlaying":'+$station+',"List":{"item":'+$rows+'}}}}}'
+ $result=Read-Queue $event
+ if($result['station'].ToString() -ne 'Example Radio' -or $result['artwork'].ToString() -ne 'https://cdn-radiotime-logos.tunein.com/s456q.png'){throw 'TuneIn station or artwork missing'}
+ $wrong=$event.Replace('"item":'+$rows,'"item":'+$rows.Replace('s456','s789'))
+ if($null -ne (Read-Queue $wrong)){throw 'Mismatched TuneIn row accepted'}
+}
 $art=$type.GetMethod('PlayingArtwork',$flags)
 foreach($url in @('http://i.scdn.co/image/x','https://i.scdn.co/image/x?token=secret','https://user:pass@i.scdn.co/x','javascript:alert(1)','/controller/image','https://i.scdn.co/auth/x')){$artArgs=[object[]]::new(1);$artArgs[0]=$jparse.Invoke($null,[object[]]@([string]($url|ConvertTo-Json -Compress)));if($art.Invoke($null,$artArgs) -ne ''){throw 'Unsupported/private artwork accepted'}}
 $room=$type.GetMethod('ParsePlayingRoom',$flags)
 $roomJson='[{"varName":"CURRENT MEDIA INFO","value":{"mediainfo":{"title":"Circle The Drain","artist":"Machine Head","medSrcDev":65,"deviceid":100002,"img":"unknown:reference"}}}]'
 if($room.Invoke($null,[object[]]@($roomJson,65))['title'].ToString() -ne 'Circle The Drain'){throw 'Measured room metadata missing'}
 if($null -ne $room.Invoke($null,[object[]]@($roomJson,1648))){throw 'Other service metadata accepted'}
+$readTuneIn=$type.GetMethod('ReadTuneInTrack',$flags)
+$stationData=Read-Queue $event
+$measured='[{"varName":"CURRENT MEDIA INFO","value":{"mediainfo":{"title":"Example Track","artist":"Example Radio","album":"Alternative Rock","medSrcDev":20,"img":"unknown:reference"}}}]'
+$track=$readTuneIn.Invoke($null,[object[]]@($measured,20,$stationData))
+if ($track['title'].ToString() -ne 'Example Track' -or $track['station'].ToString() -ne 'Example Radio' -or $track['artwork'].ToString() -ne $stationData['artwork'].ToString()) { throw 'TuneIn track merge or station logo fallback failed' }
+foreach ($wrong in @($measured.Replace('Example Radio','Wrong Station'),$measured.Replace('"medSrcDev":20','"medSrcDev":19'))) {
+ if ($null -ne $readTuneIn.Invoke($null,[object[]]@($wrong,20,$stationData))) { throw 'Unmatched TuneIn readback accepted' }
+}
 $moduleType=$assembly.GetType('Control4Crestron.Control4_Room',$true)
 $module=[Activator]::CreateInstance($moduleType);[void]$module.Initialize(62041,13)
 $core=$assembly.GetType('Control4Crestron.GatewayRegistry').GetMethod('Get').Invoke($null,[object[]]@([ushort]62041))

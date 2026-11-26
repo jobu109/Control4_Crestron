@@ -36,6 +36,8 @@
   OutputSigType3=Digital
   InputList2Cue1=Request$
   InputList2SigType1=Serial
+  InputList2Cue2=Room_Config$[#]
+  InputList2SigType2=Serial
   OutputList2Cue1=State$
   OutputList2SigType1=Serial
   OutputList2Cue2=Audio$
@@ -57,8 +59,8 @@
   ParamSigType3=String
   MinVariableInputs=3
   MaxVariableInputs=3
-  MinVariableInputsList2=1
-  MaxVariableInputsList2=1
+  MinVariableInputsList2=2
+  MaxVariableInputsList2=65
   MinVariableOutputs=3
   MaxVariableOutputs=3
   MinVariableOutputsList2=7

@@ -59,6 +59,7 @@ export class CrestronContractAdapter implements Adapter {
   }
 
   send(c: Command): void {
+    if (c.kind === 'video-sessions' || c.kind === 'video-session-watch') return;
     if (c.kind === 'zones-off') {
       for (const zone of this.store?.config.audioZones ?? []) this.send({ kind: 'zone', id: zone.id, action: 'off' });
       return;

@@ -85,3 +85,20 @@ $failure = [AggregateException]::new('PRIVATE-OUTER', [IO.IOException]::new('PRI
 $description = $describe.Invoke($null, [object[]]@($failure))
 if ($description -notmatch 'AggregateException > IOException > SocketException ConnectionRefused' -or $description -match 'PRIVATE') { throw 'Nested error description failed or exposed exception text' }
 Write-Output 'Diagnostic checks passed: nested aggregate/socket cause exposed without private exception messages.'
+
+# Endpoints alone do not identify a dimmer. Preserve explicit switch capability in later feedback.
+$storeLight = $coreType.GetMethod('StoreLightFeedback', $instanceFlags)
+[void]$storeLight.Invoke($core, [object[]]@([ushort]572, [ushort]100, $true, [ushort]0))
+$snapshot = $lights[[ushort]572]
+$capability = $snapshot.GetType().GetField('Dimming')
+if ($capability.GetValue($snapshot) -ne 0) { throw '100 percent alone was classified as a dimmer' }
+[void]$storeLight.Invoke($core, [object[]]@([ushort]572, [ushort]100, $false, [ushort]1))
+$core.AcceptLightEvent(572, 0)
+if ($capability.GetValue($lights[[ushort]572]) -ne 1) { throw 'Endpoint feedback changed a switch capability' }
+$core.AcceptLightEvent(572, 48)
+$core.AcceptLightEvent(572, 100)
+if ($capability.GetValue($lights[[ushort]572]) -ne 2) { throw 'Measured intermediate level did not override the switch fallback' }
+$core.AcceptLightEvent(424, 48)
+$core.AcceptLightEvent(424, 100)
+if ($capability.GetValue($lights[[ushort]424]) -ne 2) { throw 'Intermediate level did not establish sustained dimmer capability' }
+'Light capability checks passed'

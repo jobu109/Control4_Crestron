@@ -18,7 +18,7 @@ namespace Control4Crestron
             {
                 int count;
                 _panelLightReferences.TryGetValue(id, out count);
-                cached = _lights.ContainsKey(id);
+                cached = HasLightCapability(id);
 
                 _panelLightReferences[id] = count + 1;
             }
@@ -240,6 +240,7 @@ namespace Control4Crestron
                         retrySeconds = 1;
                         SetOnline(true);
                         EmitMessage("WebSocket subscription started");
+                        SignalSecurityRefresh(true);
                         transport.Stage = "live receive";
                         ushort[] ids;
                         lock (_sync) { ids = ActiveLightIds(); }
@@ -284,8 +285,11 @@ namespace Control4Crestron
             SignalAudioSessionReadback(message, gen);
             RoutePanelRoomPowerHint(message, gen);
             CaptureNowPlayingEvent(message, gen);
+            CaptureSecuritySocketEvent(message, gen);
+            RouteSecurityZoneEvent(message, gen);
             RoutePlayingEvent(message, gen);
             CaptureLightProbeEvent(message, gen);
+            CaptureTuneInBrowseResponse(message, gen);
             RouteRelayEvent(message, gen);
             RouteExperienceButtonEvent(message, gen);
             RouteFanEvent(message, gen);

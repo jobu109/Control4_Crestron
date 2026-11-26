@@ -206,7 +206,7 @@ namespace Control4Crestron
                     {
                         if (_generation != generation || !_online) return;
                         if (!_panelLightReferences.ContainsKey(id)) continue;
-                        cached = _lights.ContainsKey(id);
+                        cached = HasLightCapability(id);
                     }
                     if (cached) PublishCurrentLight(id);
                     else ReadLight(id, generation);

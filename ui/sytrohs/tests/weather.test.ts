@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { humidityText, weatherOverview, windText } from '../src/model/weather';
+import { humidityText, weatherIcon, weatherOverview, windText } from '../src/model/weather';
 
 describe('Home page weather wording', () => {
   it('describes temperature and sky from the OpenWeather readings', () => {
@@ -14,6 +14,17 @@ describe('Home page weather wording', () => {
     expect(weatherOverview(undefined)).toBeUndefined();
     expect(weatherOverview({ temperature: 20 })).toBeUndefined(); // scale unknown, no sky data
     expect(weatherOverview({ temperature: 20, clouds: 70 })).toBe("It's currently mostly cloudy.");
+  });
+
+  it('chooses animation only from available weather and daylight readings', () => {
+    expect(weatherIcon({ clouds: 0 }, true)).toBe('sunny');
+    expect(weatherIcon({ clouds: 0 }, false)).toBe('clear-night');
+    expect(weatherIcon({ clouds: 0 })).toBeUndefined();
+    expect(weatherIcon({ clouds: 41 }, true)).toBe('partlycloudy');
+    expect(weatherIcon({ clouds: 41 }, false)).toBe('cloudy');
+    expect(weatherIcon({ rain: 1, clouds: 0 }, true)).toBe('rainy');
+    expect(weatherIcon({ snow: 1, rain: 1 }, true)).toBe('snowy');
+    expect(weatherIcon({ temperature: 40 })).toBeUndefined();
   });
 
   it('formats humidity and wind in the driver units', () => {

@@ -21,6 +21,7 @@ const ROUTES: Record<string, Route> = {
   media: { tag: 'z-media', heading: 'Media', subheading: 'Video & audio', chrome: 'page' },
   audio: { tag: 'z-audio', heading: 'Multi Audio', subheading: 'Zones', chrome: 'page' },
   scenes: { tag: 'z-scenes', heading: 'Scenes', subheading: 'Whole home', chrome: 'page' },
+  security: { tag: 'z-security', heading: 'Security', subheading: 'Overview', chrome: 'page' },
   settings: { tag: 'z-settings', heading: 'Settings', subheading: 'Panel', chrome: 'page' }
 };
 

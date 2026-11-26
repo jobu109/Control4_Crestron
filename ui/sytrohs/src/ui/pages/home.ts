@@ -1,14 +1,16 @@
 import { css, html, nothing } from 'lit';
-import { ZPage, shared, toggle } from '../base';
+import { ZPage, shared } from '../base';
 import { icon } from '../icons';
 import { HOUSE_WEATHER, type WeatherState } from '../../model/types';
 import { favoriteActions, readFavoriteKeys } from '../../model/favorites';
 import { sunTimes, validCoordinates } from '../../model/sun';
-import { humidityText, weatherOverview, windText } from '../../model/weather';
+import { humidityText, weatherIcon, weatherOverview, windText } from '../../model/weather';
+
+const weatherAssets = import.meta.glob<string>('../../assets/weather/*.webp', { eager: true, query: '?url', import: 'default' });
 
 export class HomePage extends ZPage {
   static properties = {
-    ...ZPage.properties, scenesOpen: { state: true }, favoritesOpen: { state: true }, editFavorites: { state: true }
+    ...ZPage.properties, scenesOpen: { state: true }, favoritesOpen: { state: true }, editFavorites: { state: true }, sentScene: { state: true }
   };
   scenesOpen = false;
   favoritesOpen = false;
@@ -16,19 +18,25 @@ export class HomePage extends ZPage {
   private favoriteKeys: string[] = [];
   private favoriteStorageKey = '';
   private timer?: number;
+  private sentScene = "";
+  private sentSceneTimer?: number;
 
   static styles = [shared, css`
     .side { position: absolute; left: 0; top: 0; bottom: 0; width: 520px; background: rgba(6,8,11,0.62); }
     .bar { position: absolute; left: 40px; right: 40px; top: 24px; display: flex; justify-content: space-between; align-items: center; }
     .bar > div { display: flex; gap: 10px; align-items: center; }
-    .sq { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1.5px solid rgba(255,255,255,0.85); background: rgba(0,0,0,0.25); }
-    .sq.solid { background: #fff; color: #0b0d10; border-color: #fff; }
+    .sq { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    .home-current { --square-accent: #fff; --square-glow: #ffffff55; }
     .greet { position: absolute; left: 56px; top: 104px; width: 420px; display: flex; flex-direction: column; gap: 28px; }
     .site { display: flex; flex-direction: column; gap: 18px; font-size: 20px; font-weight: 300; }
     .site .k { display: block; color: #a9afb6; }
     .site .v { display: block; color: #fff; font-weight: 400; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
     .site .v.na { color: #a9afb6; font-style: italic; font-weight: 300; }
     .site .place { font-size: 24px; font-weight: 400; color: #fff; }
+    .site .current-weather { display: flex; align-items: center; gap: 16px; }
+    .site .weather-icon { flex: 0 0 76px; width: 76px; height: 76px; display: grid; place-items: center; }
+    .site .weather-icon img { display: block; width: 76px; height: 76px; object-fit: contain; }
+    .site .weather-icon.night { mix-blend-mode: screen; }
     .site .now { display: flex; flex-direction: column; gap: 4px; }
     .site .overview { color: #d7dbe0; font-weight: 300; font-style: italic; }
     .site .sun { display: grid; grid-template-columns: 130px 1fr; row-gap: 6px; }
@@ -50,7 +58,11 @@ export class HomePage extends ZPage {
     .favorite small { color: #a9afb6; }
     .favorite-edit { flex: 0 0 auto; }
     .scenes { position: absolute; right: 0; top: 0; bottom: 130px; width: 620px; background: rgba(6,8,11,0.94); border-left: 1px solid rgba(255,255,255,0.12); padding: 24px 48px 0 40px; display: flex; flex-direction: column; }
-    .scenes .row { flex: 1; max-height: 104px; gap: 28px; border-color: rgba(255,255,255,0.14); }
+    .scenes .scene { flex: 1; max-height: 104px; gap: 28px; padding: 0 12px; text-align: left;
+      background: transparent; border: 1px solid transparent; border-bottom-color: var(--line); border-radius: 10px; }
+    .scenes .scene:active { background: var(--idle); }
+    .scenes .scene.sent { border-color: var(--green); }
+    .scenes .scene .sub { color: var(--green); }
     .scenes .tile { width: 64px; height: 64px; border-radius: 12px; }
     .scenes .n { flex: 1; font-size: 24px; font-weight: 700; }
     .x { width: 48px; height: 48px; margin-left: -12px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; }
@@ -68,7 +80,16 @@ export class HomePage extends ZPage {
   }
   disconnectedCallback(): void {
     window.clearInterval(this.timer);
+    window.clearTimeout(this.sentSceneTimer);
+    this.sentScene = "";
     super.disconnectedCallback();
+  }
+
+  private runScene(id: string): void {
+    this.send({ kind: 'scene', id, action: 'run' });
+    this.sentScene = id;
+    window.clearTimeout(this.sentSceneTimer);
+    this.sentSceneTimer = window.setTimeout(() => (this.sentScene = ""), 1500);
   }
 
   render() {
@@ -78,7 +99,7 @@ export class HomePage extends ZPage {
     return html`
       <div class="side"></div>
       <div class="bar">
-        <div><span class="sq solid">${icon('home', 22, 1.7)}</span></div>
+        <div><span class="sq neu-square selected home-current" aria-label="Home" role="img">${icon('home', 22, 1.7)}</span></div>
         <div><a class="sq solid" href="#/settings" aria-label="Settings">${icon('dots', 22, 3)}</a></div>
       </div>
       <div class="greet">
@@ -102,8 +123,12 @@ export class HomePage extends ZPage {
         <button type="button" class="x" aria-label="Close scenes" @click=${() => (this.scenesOpen = false)}>${icon('chevronRight', 26, 1.8)}</button>
         ${scenes.map((s) => {
           const active = !!this.store.get('scene', s.id)?.active;
-          return html`<div class="row"><span class="tile ${active ? 'on' : ''}">${icon(s.icon ?? 'scenes', 32, 1.4)}</span><span class="n">${s.name}</span>
-            ${toggle(active, () => this.send({ kind: 'scene', id: s.id, action: 'run' }), `${s.name} ${active ? 'is on' : 'is off'}`)}</div>`;
+          const sent = this.sentScene === s.id;
+          return html`<button type="button" class="row scene ${sent ? 'sent' : ''}" @click=${() => this.runScene(s.id)}>
+            <span class="tile ${active ? 'on' : ''}">${icon(s.icon ?? 'scenes', 32, 1.4)}</span>
+            <span class="n">${s.name}</span>
+            ${sent ? html`<span class="sub" role="status">Sent</span>` : nothing}
+          </button>`;
         })}
         <a class="all" href="#/scenes">ALL SCENES ${icon('chevronRight', 18, 1.8)}</a>
       </section>` : nothing}
@@ -175,11 +200,20 @@ export class HomePage extends ZPage {
     }
     const current = weatherText(weather);
     const overview = weatherOverview(weather, daylight);
+    const condition = weatherIcon(weather, daylight);
+    const animated = condition && weatherAssets['../../assets/weather/' + condition + '.webp'];
+    const still = condition && weatherAssets['../../assets/weather/' + condition + '-still.webp'];
     return html`<div class="site" aria-label="Location and weather">
       ${location?.name ? html`<span class="place">${location.name}</span>` : nothing}
-      <div class="now">
-        ${value(current)}
-        ${overview ? html`<span class="overview">${overview}</span>` : nothing}
+      <div class="current-weather">
+        ${animated && still ? html`<picture class="weather-icon ${condition === 'clear-night' ? 'night' : ''}">
+          <source media="(prefers-reduced-motion: reduce)" srcset=${still}>
+          <img src=${animated} alt="" width="76" height="76">
+        </picture>` : nothing}
+        <div class="now">
+          ${value(current)}
+          ${overview ? html`<span class="overview">${overview}</span>` : nothing}
+        </div>
       </div>
       <div class="sun">
         <span class="k">Humidity</span>${value(humidityText(weather))}

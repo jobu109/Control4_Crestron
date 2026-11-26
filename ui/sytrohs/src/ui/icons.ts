@@ -18,6 +18,7 @@ export const ICONS: Record<string, string> = {
   energy: 'M13 2L4 14h7l-1 8 9-12h-7z',
   settings: 'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M16 4v4M10 10v4M18 16v4',
   power: 'M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0',
+  sunDim: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 3v2M12 19v2M3 12h2M19 12h2',
   sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
   moon: 'M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z',
   chevronRight: 'M9 6l6 6-6 6',

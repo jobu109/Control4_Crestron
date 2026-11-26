@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing } from 'lit';
 import type { HouseStore } from '../model/store';
 import type { ServiceId } from '../model/types';
 import { icon } from './icons';
+import { squareButtonStyles } from './base';
 
 interface Tile { route: string; name: string; icon: string; service?: ServiceId }
 
@@ -13,9 +14,9 @@ const TILES: Tile[] = [
   { route: 'climate', name: 'Climate', icon: 'climate', service: 'climate' },
   { route: 'comfort', name: 'Comfort', icon: 'comfort', service: 'comfort' },
   { route: 'media', name: 'Media', icon: 'media', service: 'media' },
-  { route: 'audio', name: 'Audio', icon: 'music', service: 'audio' },
+  { route: 'audio', name: 'Sessions', icon: 'music', service: 'audio' },
   { route: 'scenes', name: 'Scenes', icon: 'scenes', service: 'scenes' },
-  { route: 'security', name: 'Security', icon: 'security', service: 'security' },
+  { route: 'security', name: 'Security', icon: 'security' },
   { route: 'cameras', name: 'Cameras', icon: 'cameras', service: 'cameras' },
   { route: 'pool', name: 'Pool', icon: 'pool', service: 'pool' },
   { route: 'irrigation', name: 'Irrigation', icon: 'irrigation', service: 'irrigation' },
@@ -64,13 +65,25 @@ export class ZChrome extends LitElement {
     .title .sub { font-size: 20px; font-weight: 300; color: #e6e8eb; }
     .menu { position: absolute; left: 530px; bottom: 0; width: 220px; height: 48px; border: none; border-radius: 16px 16px 0 0; background: rgba(255,255,255,0.18); font-size: 15px; font-weight: 700; letter-spacing: 2px; }
     .scrim { position: absolute; inset: 0; border: none; background: rgba(0,0,0,0.55); pointer-events: auto; }
-    nav { display: flex; justify-content: center; gap: 12px; pointer-events: auto; }
-    nav.home { position: absolute; left: 0; right: 0; bottom: 22px; }
-    nav.sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 150px; padding-top: 30px; background: rgba(8,10,13,0.95); border-top: 1px solid rgba(255,255,255,0.14); }
+    nav { --square-accent: #fff; --square-glow: #ffffff55; position: absolute; left: 50%; transform: translateX(-50%); width: max-content;
+      max-width: calc(100% - 32px); padding: 14px 40px 12px; display: flex; justify-content: center; gap: 12px;
+      pointer-events: auto; border-radius: 999px; background: #2c3038;
+      box-shadow: inset 4px 4px 8px #1a1c21, inset -4px -4px 8px #3e444f; }
+    nav.home { bottom: 22px; }
+    nav.sheet { bottom: 0; }
     nav a { width: 72px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    nav .tile { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1.5px solid rgba(255,255,255,0.85); background: rgba(0,0,0,0.3); }
-    nav a[aria-current='page'] .tile { background: #fff; color: #0b0d10; border-color: #fff; }
+    nav .tile { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid #3e444f; background: #2c3038; color: #c4cbd4;
+      box-shadow: 5px 5px 10px #1a1c21, -4px -4px 9px #3e444f;
+      transition: box-shadow .18s, color .18s, transform .08s; }
+    nav a[aria-current='page'] .tile, nav a:active .tile {
+      color: #fff; border-color: #a4acb7;
+      box-shadow: inset 4px 4px 8px #1a1c21, inset -4px -4px 8px #3e444f, 0 0 6px #ffffff55; }
+    nav a:active .tile { transform: scale(.96); }
     nav .name { font-size: 11px; font-weight: 500; letter-spacing: 0.3px; color: #e6e8eb; }
+    nav a[aria-current='page'] .name { color: #fff; }
+    nav a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    ${squareButtonStyles}
     .offline { position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 6px 14px; border-radius: 8px; background: rgba(240,71,60,0.9); font-size: 13px; font-weight: 700; letter-spacing: 1px; pointer-events: auto; }
   `;
 

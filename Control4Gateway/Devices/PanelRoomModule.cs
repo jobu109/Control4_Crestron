@@ -16,6 +16,9 @@ namespace Control4Crestron
         private readonly UiSerialFrames _roomWire = new UiSerialFrames();
         private readonly UiSerialFrames _actionsWire = new UiSerialFrames();
         private readonly UiSerialFrames _audioSessionsWire = new UiSerialFrames();
+        private readonly UiSerialFrames _videoSessionsWire = new UiSerialFrames();
+        private int _videoSessionsRequest;
+        private bool _videoSessionsReady, _videoSessionsSelecting;
         private readonly UiSerialFrames _siteWire = new UiSerialFrames();
         private int _siteRequest;
         private bool _siteReady;
@@ -26,6 +29,7 @@ namespace Control4Crestron
         private Dictionary<ushort, Control4_Room_Devices.Entry> _houseDevices;
         private Dictionary<ushort, ushort> _houseRoomOf;
         private readonly Dictionary<ushort, int?> _houseLevels = new Dictionary<ushort, int?>();
+        private readonly Dictionary<ushort, ushort> _houseLightCapabilities = new Dictionary<ushort, ushort>();
         private EventHandler<LightStatusEventArgs> _houseLight;
         private EventHandler<ShadeStatusEventArgs> _houseShade;
         private bool _houseReady;
@@ -58,11 +62,86 @@ namespace Control4Crestron
             internal GatewayCore DeviceGateway;
             internal Dictionary<ushort, Control4_Room_Devices.Entry> Devices;
             internal readonly Dictionary<ushort, int?> DeviceLevels = new Dictionary<ushort, int?>();
+            internal readonly Dictionary<ushort, ushort> LightCapabilities = new Dictionary<ushort, ushort>();
             internal readonly UiSerialFrames DeviceWire = new UiSerialFrames();
             internal EventHandler<LightStatusEventArgs> LightChanged;
             internal EventHandler<ShadeStatusEventArgs> ShadeChanged;
             internal readonly Control4_Room Room = new Control4_Room();
             internal readonly Control4_Room_Transport Transport = new Control4_Room_Transport();
+        }
+
+        private const int RoomConfigurationSlots = 64;
+        private readonly Dictionary<ushort, RoomConfiguration> _roomConfigurations =
+            new Dictionary<ushort, RoomConfiguration>();
+        private volatile Dictionary<ushort, HashSet<int>> _roomExclusions = new Dictionary<ushort, HashSet<int>>();
+        private sealed class RoomConfiguration
+        {
+            public ushort Room;
+            public HashSet<int> Excluded;
+            public HashSet<string> LightScenes;
+        }
+
+        private bool _houseRequested;
+
+        public void SetRoomConfiguration(ushort slot, string configuration)
+        {
+            if (slot == 0 || slot > RoomConfigurationSlots || (configuration?.Length ?? 0) > 511) return;
+            ushort room = 0;
+            var ids = new HashSet<int>();
+            var scenes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!String.IsNullOrEmpty(configuration))
+            {
+                string[] fields = configuration.Split('|');
+                if ((fields.Length < 2 || fields.Length > 3) || !UInt16.TryParse(fields[0], NumberStyles.None, CultureInfo.InvariantCulture, out room) || room == 0)
+                { LogWarning("Invalid room configuration in slot " + slot); return; }
+                if (!String.IsNullOrWhiteSpace(fields[1]))
+                    foreach (string entry in fields[1].Split(','))
+                    {
+                        int id;
+                        if (!Int32.TryParse(entry.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out id) || id <= 0)
+                        { LogWarning("Invalid item ID in room exclusions slot " + slot); return; }
+                        ids.Add(id);
+                    }
+                if (fields.Length == 3)
+                    foreach (string entry in fields[2].Split(',', ';'))
+                        if (!String.IsNullOrWhiteSpace(entry)) scenes.Add(entry.Trim());
+            }
+
+            lock (_requests)
+            {
+                RoomConfiguration previous;
+                bool existed = _roomConfigurations.TryGetValue(slot, out previous);
+                if (room == 0 && !existed || existed && previous.Room == room && previous.Excluded.SetEquals(ids) && previous.LightScenes.SetEquals(scenes)) return;
+                if (room == 0) _roomConfigurations.Remove(slot);
+                else _roomConfigurations[slot] = new RoomConfiguration { Room = room, Excluded = ids, LightScenes = scenes };
+                var snapshot = new Dictionary<ushort, HashSet<int>>();
+                foreach (var configured in _roomConfigurations.Values)
+                {
+                    HashSet<int> roomIds;
+                    if (!snapshot.TryGetValue(configured.Room, out roomIds))
+                        snapshot[configured.Room] = roomIds = new HashSet<int>();
+                    roomIds.UnionWith(configured.Excluded);
+                }
+                _roomExclusions = snapshot;
+                if (_session != null && (_session.Id == room || existed && _session.Id == previous.Room)) Select(_session.Id);
+                if (_houseRequested && (_rooms.Contains(room) || existed && _rooms.Contains(previous.Room))) QueueHouse(true);
+                if (_actionRevision != null) BuildActions();
+            }
+        }
+
+        private static bool Excluded(Dictionary<ushort, HashSet<int>> exclusions, ushort room, int item)
+        {
+            HashSet<int> ids;
+            return exclusions.TryGetValue(room, out ids) && ids.Contains(item);
+        }
+
+        private static JArray VisibleRoomItems(JArray entries, Dictionary<ushort, HashSet<int>> exclusions, ushort room)
+        {
+            var visible = new JArray();
+            if (entries != null)
+                foreach (JObject item in entries)
+                    if (!Excluded(exclusions, room, (int)item["id"])) visible.Add(item.DeepClone());
+            return visible;
         }
 
         public void Initialize(ushort gatewayId, string roomIds)
@@ -75,6 +154,10 @@ namespace Control4Crestron
                 _actionRequest++;
                 _actionRevision = null;
                 CloseAudioSessions();
+                CloseSecurityZones();
+                _videoSessionsRequest++;
+                _videoSessionsReady = _videoSessionsSelecting = false;
+                _houseRequested = false;
                 _houseRequest++; // cancels a queued open
                 lock (_houseWork) CloseHouse();
                 _gateway = gatewayId;
@@ -95,7 +178,9 @@ namespace Control4Crestron
         private void QueueHouse(bool open)
         {
             // Caller holds _requests; snapshot the scope so the worker never needs that lock.
+            _houseRequested = open;
             int request = ++_houseRequest;
+            var exclusions = _roomExclusions;
             ushort gatewayId = _gateway;
             var roomOrder = new List<ushort>(_roomOrder);
             System.Threading.ThreadPool.QueueUserWorkItem(delegate
@@ -105,7 +190,7 @@ namespace Control4Crestron
                     if (request != _houseRequest) return; // superseded by a later open or close
                     try
                     {
-                        if (open) OpenHouse(gatewayId, roomOrder);
+                        if (open) OpenHouse(gatewayId, roomOrder, exclusions);
                         else CloseHouse();
                     }
                     catch (Exception ex)
@@ -178,7 +263,7 @@ namespace Control4Crestron
                     .ToString(Formatting.None) });
         }
 
-        private void OpenHouse(ushort gatewayId, List<ushort> roomOrder)
+        private void OpenHouse(ushort gatewayId, List<ushort> roomOrder, Dictionary<ushort, HashSet<int>> exclusions)
         {
             CloseHouse();
             var gateway = GatewayRegistry.Get(gatewayId);
@@ -187,17 +272,18 @@ namespace Control4Crestron
             var rooms = new JArray();
             var missingLights = new List<ushort>();
             var missingShades = new List<ushort>();
-            var light = new EventHandler<LightStatusEventArgs>((s, a) => HouseFeedback(a.ItemId, false, a.Level, a.Valid));
+            var light = new EventHandler<LightStatusEventArgs>((s, a) => HouseFeedback(a.ItemId, false, a.Level, a.Valid, a.Dimming));
             var shade = new EventHandler<ShadeStatusEventArgs>((s, a) => HouseFeedback(a.ItemId, true, a.Position, a.Valid));
             lock (_houseSync)
             {
                 foreach (ushort room in roomOrder)
                     foreach (var device in Control4_Room_Devices.Get(gatewayId, room).Values)
-                        if (!devices.ContainsKey(device.Id)) { devices.Add(device.Id, device); roomOf.Add(device.Id, room); }
+                        if (!Excluded(exclusions, room, device.Id) && !devices.ContainsKey(device.Id)) { devices.Add(device.Id, device); roomOf.Add(device.Id, room); }
                 _houseGateway = gateway;
                 _houseDevices = devices;
                 _houseRoomOf = roomOf;
                 _houseLevels.Clear();
+                _houseLightCapabilities.Clear();
                 _houseLight = light;
                 _houseShade = shade;
                 _houseRelay = PublishRelay;
@@ -224,7 +310,7 @@ namespace Control4Crestron
                 var relayCatalog = gateway.PanelRelays(out relayReady, out buttons, out fans);
                 foreach (ushort room in roomOrder)
                 {
-                    var relays = (JArray)relayCatalog[room.ToString(System.Globalization.CultureInfo.InvariantCulture)] ?? new JArray();
+                    var relays = VisibleRoomItems(relayCatalog[room.ToString(CultureInfo.InvariantCulture)] as JArray, exclusions, room);
                     foreach (JObject relay in relays) _houseRelayIds.Add((ushort)relay["id"]);
                     var items = new JArray();
                     foreach (var device in devices.Values)
@@ -232,12 +318,11 @@ namespace Control4Crestron
                         if (roomOf[device.Id] != room) continue;
                         int? level;
                         _houseLevels.TryGetValue(device.Id, out level);
-                        items.Add(new JObject { ["id"] = device.Id, ["name"] = device.Name, ["shade"] = device.Shade,
-                            ["value"] = level.HasValue ? new JValue(level.Value) : new JValue((object)null) });
+                        items.Add(DeviceCatalogRow(device, level, _houseLightCapabilities));
                     }
-                    var roomButtons = buttons[room.ToString(System.Globalization.CultureInfo.InvariantCulture)] as JArray ?? new JArray();
+                    var roomButtons = VisibleRoomItems(buttons[room.ToString(CultureInfo.InvariantCulture)] as JArray, exclusions, room);
                     foreach (JObject button in roomButtons) _houseButtonIds.Add((ushort)button["id"]);
-                    var roomFans = fans[room.ToString(System.Globalization.CultureInfo.InvariantCulture)] as JArray ?? new JArray();
+                    var roomFans = VisibleRoomItems(fans[room.ToString(CultureInfo.InvariantCulture)] as JArray, exclusions, room);
                     foreach (JObject fan in roomFans) { _houseFanIds.Add((ushort)fan["id"]); fan.Remove("protocol"); }
                     rooms.Add(new JObject { ["id"] = room, ["devices"] = items, ["relays"] = relays, ["experience_buttons"] = roomButtons, ["fans"] = roomFans });
                 }
@@ -270,6 +355,7 @@ namespace Control4Crestron
                 _houseButtonIds.Clear();
                 _houseFanIds.Clear();
                 _houseLevels.Clear();
+                _houseLightCapabilities.Clear();
             }
             if (gateway == null) return;
             gateway.LightChanged -= light;
@@ -285,7 +371,31 @@ namespace Control4Crestron
                 else gateway.UnregisterPanelLight(device.Id);
         }
 
-        private void HouseFeedback(ushort id, bool shade, ushort value, ushort valid)
+        private static JObject DeviceCatalogRow(Control4_Room_Devices.Entry device, int? level, Dictionary<ushort, ushort> capabilities)
+        {
+            var item = new JObject { ["id"] = device.Id, ["name"] = device.Name, ["shade"] = device.Shade,
+                ["value"] = level.HasValue ? new JValue(level.Value) : new JValue((object)null) };
+            ushort dimming;
+            if (device.KnownDimmer) item["dimmable"] = true;
+            else if (!device.Shade && capabilities.TryGetValue(device.Id, out dimming) && dimming != 0)
+                item["dimmable"] = dimming == 2;
+            return item;
+        }
+
+        private static bool UpdateLightCapability(Dictionary<ushort, ushort> capabilities, ushort id, ushort dimming)
+        {
+            ushort previous;
+            if (capabilities.TryGetValue(id, out previous) && previous == dimming) return false;
+            capabilities[id] = dimming;
+            return true;
+        }
+
+        private static void PutLightCapability(JObject packet, bool shade, ushort dimming)
+        {
+            if (!shade && dimming != 0) packet["dim"] = dimming == 2;
+        }
+
+        private void HouseFeedback(ushort id, bool shade, ushort value, ushort valid, ushort dimming = 0)
         {
             string packet;
             lock (_houseSync)
@@ -294,10 +404,14 @@ namespace Control4Crestron
                 if (_houseDevices == null || !_houseDevices.TryGetValue(id, out entry) || entry.Shade != shade) return;
                 int? next = valid == 1 ? (int?)value : null;
                 int? previous;
-                if (_houseLevels.TryGetValue(id, out previous) && previous == next) return;
+                if (entry.KnownDimmer) dimming = 2;
+                bool capabilityChanged = !shade && UpdateLightCapability(_houseLightCapabilities, id, dimming);
+                if (_houseLevels.TryGetValue(id, out previous) && previous == next && !capabilityChanged) return;
                 _houseLevels[id] = next;
                 if (!_houseReady) return; // Initial values go into the catalog itself.
-                packet = new JObject { ["h"] = 1, ["u"] = id, ["v"] = next.HasValue ? new JValue(next.Value) : new JValue((object)null) }.ToString(Formatting.None);
+                var update = new JObject { ["h"] = 1, ["u"] = id, ["v"] = next.HasValue ? new JValue(next.Value) : new JValue((object)null) };
+                PutLightCapability(update, shade, dimming);
+                packet = update.ToString(Formatting.None);
             }
             var handler = PacketReady;
             if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = packet });
@@ -329,7 +443,197 @@ namespace Control4Crestron
                 gateway = _houseGateway;
                 if (gateway == null || !_houseDevices.TryGetValue(id, out device) || !_houseRoomOf.TryGetValue(id, out owner) || owner != room) return;
             }
-            DeviceAction(gateway, device, body);
+            if (!Excluded(_roomExclusions, room, id)) DeviceAction(gateway, device, body);
+        }
+
+        private GatewayCore _securityGateway;
+        private readonly UiSerialFrames _securityZoneWire = new UiSerialFrames();
+
+        private void OpenSecurityZones()
+        {
+            if (_securityGateway == null)
+            {
+                _securityGateway = GatewayRegistry.Get(_gateway);
+                _securityGateway.SecurityZonesReceived += OnSecurityZones;
+                _securityGateway.SubscribeSecurityRefresh(OnSecurityRefresh);
+            }
+            _securityGateway.RequestSecurityZones();
+        }
+
+        private void CloseSecurityZones()
+        {
+            ClearKeypad();
+            if (_securityGateway == null) return;
+            _securityGateway.SecurityZonesReceived -= OnSecurityZones;
+            _securityGateway.UnsubscribeSecurityRefresh(OnSecurityRefresh);
+            _securityReadAgain = false;
+            _securityReading = false;
+            _securityReadVersion++;
+            _securityGateway = null;
+        }
+
+        private void OnSecurityZones(JObject packet)
+        {
+            lock (_requests)
+            {
+                if (_securityGateway == null) return;
+                if (packet["zones"] != null)
+                {
+                    _securityZoneWire.Set(0, "sec_zones", packet.ToString(Formatting.None));
+                    PublishSecurityZonePage(1);
+                }
+                else
+                {
+                    var handler = PacketReady;
+                    if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = packet.ToString(Formatting.None) });
+                }
+            }
+        }
+
+        private void PublishSecurityZonePage(ushort page)
+        {
+            if (_securityGateway == null || page > _securityZoneWire.Count) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = _securityZoneWire.Read(ref page) });
+        }
+
+        private readonly UiSerialFrames _keypadWire = new UiSerialFrames();
+        private System.Security.Cryptography.RSACryptoServiceProvider _keypadKey;
+        private string _keypadChallenge, _keypadFirstPart;
+        private DateTime _keypadExpires;
+        private bool _keypadPending;
+
+        private void ClearKeypad()
+        {
+            if (_keypadKey != null) _keypadKey.Dispose();
+            _keypadKey = null;
+            _keypadChallenge = _keypadFirstPart = null;
+        }
+
+        private void OpenKeypad()
+        {
+            if (_securityGateway == null || _keypadPending) return;
+            ClearKeypad();
+            try
+            {
+                _keypadKey = new System.Security.Cryptography.RSACryptoServiceProvider(2048);
+                _keypadKey.PersistKeyInCsp = false;
+                var key = _keypadKey.ExportParameters(false);
+                _keypadChallenge = Guid.NewGuid().ToString("N");
+                _keypadExpires = DateTime.UtcNow.AddSeconds(90);
+                _keypadWire.Set(0, "sec_key", new JObject { ["room_id"] = 0,
+                    ["challenge"] = _keypadChallenge, ["n"] = Base64Url(key.Modulus), ["e"] = Base64Url(key.Exponent)
+                }.ToString(Formatting.None));
+                PublishKeypadPage(1);
+            }
+            catch (System.Security.Cryptography.CryptographicException)
+            {
+                ClearKeypad();
+                SendKeypadResult("unavailable");
+            }
+        }
+
+        private static string Base64Url(byte[] bytes)
+        {
+            return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        }
+
+        private void PublishKeypadPage(ushort page)
+        {
+            if (_keypadKey == null || DateTime.UtcNow > _keypadExpires || page > _keypadWire.Count) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = _keypadWire.Read(ref page) });
+        }
+
+        private void SendKeypadResult(string status)
+        {
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0,
+                Json = new JObject { ["security_keypad"] = status }.ToString(Formatting.None) });
+        }
+
+        private void AcceptKeypadPart(JObject body, bool last)
+        {
+            if (_securityGateway == null || _keypadPending || _keypadKey == null ||
+                DateTime.UtcNow > _keypadExpires || body["c"]?.Type != JTokenType.String ||
+                (string)body["c"] != _keypadChallenge) return;
+            string part = body["d"]?.Type == JTokenType.String ? (string)body["d"] : null;
+            if (part == null || part.Length != 172) return;
+            if (!last) { _keypadFirstPart = part; return; }
+            if (_keypadFirstPart == null) return;
+            string[] fields;
+            byte[] clear = null;
+            try
+            {
+                clear = _keypadKey.Decrypt(Convert.FromBase64String(_keypadFirstPart + part), true);
+                fields = System.Text.Encoding.UTF8.GetString(clear).Split('|');
+                if (fields.Length != 4 || fields[0] != _keypadChallenge) throw new FormatException();
+            }
+            catch (Exception ex) when (ex is FormatException || ex is System.Security.Cryptography.CryptographicException)
+            {
+                SendKeypadResult("invalid");
+                return;
+            }
+            finally
+            {
+                if (clear != null) Array.Clear(clear, 0, clear.Length);
+                ClearKeypad();
+            }
+            ushort partition;
+            if (!UInt16.TryParse(fields[1], out partition) || partition == 0)
+            {
+                SendKeypadResult("invalid");
+                return;
+            }
+            _keypadPending = true;
+            var gateway = _securityGateway;
+            gateway.ExecuteSecurityKeypad(partition, fields[2], fields[3], result =>
+            {
+                lock (_requests)
+                {
+                    _keypadPending = false;
+                    if (_securityGateway != gateway) return;
+                    SendKeypadResult(result);
+                    ReadSecurity();
+                }
+            });
+        }
+
+        private bool _securityReading, _securityReadAgain;
+        private int _securityReadVersion;
+
+        private void OnSecurityRefresh(bool reconnect)
+        {
+            lock (_requests)
+            {
+                if (_securityGateway == null) return;
+                if (reconnect) _securityGateway.RequestSecurityZones();
+                ReadSecurity();
+            }
+        }
+
+        private void ReadSecurity()
+        {
+            if (_securityReading) { _securityReadAgain = true; return; }
+            _securityReading = true;
+            int version = ++_securityReadVersion;
+            GatewayRegistry.Get(_gateway).ReadPanelSecurity(packet =>
+            {
+                lock (_requests)
+                {
+                    if (version != _securityReadVersion) return;
+                    _securityReading = false;
+                    if (_securityReadAgain)
+                    {
+                        _securityReadAgain = false;
+                        ReadSecurity();
+                        return;
+                    }
+                    var handler = PacketReady;
+                    if (handler != null) handler(this, new PanelRoomPacket { Stream = 0,
+                        Json = packet.ToString(Formatting.None) });
+                }
+            });
         }
 
         private void ReadSite()
@@ -520,6 +824,39 @@ namespace Control4Crestron
             });
         }
 
+        private void PublishVideoSessions(ushort page)
+        {
+            if (!_videoSessionsReady || page > _videoSessionsWire.Count) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = _videoSessionsWire.Read(ref page) });
+        }
+
+        private void ReadVideoSessions(ushort origin = 0, ushort destination = 0, int source = 0)
+        {
+            if (_videoSessionsSelecting) return;
+            int request = ++_videoSessionsRequest;
+            var scope = _roomOrder.ToArray();
+            var exclusions = _roomExclusions;
+            _videoSessionsReady = false;
+            _videoSessionsSelecting = destination != 0;
+            GatewayRegistry.Get(_gateway).ReadPanelVideoSessions(scope, exclusions, origin, destination, source, () =>
+            {
+                lock (_requests) return request == _videoSessionsRequest;
+            }, result =>
+            {
+                lock (_requests)
+                {
+                    if (request != _videoSessionsRequest) return;
+                    _videoSessionsSelecting = false;
+                    result["room_id"] = 0;
+                    result["request"] = request;
+                    _videoSessionsWire.Set(0, "video_sessions", result.ToString(Formatting.None));
+                    _videoSessionsReady = true;
+                    PublishVideoSessions(1);
+                }
+            });
+        }
+
         private void PublishAudioSessions(ushort page)
         {
             if (!_audioSessionsReady || page > _audioSessionsWire.Count) return;
@@ -539,15 +876,56 @@ namespace Control4Crestron
                     if (request != _actionRequest) return;
                     _actions = actions;
                     _actionGeneration = generation;
-                    _actionRevision = Guid.NewGuid().ToString("N").Substring(0, 16);
-                    var items = new JArray();
-                    for (int i = 0; i < actions.Length; i++)
-                        items.Add(new JObject { ["slot"] = i + 1, ["kind"] = actions[i].Kind, ["name"] = actions[i].Name });
-                    _actionsWire.Set(0, "scenes", new JObject { ["room_id"] = 0,
-                        ["revision"] = _actionRevision, ["actions"] = items }.ToString(Formatting.None));
-                    PublishActions(1);
+                    BuildActions();
                 }
             });
+        }
+
+        private void BuildActions()
+        {
+            _actionRevision = Guid.NewGuid().ToString("N").Substring(0, 16);
+            var uniqueNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var duplicateNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var action in _actions)
+                if (action.Kind == "light" && !uniqueNames.Add(action.Name.Trim()))
+                    duplicateNames.Add(action.Name.Trim());
+
+            var items = new JArray();
+            for (int index = 0; index < _actions.Length; index++)
+            {
+                var action = _actions[index];
+                var item = new JObject { ["slot"] = index + 1, ["kind"] = action.Kind, ["name"] = action.Name };
+                string name = action.Name.Trim();
+                if (action.Kind == "light" && !duplicateNames.Contains(name))
+                {
+                    var rooms = new SortedSet<ushort>();
+                    foreach (var configuration in _roomConfigurations.Values)
+                        if (_rooms.Contains(configuration.Room) && configuration.LightScenes.Contains(name))
+                            rooms.Add(configuration.Room);
+                    if (rooms.Count != 0) item["room_ids"] = new JArray(rooms);
+                }
+                items.Add(item);
+            }
+            foreach (var configuration in _roomConfigurations)
+            {
+                var room = configuration.Value;
+                if (room.LightScenes.Count == 0) continue;
+                if (!_rooms.Contains(room.Room))
+                {
+                    LogWarning("Room Config slot " + configuration.Key + " has light scenes for room " + room.Room + " outside router scope");
+                    continue;
+                }
+                foreach (string name in room.LightScenes)
+                {
+                    if (duplicateNames.Contains(name))
+                        LogWarning("Room " + room.Room + " light scene matches more than one Advanced Lighting scene: " + name);
+                    else if (!uniqueNames.Contains(name))
+                        LogWarning("Room " + room.Room + " light scene was not found in Advanced Lighting: " + name);
+                }
+            }
+            _actionsWire.Set(0, "scenes", new JObject { ["room_id"] = 0,
+                ["revision"] = _actionRevision, ["actions"] = items }.ToString(Formatting.None));
+            PublishActions(1);
         }
 
         private void PublishActions(ushort page)
@@ -604,7 +982,7 @@ namespace Control4Crestron
                 if (session.DeviceWire.Count > 0) Send(session, 0, session.DeviceWire.Read(ref page));
         }
 
-        private void DeviceFeedback(Session session, ushort id, bool shade, ushort value, ushort valid)
+        private void DeviceFeedback(Session session, ushort id, bool shade, ushort value, ushort valid, ushort dimming = 0)
         {
             Control4_Room_Devices.Entry entry;
             if (!session.Devices.TryGetValue(id, out entry) || entry.Shade != shade) return;
@@ -612,10 +990,14 @@ namespace Control4Crestron
             lock (session.DeviceLevels)
             {
                 int? previous;
-                if (session.DeviceLevels.TryGetValue(id, out previous) && previous == next) return;
+                if (entry.KnownDimmer) dimming = 2;
+                bool capabilityChanged = !shade && UpdateLightCapability(session.LightCapabilities, id, dimming);
+                if (session.DeviceLevels.TryGetValue(id, out previous) && previous == next && !capabilityChanged) return;
                 session.DeviceLevels[id] = next;
-                Send(session, 0, new JObject { ["r"] = session.Id, ["u"] = id,
-                    ["v"] = next.HasValue ? new JValue(next.Value) : new JValue((object)null) }.ToString(Formatting.None));
+                var update = new JObject { ["r"] = session.Id, ["u"] = id,
+                    ["v"] = next.HasValue ? new JValue(next.Value) : new JValue((object)null) };
+                PutLightCapability(update, shade, dimming);
+                Send(session, 0, update.ToString(Formatting.None));
             }
         }
 
@@ -623,10 +1005,13 @@ namespace Control4Crestron
         {
             var missingLights = new List<ushort>();
             session.Devices = Control4_Room_Devices.Get(_gateway, session.Id);
+            var exclusions = _roomExclusions;
+            foreach (ushort id in new List<ushort>(session.Devices.Keys))
+                if (Excluded(exclusions, session.Id, id)) session.Devices.Remove(id);
             if (session.Devices.Count > 0)
             {
                 var gateway = session.DeviceGateway = GatewayRegistry.Get(_gateway);
-                session.LightChanged = (s, a) => DeviceFeedback(session, a.ItemId, false, a.Level, a.Valid);
+                session.LightChanged = (s, a) => DeviceFeedback(session, a.ItemId, false, a.Level, a.Valid, a.Dimming);
                 session.ShadeChanged = (s, a) => DeviceFeedback(session, a.ItemId, true, a.Position, a.Valid);
                 gateway.LightChanged += session.LightChanged;
                 gateway.ShadeChanged += session.ShadeChanged;
@@ -648,8 +1033,7 @@ namespace Control4Crestron
                 {
                     int? level;
                     session.DeviceLevels.TryGetValue(device.Id, out level);
-                    items.Add(new JObject { ["id"] = device.Id, ["name"] = device.Name, ["shade"] = device.Shade,
-                        ["value"] = level.HasValue ? new JValue(level.Value) : new JValue((object)null) });
+                    items.Add(DeviceCatalogRow(device, level, session.LightCapabilities));
                 }
                 var document = new JObject { ["room_id"] = session.Id, ["devices"] = items };
                 session.DeviceWire.Set(session.Id, "d", document.ToString(Formatting.None));
@@ -694,6 +1078,8 @@ namespace Control4Crestron
             Close();
             var session = new Session { Id = id };
             session.Room.AutomaticServiceBrowse = false;
+            HashSet<int> exclusions;
+            if (_roomExclusions.TryGetValue(id, out exclusions)) session.Room.SourceExclusions = exclusions;
             _session = session;
             session.Room.FeedbackChanged += (s, a) => State(session, "volume", a.Volume, "volumeValid", a.VolumeValid,
                 "muted", a.Muted, "muteValid", a.MuteValid, "power", a.Power);
@@ -746,6 +1132,22 @@ namespace Control4Crestron
             {
                 if (_gateway == 0) return;
                 if (op == "audio_sessions") { OpenAudioSessions(); return; }
+                if (op == "video_sessions") { ReadVideoSessions(); return; }
+                if (op == "video_sessions_page")
+                {
+                    if (Number(body["value"], 1, UInt16.MaxValue, out number)) PublishVideoSessions(number);
+                    return;
+                }
+                if (op == "video_session_watch")
+                {
+                    ushort origin, target;
+                    int source;
+                    if (Number(body["room_id"], 1, UInt16.MaxValue, out origin) && _rooms.Contains(origin) &&
+                        Number(body["target"], 1, UInt16.MaxValue, out target) && _rooms.Contains(target) && origin != target &&
+                        body["source"]?.Type == JTokenType.Integer && Int32.TryParse(body["source"].ToString(), out source) && source > 0)
+                        ReadVideoSessions(origin, target, source);
+                    return;
+                }
                 if (op == "audio_sessions_close") { CloseAudioSessions(); return; }
                 if (op == "audio_sessions_off") { TurnOffAllAudioZones(body); return; }
                 if (op == "audio_session_add" || op == "audio_session_remove")
@@ -761,7 +1163,7 @@ namespace Control4Crestron
                 {
                     ushort fanRoom, fanId;
                     if (Number(body["room_id"], 1, UInt16.MaxValue, out fanRoom) && _rooms.Contains(fanRoom) &&
-                        Number(body["device_id"], 1, UInt16.MaxValue, out fanId) && Number(body["value"], 0, 4, out number))
+                        Number(body["device_id"], 1, UInt16.MaxValue, out fanId) && !Excluded(_roomExclusions, fanRoom, fanId) && Number(body["value"], 0, 4, out number))
                         GatewayRegistry.Get(_gateway).SetPanelFanSpeed(fanRoom, fanId, number);
                     return;
                 }
@@ -769,7 +1171,7 @@ namespace Control4Crestron
                 {
                     ushort buttonRoom, buttonId;
                     if (Number(body["room_id"], 1, UInt16.MaxValue, out buttonRoom) && _rooms.Contains(buttonRoom) &&
-                        Number(body["device_id"], 1, UInt16.MaxValue, out buttonId))
+                        Number(body["device_id"], 1, UInt16.MaxValue, out buttonId) && !Excluded(_roomExclusions, buttonRoom, buttonId))
                         GatewayRegistry.Get(_gateway).SelectExperienceButton(buttonRoom, buttonId);
                     return;
                 }
@@ -784,7 +1186,7 @@ namespace Control4Crestron
                 {
                     ushort relayRoom, relayId;
                     if (!Number(body["room_id"], 1, UInt16.MaxValue, out relayRoom) || !_rooms.Contains(relayRoom) ||
-                        !Number(body["device_id"], 1, UInt16.MaxValue, out relayId)) return;
+                        !Number(body["device_id"], 1, UInt16.MaxValue, out relayId) || Excluded(_roomExclusions, relayRoom, relayId)) return;
                     GatewayCore gateway;
                     lock (_houseSync)
                     {
@@ -795,6 +1197,23 @@ namespace Control4Crestron
                     return;
                 }
                 if (op == "house_device") { HouseDeviceRequest(body); return; }
+                if (op == "inspect_security_zones") { GatewayRegistry.Get(_gateway).ProbeSecurityZoneRoster(); return; }
+                if (op == "inspect_security") { GatewayRegistry.Get(_gateway).BeginSecuritySocketCapture(); return; }
+                if (op == "sec_key") { OpenKeypad(); return; }
+                if (op == "sec_key_page")
+                {
+                    if (Number(body["value"], 1, UInt16.MaxValue, out number)) PublishKeypadPage(number);
+                    return;
+                }
+                if (op == "sec_a" || op == "sec_b") { AcceptKeypadPart(body, op == "sec_b"); return; }
+                if (op == "security_zones") { OpenSecurityZones(); return; }
+                if (op == "security_zones_close") { CloseSecurityZones(); return; }
+                if (op == "security_zones_page")
+                {
+                    if (Number(body["value"], 1, UInt16.MaxValue, out number)) PublishSecurityZonePage(number);
+                    return;
+                }
+                if (op == "security") { ReadSecurity(); return; }
                 if (op == "site") { ReadSite(); return; }
                 if (op == "site_page")
                 {
@@ -834,6 +1253,8 @@ namespace Control4Crestron
                     case "audio": if (arg != null && arg.Type == JTokenType.String) room.SelectAudioSourceId((string)arg); break;
                     case "video": if (arg != null && arg.Type == JTokenType.String) room.SelectVideoSourceId((string)arg); break;
                     case "item": room.SelectMediaRequest(json); break;
+                    case "inspect_now_playing": room.InspectNowPlaying(); break;
+                    case "inspect_amazon_browse": room.InspectAmazonBrowse(); break;
                     case "key": if (arg != null && arg.Type == JTokenType.String) session.Transport.Press((string)arg); break;
                     case "volume": if (Number(arg, 0, 100, out number)) room.SetVolume(number); break;
                     case "mute_on": room.MuteOn(); break;
@@ -855,6 +1276,7 @@ namespace Control4Crestron
         {
             internal ushort Id;
             internal bool Shade;
+            internal bool KnownDimmer;
             internal string Name;
         }
 
