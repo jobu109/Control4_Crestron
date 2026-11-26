@@ -1,0 +1,12 @@
+{
+  "listen_host": "192.168.1.50",
+  "listen_port": 48125,
+  "director_host": "192.168.1.10",
+  "devices": [
+    {"kind": "shield", "host": "192.168.1.20", "sources": [101], "adb": "C:/Android/platform-tools/adb.exe"},
+    {"kind": "cast", "host": "192.168.1.21", "sources": [102]},
+    {"kind": "cast", "host": "192.168.1.22", "sources": [103]},
+    {"kind": "apple", "host": "192.168.1.23", "sources": [104], "credentials_file": "C:/Local/apple-airplay.txt"},
+    {"kind": "roku", "host": "192.168.1.24", "sources": [105]}
+  ]
+}

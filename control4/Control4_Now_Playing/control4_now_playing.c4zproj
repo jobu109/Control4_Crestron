@@ -1,0 +1,7 @@
+<Driver type="c4z" name="control4_now_playing" squishLua="false" Encryption="false">
+  <Items>
+    <Item type="file" name="driver.xml"/>
+    <Item type="file" name="driver.lua"/>
+    <Item type="dir" name="www" recurse="true"/>
+  </Items>
+</Driver>

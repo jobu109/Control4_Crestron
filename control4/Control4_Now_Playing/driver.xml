@@ -1,0 +1,16 @@
+<devicedata>
+  <copyright>TSI</copyright><creator>TSI</creator><manufacturer>TSI</manufacturer>
+  <name>Control4 Now Playing</name><model>Control4 Now Playing</model>
+  <created>11/25/2026 12:00 AM</created><modified>11/25/2026 12:00 AM</modified><version>4</version>
+  <control>lua_gen</control><controlmethod>ip</controlmethod><driver>DriverWorks</driver>
+  <combo>true</combo><proxies qty="1"><proxy name="control4_now_playing">control4_now_playing</proxy></proxies><capabilities/>
+  <config><documentation file="www/documentation.rtf"/>
+    <script file="driver.lua"/>
+    <properties>
+      <property><name>Roku IP</name><type>STRING</type><readonly>false</readonly><default></default></property>
+      <property><name>Watch Source IDs</name><type>STRING</type><readonly>false</readonly><default></default></property>
+      <property><name>Status</name><type>STRING</type><readonly>true</readonly><default>Waiting for Roku configuration</default></property>
+    </properties>
+  </config>
+  <composer_categories><category>Generic</category></composer_categories>
+</devicedata>
