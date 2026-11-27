@@ -224,7 +224,7 @@ export class HomePage extends ZPage {
     </div>`;
   }
 
-  /** Short house summary; adapters can enrich this later with door/lock states. */
+  /** House summaries use the latest measured feedback from the active adapter. */
   private statusLines() {
     const rooms = this.store.config.rooms;
     const lit = rooms.filter((r) => this.store.lightsOn(r) > 0).length;
@@ -232,7 +232,14 @@ export class HomePage extends ZPage {
     // Summaries only describe what the system has reported, never a default "off".
     const lightsKnown = rooms.some((r) => r.lights.some((l) => this.store.known('light', l.id)));
     const mediaKnown = rooms.some((r) => this.store.get('media', r.id)?.power !== undefined);
+    const thermostat = this.store.config.directorClimate?.thermostats.find((t) =>
+      t.connected === true && Number.isFinite(t.DISPLAY_TEMPERATURE) && /^(fahrenheit|celsius)$/i.test(t.SCALE ?? ''));
+    const unit = thermostat?.SCALE?.toLowerCase() === 'celsius' ? 'C' : 'F';
+    const mode = this.store.config.securityStatus?.mode;
+    const security = mode === 'home' ? 'armed stay' : mode === 'away' ? 'armed away' : mode;
     return html`
+      ${thermostat ? html`<span>Indoor temperature <em>${thermostat.DISPLAY_TEMPERATURE}°${unit}</em></span>` : nothing}
+      ${security ? html`<span>Security is <em>${security}</em></span>` : nothing}
       ${this.store.has('lighting') && lightsKnown ? html`<span>Lights are <em>on in ${lit} ${lit === 1 ? 'room' : 'rooms'}</em></span>` : nothing}
       ${this.store.has('media') && mediaKnown ? html`<span>Media is <em>${playing ? `playing in ${playing}` : 'off'}</em></span>` : nothing}
     `;

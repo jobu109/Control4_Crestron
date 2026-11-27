@@ -11,21 +11,28 @@ const TILES: Tile[] = [
   { route: 'rooms', name: 'Rooms', icon: 'rooms' },
   { route: 'lighting', name: 'Lighting', icon: 'light', service: 'lighting' },
   { route: 'shades', name: 'Shades', icon: 'shades', service: 'shades' },
-  { route: 'climate', name: 'Climate', icon: 'climate', service: 'climate' },
-  { route: 'comfort', name: 'Comfort', icon: 'comfort', service: 'comfort' },
+  { route: 'comfort', name: 'Comfort', icon: 'comfort' },
   { route: 'media', name: 'Media', icon: 'media', service: 'media' },
   { route: 'audio', name: 'Sessions', icon: 'music', service: 'audio' },
   { route: 'scenes', name: 'Scenes', icon: 'scenes', service: 'scenes' },
   { route: 'security', name: 'Security', icon: 'security' },
-  { route: 'cameras', name: 'Cameras', icon: 'cameras', service: 'cameras' },
   { route: 'pool', name: 'Pool', icon: 'pool', service: 'pool' },
-  { route: 'irrigation', name: 'Irrigation', icon: 'irrigation', service: 'irrigation' },
-  { route: 'energy', name: 'Energy', icon: 'energy', service: 'energy' }
+  { route: 'irrigation', name: 'Irrigation', icon: 'irrigation', service: 'irrigation' }
 ];
 
 /** Dock tiles for the services this house actually has. */
 export function dockTiles(store: HouseStore): Tile[] {
-  return TILES.filter((t) => !t.service || store.has(t.service));
+  return TILES.filter((tile) => {
+    if (tile.route === 'security') {
+      const status = store.config.securityStatus;
+      return Boolean(status?.partition || status?.multiple);
+    }
+    if (tile.route === 'comfort') {
+      const climate = store.config.directorClimate;
+      return Boolean((climate?.available && climate.thermostats.length) || store.has('climate'));
+    }
+    return !tile.service || store.has(tile.service);
+  });
 }
 
 /**

@@ -117,7 +117,34 @@ export interface SecurityStatus {
   multiple?: boolean;
 }
 
+export interface DirectorThermostat {
+  id: number;
+  name: string;
+  connected?: boolean;
+  SCALE?: string;
+  HVAC_MODE?: string;
+  HVAC_STATE?: string;
+  FAN_MODE?: string;
+  FAN_STATE?: string;
+  HVAC_MODES_LIST?: string;
+  FAN_MODES_LIST?: string;
+  DISPLAY_TEMPERATURE?: number;
+  DISPLAY_HEATSETPOINT?: number;
+  DISPLAY_COOLSETPOINT?: number;
+  HUMIDITY?: number;
+}
+
+export interface OutdoorDevice {
+  id: number;
+  name: string;
+  [field: string]: string | number;
+}
+
 export interface HouseConfig {
+  irrigationResult?: "pending" | "sent" | "failed";
+  outdoor?: { pool: OutdoorDevice[]; irrigation: OutdoorDevice[] };
+  climateResult?: 'pending' | 'sent' | 'failed';
+  directorClimate?: { available: boolean; thermostats: DirectorThermostat[] };
   securityStatus?: SecurityStatus;
   securityKeypadResult?: string;
   securityZones?: ReadonlyArray<{ id: number; name: string; open?: boolean }>;
@@ -248,6 +275,7 @@ export function stateKey(kind: StateKind, id: string): string {
 // ---- Commands from the UI ----
 
 export type Command =
+  | { kind: "irrigation"; id: number; action: "run" | "stop" | "pause" | "resume" | "mode" | "day" | "hour" | "minute"; setting?: string; state?: string }
   | { kind: 'video-sessions' }
   | { kind: 'video-session-watch'; room: number; target: number; source: number }
   | { kind: 'fan-speed'; id: string; roomId: string; action: 'speed'; value: number }

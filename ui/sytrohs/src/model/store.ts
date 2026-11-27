@@ -13,6 +13,7 @@ export interface Adapter {
   focusRoom?(roomId: string): void;
   /** The current page (route name). Lets an adapter open or close page-specific feeds. */
   setView?(view: string): void;
+  sendClimate?(id: number, action: string, value?: string): void;
   sendSecurityKeypad?(partition: number, action: string, pin: string): void;
   dispose?(): void;
 }
@@ -64,6 +65,10 @@ export class HouseStore extends EventTarget {
 
   get<K extends StateKind>(kind: K, id: string): StateMap[K] | undefined {
     return this.states.get(stateKey(kind, id)) as StateMap[K] | undefined;
+  }
+
+  sendClimate(id: number, action: string, value?: string): void {
+    this.adapter?.sendClimate?.(id, action, value);
   }
 
   sendSecurityKeypad(partition: number, action: string, pin: string): void {

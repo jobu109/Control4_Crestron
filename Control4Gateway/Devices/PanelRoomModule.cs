@@ -19,6 +19,12 @@ namespace Control4Crestron
         private readonly UiSerialFrames _videoSessionsWire = new UiSerialFrames();
         private int _videoSessionsRequest;
         private bool _videoSessionsReady, _videoSessionsSelecting;
+        private readonly UiSerialFrames _outdoorWire = new UiSerialFrames();
+        private int _outdoorRequest;
+        private bool _outdoorReady;
+        private bool _irrigationPending;
+        private int _irrigationGeneration;
+        private JArray _irrigationPrograms = new JArray();
         private readonly UiSerialFrames _siteWire = new UiSerialFrames();
         private int _siteRequest;
         private bool _siteReady;
@@ -155,6 +161,7 @@ namespace Control4Crestron
                 _actionRevision = null;
                 CloseAudioSessions();
                 CloseSecurityZones();
+                CloseClimate();
                 _videoSessionsRequest++;
                 _videoSessionsReady = _videoSessionsSelecting = false;
                 _houseRequested = false;
@@ -449,7 +456,9 @@ namespace Control4Crestron
         private GatewayCore _securityGateway;
         private readonly UiSerialFrames _securityZoneWire = new UiSerialFrames();
 
-        private void OpenSecurityZones()
+        private bool _securityZonesOpen;
+
+        private void OpenSecurityZones(bool includeZones)
         {
             if (_securityGateway == null)
             {
@@ -457,12 +466,14 @@ namespace Control4Crestron
                 _securityGateway.SecurityZonesReceived += OnSecurityZones;
                 _securityGateway.SubscribeSecurityRefresh(OnSecurityRefresh);
             }
-            _securityGateway.RequestSecurityZones();
+            _securityZonesOpen = includeZones;
+            if (includeZones) _securityGateway.RequestSecurityZones();
         }
 
         private void CloseSecurityZones()
         {
             ClearKeypad();
+            _securityZonesOpen = false;
             if (_securityGateway == null) return;
             _securityGateway.SecurityZonesReceived -= OnSecurityZones;
             _securityGateway.UnsubscribeSecurityRefresh(OnSecurityRefresh);
@@ -476,7 +487,7 @@ namespace Control4Crestron
         {
             lock (_requests)
             {
-                if (_securityGateway == null) return;
+                if (_securityGateway == null || !_securityZonesOpen) return;
                 if (packet["zones"] != null)
                 {
                     _securityZoneWire.Set(0, "sec_zones", packet.ToString(Formatting.None));
@@ -599,6 +610,61 @@ namespace Control4Crestron
             });
         }
 
+        private readonly UiSerialFrames _climateWire = new UiSerialFrames();
+        private bool _climateReading, _climateCommandPending, _climateReadAgain;
+        private GatewayCore _climateGateway;
+        private int _climateReadVersion;
+
+        private void OpenClimate()
+        {
+            if (_climateGateway != null) return;
+            _climateGateway = GatewayRegistry.Get(_gateway);
+            _climateGateway.ClimateChanged += OnClimateChanged;
+        }
+
+        private void CloseClimate()
+        {
+            if (_climateGateway != null) _climateGateway.ClimateChanged -= OnClimateChanged;
+            _climateGateway = null;
+            _climateReadVersion++;
+            _climateReading = _climateReadAgain = false;
+        }
+
+        private void OnClimateChanged()
+        {
+            lock (_requests)
+                if (_climateGateway != null) ReadClimate();
+        }
+
+        private void ReadClimate()
+        {
+            if (_climateReading) { _climateReadAgain = true; return; }
+            _climateReading = true;
+            int version = ++_climateReadVersion;
+            GatewayRegistry.Get(_gateway).ReadThermostats(packet =>
+            {
+                lock (_requests)
+                {
+                    if (version != _climateReadVersion) return;
+                    _climateReading = false;
+                    _climateWire.Set(0, "climate", packet.ToString(Formatting.None));
+                    PublishClimatePage(1);
+                    if (_climateReadAgain)
+                    {
+                        _climateReadAgain = false;
+                        ReadClimate();
+                    }
+                }
+            });
+        }
+
+        private void PublishClimatePage(ushort page)
+        {
+            if (page > _climateWire.Count) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = _climateWire.Read(ref page) });
+        }
+
         private bool _securityReading, _securityReadAgain;
         private int _securityReadVersion;
 
@@ -607,7 +673,7 @@ namespace Control4Crestron
             lock (_requests)
             {
                 if (_securityGateway == null) return;
-                if (reconnect) _securityGateway.RequestSecurityZones();
+                if (reconnect && _securityZonesOpen) _securityGateway.RequestSecurityZones();
                 ReadSecurity();
             }
         }
@@ -634,6 +700,35 @@ namespace Control4Crestron
                         Json = packet.ToString(Formatting.None) });
                 }
             });
+        }
+
+        private void ReadOutdoor()
+        {
+            int request = ++_outdoorRequest;
+            GatewayRegistry.Get(_gateway).ReadPanelOutdoor((generation, result) =>
+            {
+                lock (_requests)
+                {
+                    if (request != _outdoorRequest) return;
+                    _irrigationGeneration = generation;
+                    _irrigationPrograms = (JArray)result["irrigation"].DeepClone();
+                    foreach (JObject row in (JArray)result["irrigation"])
+                    {
+                        foreach (string action in new[] { "run", "stop", "pause", "resume", "mode", "day", "hour", "minute" })
+                            if (row.Remove(action + "_target")) row["can_" + action] = 1;
+                    }
+                    _outdoorWire.Set(0, "outdoor", result.ToString(Formatting.None));
+                    _outdoorReady = true;
+                    PublishOutdoor(1);
+                }
+            });
+        }
+
+        private void PublishOutdoor(ushort page)
+        {
+            if (!_outdoorReady || page > _outdoorWire.Count) return;
+            var handler = PacketReady;
+            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0, Json = _outdoorWire.Read(ref page) });
         }
 
         private void ReadSite()
@@ -1206,14 +1301,74 @@ namespace Control4Crestron
                     return;
                 }
                 if (op == "sec_a" || op == "sec_b") { AcceptKeypadPart(body, op == "sec_b"); return; }
-                if (op == "security_zones") { OpenSecurityZones(); return; }
+                if (op == "security_zones") { OpenSecurityZones(true); return; }
+                if (op == "security_watch") { OpenSecurityZones(false); return; }
                 if (op == "security_zones_close") { CloseSecurityZones(); return; }
                 if (op == "security_zones_page")
                 {
                     if (Number(body["value"], 1, UInt16.MaxValue, out number)) PublishSecurityZonePage(number);
                     return;
                 }
+                if (op == "climate_control")
+                {
+                    if (_climateCommandPending || !Number(body["id"], 1, UInt16.MaxValue, out number) ||
+                        body["action"]?.Type != JTokenType.String) return;
+                    _climateCommandPending = true;
+                    GatewayRegistry.Get(_gateway).ExecuteClimateControl(number, (string)body["action"],
+                        body["value"]?.Type == JTokenType.String ? (string)body["value"] : null, accepted =>
+                        {
+                            lock (_requests)
+                            {
+                                _climateCommandPending = false;
+                                var handler = PacketReady;
+                                if (handler != null) handler(this, new PanelRoomPacket { Stream = 0,
+                                    Json = new JObject { ["climate_result"] = accepted }.ToString(Formatting.None) });
+                                ReadClimate();
+                            }
+                        });
+                    return;
+                }
+                if (op == "climate") { OpenClimate(); ReadClimate(); return; }
+                if (op == "climate_close") { CloseClimate(); return; }
+                if (op == "climate_page")
+                {
+                    if (Number(body["value"], 1, UInt16.MaxValue, out number)) PublishClimatePage(number);
+                    return;
+                }
                 if (op == "security") { ReadSecurity(); return; }
+                if (op == "irrigation_control")
+                {
+                    string action = body["action"]?.Type == JTokenType.String ? (string)body["action"] : null;
+                    var parameters = GatewayCore.IrrigationParameters(action,
+                        body["setting"]?.Type == JTokenType.String ? (string)body["setting"] : null,
+                        body["state"]?.Type == JTokenType.String ? (string)body["state"] : null);
+                    if (_irrigationPending || parameters == null ||
+                        !Number(body["id"], 1, UInt16.MaxValue, out id)) return;
+                    int target = 0;
+                    foreach (JObject program in _irrigationPrograms)
+                        if ((int)program["id"] == id)
+                            target = (int?)program[action + "_target"] ?? 0;
+                    if (target == 0) return;
+                    _irrigationPending = true;
+                    GatewayRegistry.Get(_gateway).ExecuteIrrigationCommand(target, action, parameters, _irrigationGeneration, accepted =>
+                    {
+                        lock (_requests)
+                        {
+                            _irrigationPending = false;
+                            var handler = PacketReady;
+                            if (handler != null) handler(this, new PanelRoomPacket { Stream = 0,
+                                Json = new JObject { ["irrigation_result"] = accepted }.ToString(Formatting.None) });
+                            ReadOutdoor();
+                        }
+                    });
+                    return;
+                }
+                if (op == "outdoor") { ReadOutdoor(); return; }
+                if (op == "outdoor_page")
+                {
+                    if (Number(body["value"], 1, UInt16.MaxValue, out number)) PublishOutdoor(number);
+                    return;
+                }
                 if (op == "site") { ReadSite(); return; }
                 if (op == "site_page")
                 {

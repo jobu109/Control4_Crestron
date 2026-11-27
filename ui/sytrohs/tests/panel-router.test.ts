@@ -10,7 +10,7 @@ import type { CrComLibLike } from '../src/adapters/crestron';
 /** Page request op -> stream kind, as handled by PanelRoomModule.Request. */
 const PAGE_KIND: Record<string, string> = {
   device_page: 'd', audio_page: 'a', video_page: 'v', media_page: 'm', playing_page: 'n',
-  rooms_page: 'rooms', scenes_page: 'scenes', audio_sessions_page: 'audio_sessions', video_sessions_page: 'video_sessions', site_page: 'site',
+  rooms_page: 'rooms', scenes_page: 'scenes', audio_sessions_page: 'audio_sessions', video_sessions_page: 'video_sessions', site_page: 'site', outdoor_page: 'outdoor',
   house_devices_page: 'house_devices'
 };
 
@@ -94,14 +94,23 @@ describe('panel router adapter', () => {
     expect(store.connection).toBe('connecting');
     router.connect();
     expect(store.connection).toBe('online');
-    expect(router.ops()).toEqual(['rooms', 'scenes', 'site', 'audio_sessions']);
-    expect(router.requests.map((r) => r.q)).toEqual([1, 2, 3, 4]);
+    expect(router.ops()).toEqual(['rooms', 'scenes', 'site', 'outdoor', 'audio_sessions']);
+    expect(router.requests.map((r) => r.q)).toEqual([1, 2, 3, 4, 5]);
     router.doc(J.state, 0, 'rooms', ROOMS);
     // The heavy whole-house request waits for the room list.
-    expect(router.ops().slice(4)).toEqual(['house_devices']);
+    expect(router.ops().slice(5)).toEqual(['house_devices']);
+    expect(store.has('pool')).toBe(false);
+    expect(store.has('irrigation')).toBe(false);
+    router.doc(J.state, 0, 'outdoor', {
+      room_id: 0, pool: [{ id: 2312, name: 'Pool', PUMPMODE: 'Off' }],
+      irrigation: [{ id: 2315, name: 'Irrigation Program', STEP: '1' }]
+    });
+    expect(store.has('pool')).toBe(true);
+    expect(store.has('irrigation')).toBe(true);
+    expect(store.config.outdoor?.pool[0].PUMPMODE).toBe('Off');
     expect(store.config.floors).toEqual([PANEL_FLOOR]);
     expect(store.config.rooms.map((r) => [r.id, r.name, r.lazy])).toEqual([['13', 'Living Room', true], ['212', 'Kitchen', true]]);
-    expect(store.config.services).toEqual(['media', 'audio']);
+    expect(store.config.services).toEqual(['media', 'audio', 'pool', 'irrigation']);
     expect(store.roomsOnFloor(PANEL_FLOOR.id)).toHaveLength(2);
   });
 
@@ -392,7 +401,7 @@ describe('panel router adapter', () => {
     ]);
     router.clear();
     store.setView('home');
-    expect(router.ops()).toEqual(['audio_sessions_close']);
+    expect(router.ops()).toEqual(['climate', 'security_watch', 'security', 'audio_sessions_close']);
   });
 
   it('updates only scoped room summary power without selecting the room', () => {
@@ -580,7 +589,7 @@ describe('panel router adapter', () => {
     store.send({ kind: 'light', id: '437', action: 'on' });
     expect(router.requests).toEqual([]);
     router.connect(true);
-    expect(router.ops()).toEqual(['rooms', 'scenes', 'site', 'audio_sessions', 'room']);
+    expect(router.ops()).toEqual(['rooms', 'scenes', 'site', 'outdoor', 'audio_sessions', 'room']);
     expect(router.last('room')).toMatchObject({ room_id: 13 });
     router.doc(J.state, 13, 'd', DEVICES);
     expect(store.get('light', '437')?.level).toBe(40);
@@ -620,7 +629,7 @@ describe('panel router request pacing', () => {
     await vi.advanceTimersByTimeAsync(REQUEST_GAP_MS);
     expect(router.ops()).toEqual(['rooms', 'scenes']);
     await vi.advanceTimersByTimeAsync(REQUEST_GAP_MS * 3);
-    expect(router.ops()).toEqual(['rooms', 'scenes', 'site', 'audio_sessions']);
+    expect(router.ops()).toEqual(['rooms', 'scenes', 'site', 'outdoor', 'audio_sessions']);
   });
 
   it('keeps only the latest queued level for the same device', async () => {
@@ -644,7 +653,7 @@ describe('panel router request pacing', () => {
     router.clear();
     await vi.advanceTimersByTimeAsync(15000);
     // rooms arrived; scenes and site were lost and are asked for again.
-    expect(router.ops()).toEqual(['scenes', 'site']);
+    expect(router.ops()).toEqual(['scenes', 'site', 'outdoor']);
     router.clear();
     await vi.advanceTimersByTimeAsync(15000 * 5);
     expect(router.ops().filter((op) => op === 'scenes')).toHaveLength(1); // two retries in total

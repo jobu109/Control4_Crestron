@@ -930,6 +930,507 @@ namespace Control4Crestron
                 number >= 0 && number <= maximum ? (int?)number : null;
         }
 
+        internal void ExecuteClimateControl(int id, string action, string value, Action<bool> completed)
+        {
+            int generation;
+            lock (_sync) generation = _generation;
+            Queue(delegate
+            {
+                bool accepted = false;
+                try
+                {
+                    string host, token;
+                    if (!CurrentGeneration(generation) || !GetConnection(out host, out token)) return;
+                    var items = InventoryItems(Request(host, token, "GET", "/api/v1/categories/comfort", null));
+                    if (!System.Linq.Enumerable.Any(items, item =>
+                        ScalarText(item["type"]) == "7" && ScalarText(item["item_id"]) == id.ToString(CultureInfo.InvariantCulture))) return;
+                    string path = "/api/v1/items/" + id.ToString(CultureInfo.InvariantCulture);
+                    var variables = JArray.Parse(Request(host, token, "GET", path + "/variables", null));
+                    JToken modes;
+                    if (SecurityNumber(variables, "IS_CONNECTED", 1) != 1 ||
+                        !SourceVariable(variables, "HVAC_MODES_LIST", out modes)) return;
+                    string command;
+                    var parameters = new JObject();
+                    switch (action)
+                    {
+                        case "mode":
+                        case "fan":
+                            if (action == "fan" && !SourceVariable(variables, "FAN_MODES_LIST", out modes)) return;
+                            if (modes.Type != JTokenType.String || String.IsNullOrEmpty(value)) return;
+                            string match = System.Linq.Enumerable.FirstOrDefault(((string)modes).Split(','),
+                                mode => String.Equals(mode.Trim(), value, StringComparison.OrdinalIgnoreCase));
+                            if (match == null) return;
+                            parameters["MODE"] = match.Trim();
+                            command = action == "mode" ? "SET_MODE_HVAC" : "SET_MODE_FAN";
+                            break;
+                        case "heat_set":
+                        case "cool_set":
+                            int temperature;
+                            JToken scale;
+                            if (!Int32.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out temperature) ||
+                                temperature < 45 || temperature > 95 ||
+                                !SourceVariable(variables, "SCALE", out scale) ||
+                                !String.Equals(ScalarText(scale), "FAHRENHEIT", StringComparison.OrdinalIgnoreCase)) return;
+                            parameters["FAHRENHEIT"] = temperature.ToString(CultureInfo.InvariantCulture);
+                            command = action == "heat_set" ? "SET_SETPOINT_HEAT" : "SET_SETPOINT_COOL";
+                            break;
+                        case "heat_up": command = "INC_SETPOINT_HEAT"; break;
+                        case "heat_down": command = "DEC_SETPOINT_HEAT"; break;
+                        case "cool_up": command = "INC_SETPOINT_COOL"; break;
+                        case "cool_down": command = "DEC_SETPOINT_COOL"; break;
+                        default: return;
+                    }
+                    JObject metadata = BuildCommandMetadataReport(Request(host, token, "GET", path + "/commands", null), 200, id);
+                    if (!System.Linq.Enumerable.Any((JArray)metadata["commands"], entry =>
+                        String.Equals((string)entry["command_name"], command, StringComparison.Ordinal)) ||
+                        !CurrentGeneration(generation)) return;
+                    var payload = new JObject { ["command"] = command, ["tParams"] = parameters };
+                    Request(host, token, "POST", path + "/commands", payload.ToString(Formatting.None));
+                    accepted = true;
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Climate command failed: " + FailureKind(ex));
+                }
+                finally { completed(accepted); }
+            });
+        }
+
+        internal event Action ClimateChanged;
+        private int[] _climateEventItems = new int[0];
+        private int _climateEventGeneration = -1;
+
+        private void RouteClimateEvent(JToken message, int generation)
+        {
+            var handler = ClimateChanged;
+            var packet = message as JObject;
+            int id;
+            if (handler == null || packet == null || ScalarText(packet["evtName"]) != "OnDataToUI" ||
+                !TrySourceId(packet["iddevice"], out id)) return;
+            lock (_sync)
+                if (_generation != generation || _climateEventGeneration != generation ||
+                    Array.IndexOf(_climateEventItems, id) < 0) return;
+            SafeEvent(handler);
+        }
+
+        internal void ReadThermostats(Action<JObject> completed)
+        {
+            int generation;
+            lock (_sync) generation = _generation;
+            Queue(delegate
+            {
+                var rows = new JArray();
+                bool available = false;
+                try
+                {
+                    string host, token;
+                    if (!CurrentGeneration(generation) || !GetConnection(out host, out token)) return;
+                    var items = InventoryItems(Request(host, token, "GET", "/api/v1/categories/comfort", null));
+                    foreach (JObject item in System.Linq.Enumerable.OfType<JObject>(items))
+                    {
+                        if (!CurrentGeneration(generation) || rows.Count >= 32) break;
+                        int id;
+                        if (ScalarText(item["type"]) != "7" || !TrySourceId(item["item_id"], out id) || id <= 0) continue;
+                        try
+                        {
+                            var vars = JArray.Parse(Request(host, token, "GET", "/api/v1/items/" +
+                                id.ToString(CultureInfo.InvariantCulture) + "/variables", null));
+                            JToken value;
+                            if (!SourceVariable(vars, "HVAC_MODES_LIST", out value)) continue;
+                            var row = new JObject { ["id"] = id, ["name"] = PlayingText(item["name"]) };
+                            int? connected = SecurityNumber(vars, "IS_CONNECTED", 1);
+                            if (connected.HasValue) row["connected"] = connected == 1;
+                            foreach (string field in new[] { "SCALE", "HVAC_MODE", "HVAC_STATE", "FAN_MODE", "FAN_STATE", "HVAC_MODES_LIST", "FAN_MODES_LIST" })
+                                if (SourceVariable(vars, field, out value) && value.Type == JTokenType.String)
+                                    row[field] = PlayingText(value);
+                            if (connected != 0)
+                                foreach (string field in new[] { "DISPLAY_TEMPERATURE", "DISPLAY_HEATSETPOINT", "DISPLAY_COOLSETPOINT", "HUMIDITY" })
+                                {
+                                    decimal number;
+                                    if (SourceVariable(vars, field, out value) &&
+                                        Decimal.TryParse(ScalarText(value), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
+                                            CultureInfo.InvariantCulture, out number) && number >= -100 &&
+                                        number <= (field == "HUMIDITY" ? 100 : 250) && (field != "HUMIDITY" || number >= 0))
+                                        row[field] = number;
+                                }
+                            rows.Add(row);
+                        }
+                        catch (Exception ex)
+                        {
+                            InvalidateRejectedToken(ex);
+                            EmitMessage("Thermostat read failed: " + FailureKind(ex));
+                        }
+                    }
+                    lock (_sync)
+                    {
+                        available = _generation == generation;
+                        if (available)
+                        {
+                            var ids = new System.Collections.Generic.HashSet<int>();
+                            foreach (JObject row in System.Linq.Enumerable.OfType<JObject>(rows))
+                            {
+                                ids.Add((int)row["id"]);
+                                foreach (JObject item in System.Linq.Enumerable.OfType<JObject>(items))
+                                {
+                                    int driver;
+                                    if (ScalarText(item["type"]) == "6" &&
+                                        String.Equals(PlayingText(item["name"]), (string)row["name"], StringComparison.Ordinal) &&
+                                        TrySourceId(item["item_id"], out driver)) ids.Add(driver);
+                                }
+                            }
+                            _climateEventItems = System.Linq.Enumerable.ToArray(ids);
+                            _climateEventGeneration = generation;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Climate discovery failed: " + FailureKind(ex));
+                }
+                finally
+                {
+                    completed(new JObject { ["room_id"] = 0, ["available"] = available,
+                        ["thermostats"] = available ? rows : new JArray() });
+                }
+            });
+        }
+
+        private JObject InspectCameraProxyReply(string host, string token, string path, string command,
+            JObject parameters, string expectedTag)
+        {
+            try
+            {
+                var body = new JObject { ["command"] = command, ["tParams"] = parameters };
+                int status;
+                string reply = Request(host, token, "POST", path, body.ToString(Formatting.None), out status);
+                return new JObject { ["http_status"] = status, ["reply_length"] = reply.Length,
+                    ["empty_object"] = String.Equals(reply.Trim(), "{}", StringComparison.Ordinal),
+                    ["expected_return_tag"] = reply.IndexOf("<" + expectedTag, StringComparison.OrdinalIgnoreCase) >= 0 };
+            }
+            catch (Exception ex)
+            {
+                InvalidateRejectedToken(ex);
+                return new JObject { ["error"] = FailureKind(ex) };
+            }
+        }
+
+        private JArray InspectCameraInventory(JArray items, string host, string token, int generation)
+        {
+            var reports = new JArray();
+            foreach (JObject item in System.Linq.Enumerable.OfType<JObject>(items))
+            {
+                if (!CurrentGeneration(generation) || reports.Count >= 12) break;
+                int id;
+                if (!TrySourceId(item["item_id"], out id) || id <= 0) continue;
+                var row = new JObject { ["item_id"] = id, ["name"] = item["name"], ["type"] = item["type"] };
+                reports.Add(row);
+                try
+                {
+                    string path = "/api/v1/items/" + id.ToString(CultureInfo.InvariantCulture);
+                    row["command_metadata"] = BuildCommandMetadataReport(
+                        Request(host, token, "GET", path + "/commands", null), 200, id);
+                    if (ScalarText(item["type"]) == "7" && CurrentGeneration(generation))
+                    {
+                        row["snapshot_query"] = InspectCameraProxyReply(host, token, path + "/commands",
+                            "GET_SNAPSHOT_QUERY_STRING", new JObject { ["SIZE_X"] = 320, ["SIZE_Y"] = 180 }, "snapshot_query_string");
+                        if (CurrentGeneration(generation))
+                            row["properties_query"] = InspectCameraProxyReply(host, token, path + "/commands",
+                                "GET_PROPERTIES", new JObject(), "camera_properties");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    row["error"] = FailureKind(ex);
+                }
+            }
+            return reports;
+        }
+
+        private static readonly System.Collections.Generic.Dictionary<string, string> IrrigationNames =
+            new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["run"] = "Start Program", ["stop"] = "Stop Program", ["pause"] = "Pause Program",
+                ["resume"] = "Resume Program", ["mode"] = "Program Mode", ["day"] = "Enable or Disable Day",
+                ["hour"] = "Start Hour", ["minute"] = "Start Minute"
+            };
+
+        internal static JObject IrrigationParameters(string action, string value, string state)
+        {
+            switch (action)
+            {
+                case "run": case "stop": case "pause": case "resume": return new JObject();
+                case "mode":
+                    return Array.IndexOf(new[] { "Off", "Every Day", "Odd Days", "Even Days", "Select Days" }, value) < 0
+                        ? null : new JObject { ["Mode"] = value };
+                case "day":
+                    return Array.IndexOf(new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" }, value) < 0 ||
+                        (state != "Enable" && state != "Disable") ? null : new JObject { ["Day"] = value, ["State"] = state };
+                case "hour": case "minute":
+                    int number;
+                    bool hour = action == "hour";
+                    if (!Int32.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out number) ||
+                        number < 0 || number > (hour ? 24 : 59)) return null;
+                    return new JObject { [hour ? "Hour (0-24)" : "Minute (0-59)"] = number.ToString(CultureInfo.InvariantCulture) };
+                default: return null;
+            }
+        }
+
+        private void ReadIrrigationCommands(JObject row, JToken item, JArray items, string host, string token, int generation)
+        {
+            int parent;
+            int id = (int)row["id"];
+            TrySourceId(item["parent_id"], out parent);
+            int protocol = 0;
+            try
+            {
+                string path = "/api/v1/items/" + id.ToString(CultureInfo.InvariantCulture);
+                var detail = JObject.Parse(ReadWithTimeoutRetry(host, token, path, generation));
+                TrySourceId(detail["protocolId"] ?? detail["protocol_id"] ?? detail["driverId"] ?? detail["driver_id"], out protocol);
+            }
+            catch (Exception ex)
+            {
+                InvalidateRejectedToken(ex);
+                EmitMessage("Irrigation protocol lookup failed: " + FailureKind(ex));
+            }
+            // Some Director versions omit the protocol relationship for this driver.
+            // Match the verified driver and proxy identities only for an unambiguous pair.
+            if (protocol == 0 && parent == 0 &&
+                String.Equals((string)item["name"], "Irrigation Program", StringComparison.OrdinalIgnoreCase))
+            {
+                int matchingPrograms = System.Linq.Enumerable.Count(items, entry =>
+                    ScalarText(entry["type"]) == "7" &&
+                    String.Equals((string)entry["name"], "Irrigation Program", StringComparison.OrdinalIgnoreCase));
+                var drivers = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Where(items, entry =>
+                    ScalarText(entry["type"]) == "6" &&
+                    String.Equals((string)entry["name"], "Irrigation Control", StringComparison.OrdinalIgnoreCase)));
+                if (matchingPrograms == 1 && drivers.Length == 1)
+                    TrySourceId(drivers[0]["item_id"], out protocol);
+            }
+            int target = protocol > 0 ? protocol : parent;
+            if (CurrentGeneration(generation) && target > 0 && target != id &&
+                System.Linq.Enumerable.Any(items, entry => ScalarText(entry["type"]) == "6" &&
+                    ScalarText(entry["item_id"]) == target.ToString(CultureInfo.InvariantCulture)))
+            {
+                try
+                {
+                    string path = "/api/v1/items/" + target.ToString(CultureInfo.InvariantCulture) + "/commands";
+                    var commands = JArray.Parse(ReadWithTimeoutRetry(host, token, path, generation));
+                    foreach (var entry in commands)
+                    {
+                        if (!(entry is JObject)) continue;
+                        string name = ScalarText(entry["command"]);
+                        foreach (var command in IrrigationNames)
+                        {
+                            string field = command.Key + "_target";
+                            if (command.Value == name && row[field] == null) row[field] = target;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Irrigation capability read failed: " + FailureKind(ex));
+                }
+            }
+            var supported = new System.Collections.Generic.List<string>();
+            foreach (var command in IrrigationNames)
+                if (row[command.Key + "_target"] != null)
+                    supported.Add(command.Key + "=" + row[command.Key + "_target"]);
+            EmitMessage("Irrigation program " + id + " protocol " + protocol + "; command targets " +
+                (supported.Count == 0 ? "none advertised" : String.Join(", ", supported)));
+        }
+
+        internal void ExecuteIrrigationCommand(int target, string action, JObject parameters, int generation, Action<bool> completed)
+        {
+            Queue(delegate
+            {
+                bool accepted = false;
+                try
+                {
+                    string host, token;
+                    if (target <= 0 || !CurrentGeneration(generation) || !GetConnection(out host, out token)) return;
+                    var payload = new JObject { ["command"] = IrrigationNames[action], ["tParams"] = parameters };
+                    Request(host, token, "POST", "/api/v1/items/" + target.ToString(CultureInfo.InvariantCulture) +
+                        "/commands", payload.ToString(Formatting.None));
+                    accepted = CurrentGeneration(generation);
+                    if (accepted) EmitMessage("Irrigation " + action + " accepted on item " + target);
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Irrigation " + action + " failed on item " + target + ": " + FailureKind(ex));
+                }
+                finally { completed(accepted); }
+            });
+        }
+
+        internal void ReadPanelOutdoor(Action<int, JObject> completed)
+        {
+            int generation;
+            lock (_sync) generation = _generation;
+            Queue(delegate
+            {
+                var pool = new JArray();
+                var irrigation = new JArray();
+                try
+                {
+                    string host, token;
+                    if (!GetConnection(out host, out token) || !CurrentGeneration(generation)) return;
+                    var items = InventoryItems(ReadWithTimeoutRetry(host, token, "/api/v1/items", generation));
+                    foreach (var item in items)
+                    {
+                        if (!CurrentGeneration(generation)) return;
+                        if (pool.Count + irrigation.Count >= 16) break;
+                        string name = (string)item["name"] ?? "";
+                        int id;
+                        if (ScalarText(item["type"]) != "7" || !TrySourceId(item["item_id"], out id) || id <= 0 ||
+                            !System.Text.RegularExpressions.Regex.IsMatch(name, @"\b(pool|spa|intellicenter|irrigation)\b",
+                                System.Text.RegularExpressions.RegexOptions.IgnoreCase)) continue;
+                        try
+                        {
+                            string path = "/api/v1/items/" + id.ToString(CultureInfo.InvariantCulture) + "/variables";
+                            var variables = JArray.Parse(ReadWithTimeoutRetry(host, token, path, generation));
+                            JToken value;
+                            bool isPool = SourceVariable(variables, "PUMPMODE", out value) &&
+                                SourceVariable(variables, "HASPOOL", out value);
+                            bool isProgram = SourceVariable(variables, "STEP", out value) &&
+                                SourceVariable(variables, "STEP_TIME", out value) &&
+                                SourceVariable(variables, "LAST_MENU_SELECTED", out value);
+                            if (!isPool && !isProgram) continue;
+                            var row = new JObject { ["id"] = id, ["name"] = name };
+                            var fields = isPool
+                                ? new[] { "PUMPMODE", "POOL_HEATMODE", "POOL_TEMPERATURE", "POOL_SETPOINT", "SPAMODE",
+                                    "SPA_HEATMODE", "SPA_TEMPERATURE", "SPA_SETPOINT", "AIR_TEMPERATURE", "SCALE",
+                                    "HASPOOL", "HASSPA", "HASAIR" }
+                                : new[] { "STEP", "STEP_TIME" };
+                            foreach (string field in fields)
+                            {
+                                if (!SourceVariable(variables, field, out value)) continue;
+                                string reading = ScalarText(value);
+                                if (!String.IsNullOrWhiteSpace(reading) && reading.Length <= 64)
+                                    row[field] = reading;
+                            }
+                            if (isProgram && !isPool) ReadIrrigationCommands(row, item, items, host, token, generation);
+                            (isPool ? pool : irrigation).Add(row);
+                        }
+                        catch (Exception ex)
+                        {
+                            InvalidateRejectedToken(ex);
+                            EmitMessage("Outdoor device read failed: " + FailureKind(ex));
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    EmitMessage("Outdoor discovery failed: " + FailureKind(ex));
+                }
+                if (CurrentGeneration(generation))
+                    completed(generation, new JObject { ["room_id"] = 0, ["pool"] = pool, ["irrigation"] = irrigation });
+            });
+        }
+
+        private JArray InspectOutdoorInventory(JArray items, string host, string token, int generation)
+        {
+            var results = new JArray();
+            foreach (var item in items)
+            {
+                if (!CurrentGeneration(generation) || results.Count >= 16) break;
+                var name = (string)item["name"] ?? "";
+                int id;
+                if (!System.Text.RegularExpressions.Regex.IsMatch(name,
+                    @"\b(pool|spa|intellicenter|irrigation)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase) ||
+                    !TrySourceId(item["item_id"], out id) || id <= 0) continue;
+                var row = new JObject { ["item_id"] = id, ["name"] = name, ["type"] = item["type"] };
+                results.Add(row);
+                foreach (var resource in new[] { "variables", "commands" })
+                {
+                    if (!CurrentGeneration(generation)) return results;
+                    try
+                    {
+                        string response = Request(host, token, "GET", "/api/v1/items/" +
+                            id.ToString(CultureInfo.InvariantCulture) + "/" + resource, null);
+                        row[resource] = resource == "commands" ? BuildCommandMetadataReport(response, 200, id) : InspectNowPlayingVariables(response);
+                    }
+                    catch (Exception error)
+                    {
+                        row[resource + "_error"] = error.GetType().Name;
+                    }
+                }
+            }
+            return results;
+        }
+
+        private JArray InspectComfortInventory(JArray items, JArray comfort, string host, string token, int generation)
+        {
+            var results = new JArray();
+            var seen = new System.Collections.Generic.HashSet<int>();
+            var candidates = System.Linq.Enumerable.Concat(comfort,
+                System.Linq.Enumerable.Where(items, item => System.Text.RegularExpressions.Regex.IsMatch(
+                    (string)item["name"] ?? "", @"thermostat|hvac|ecobee", System.Text.RegularExpressions.RegexOptions.IgnoreCase)));
+            foreach (JObject item in System.Linq.Enumerable.OfType<JObject>(candidates))
+            {
+                if (!CurrentGeneration(generation) || results.Count >= 12) break;
+                int id;
+                if (!TrySourceId(item["item_id"], out id) || id <= 0 || !seen.Add(id)) continue;
+                var report = new JObject { ["item_id"] = id, ["name"] = item["name"] };
+                results.Add(report);
+                try
+                {
+                    string path = "/api/v1/items/" + id.ToString(CultureInfo.InvariantCulture);
+                    string response = Request(host, token, "GET", path + "/variables", null);
+                    report["variables"] = InspectNowPlayingVariables(response);
+                    var variables = JArray.Parse(response);
+                    var values = new JObject();
+                    foreach (string field in new[] { "TEMPERATURE", "CURRENT_TEMPERATURE", "ROOM_TEMPERATURE", "OUTDOOR_TEMPERATURE",
+                        "HEAT_SETPOINT", "COOL_SETPOINT", "HEATING_SETPOINT", "COOLING_SETPOINT", "HUMIDITY",
+                        "TEMPERATURE_F", "TEMPERATURE_C", "HEAT_SETPOINT_F", "HEAT_SETPOINT_C", "COOL_SETPOINT_F",
+                        "COOL_SETPOINT_C", "DISPLAY_TEMPERATURE", "DISPLAY_HEATSETPOINT", "DISPLAY_COOLSETPOINT", "IS_CONNECTED" })
+                    {
+                        JToken value;
+                        decimal number;
+                        if (SourceVariable(variables, field, out value) &&
+                            Decimal.TryParse(ScalarText(value), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
+                                CultureInfo.InvariantCulture, out number) && number >= -2000 && number <= 3000)
+                            values[field] = number;
+                    }
+                    report["temperature_and_humidity_samples"] = values;
+                    var settings = new JObject();
+                    foreach (string field in new[] { "SCALE", "HVAC_MODE", "HVAC_STATE", "FAN_MODE", "FAN_STATE",
+                        "HVAC_MODES_LIST", "FAN_MODES_LIST", "HOLD_MODE", "HOLD_MODES_LIST" })
+                    {
+                        JToken value;
+                        if (SourceVariable(variables, field, out value) && value.Type == JTokenType.String &&
+                            System.Text.RegularExpressions.Regex.IsMatch((string)value, @"^[A-Za-z0-9 ,;|_-]{0,160}$"))
+                            settings[field] = value.DeepClone();
+                    }
+                    report["thermostat_settings"] = settings;
+                    if (ScalarText(item["type"]) == "7" && values["TEMPERATURE"] != null && CurrentGeneration(generation))
+                    {
+                        try
+                        {
+                            string metadata = Request(host, token, "GET", path + "/commands", null);
+                            report["command_metadata"] = BuildCommandMetadataReport(metadata, 200, id);
+                        }
+                        catch (Exception ex)
+                        {
+                            InvalidateRejectedToken(ex);
+                            report["command_metadata_error"] = FailureKind(ex);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    InvalidateRejectedToken(ex);
+                    report["error"] = FailureKind(ex);
+                }
+            }
+            return results;
+        }
+
         private JArray InspectSecurityInventory(JArray items, string host, string token, int generation)
         {
             var results = new JArray();
@@ -1049,6 +1550,9 @@ namespace Control4Crestron
                     inventory["room_now_playing_inspections"] = NowPlayingReports();
                     inventory["room_media_catalogs"] = RoomCatalogReports();
                     inventory["security_inspection"] = InspectSecurityInventory(all, host, token, gen);
+                    inventory["comfort_inspection"] = InspectComfortInventory(all, (JArray)groups["comfort"], host, token, gen);
+                    inventory["camera_inspection"] = InspectCameraInventory((JArray)groups["cameras"], host, token, gen);
+                    inventory["outdoor_inspection"] = InspectOutdoorInventory(all, host, token, gen);
                     lock (_sync)
                         if (_securitySocketCapture != null && _securityCaptureGeneration == gen)
                             inventory["security_websocket_capture"] = _securitySocketCapture.DeepClone();

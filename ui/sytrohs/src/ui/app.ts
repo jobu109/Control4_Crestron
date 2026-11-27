@@ -8,6 +8,7 @@ import './pages/overview';
 import './pages/media';
 import './pages/climate';
 import './pages/misc';
+import './pages/outdoor';
 
 interface Route { tag: string; heading: string; subheading: string; chrome: 'home' | 'page' | 'own' }
 
@@ -17,11 +18,13 @@ const ROUTES: Record<string, Route> = {
   room: { tag: 'z-room', heading: '', subheading: '', chrome: 'own' },
   lighting: { tag: 'z-lighting', heading: 'Lighting', subheading: 'Overview', chrome: 'page' },
   shades: { tag: 'z-shades', heading: 'Shades', subheading: 'Overview', chrome: 'page' },
-  climate: { tag: 'z-climate', heading: 'Climate', subheading: 'Thermostat', chrome: 'page' },
+  comfort: { tag: 'z-climate', heading: 'Comfort', subheading: 'Thermostat', chrome: 'page' },
   media: { tag: 'z-media', heading: 'Media', subheading: 'Video & audio', chrome: 'page' },
   audio: { tag: 'z-audio', heading: 'Multi Audio', subheading: 'Zones', chrome: 'page' },
   scenes: { tag: 'z-scenes', heading: 'Scenes', subheading: 'Whole home', chrome: 'page' },
   security: { tag: 'z-security', heading: 'Security', subheading: 'Overview', chrome: 'page' },
+  pool: { tag: 'z-pool', heading: 'Pool', subheading: 'Overview', chrome: 'page' },
+  irrigation: { tag: 'z-irrigation', heading: 'Irrigation', subheading: 'Programs', chrome: 'page' },
   settings: { tag: 'z-settings', heading: 'Settings', subheading: 'Panel', chrome: 'page' }
 };
 
@@ -92,6 +95,7 @@ export class SytrohsApp extends LitElement {
 
 function parseHash(): string[] {
   const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  if (parts[0] === 'climate') parts[0] = 'comfort';
   return parts.length ? parts : ['home'];
 }
 

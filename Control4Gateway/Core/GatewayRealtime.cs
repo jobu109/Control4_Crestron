@@ -241,6 +241,8 @@ namespace Control4Crestron
                         SetOnline(true);
                         EmitMessage("WebSocket subscription started");
                         SignalSecurityRefresh(true);
+                        var climate = ClimateChanged;
+                        if (climate != null) SafeEvent(climate);
                         transport.Stage = "live receive";
                         ushort[] ids;
                         lock (_sync) { ids = ActiveLightIds(); }
@@ -287,6 +289,7 @@ namespace Control4Crestron
             CaptureNowPlayingEvent(message, gen);
             CaptureSecuritySocketEvent(message, gen);
             RouteSecurityZoneEvent(message, gen);
+            RouteClimateEvent(message, gen);
             RoutePlayingEvent(message, gen);
             CaptureLightProbeEvent(message, gen);
             CaptureTuneInBrowseResponse(message, gen);

@@ -1,3 +1,19 @@
+## Sytrohs release checkpoint (2026-11-26)
+
+Hardware acceptance covered Irrigation Run, Stop, Pause, Resume, mode, watering days, and start time. Pool is a read-only page. The combined cold-start check for automatic Security, Comfort, Pool, and Irrigation discovery is pending. Cameras, video Now Watching, and Amazon Music browsing are deferred.
+
+- Gateway library at SIMPLPlus/Control4Gateway.clz. SHA-256 BFC28C5AC2C8AB11737434C45BEB221D583EF68CFCFF902FE47710578083CEAD
+- Sytrohs archive at ui/sytrohs/archives/Sytrohs.ch5z. SHA-256 6C8081C66F61E37C8A35E85482944623C91400E7E1C93158C321B6F81608FE82
+- Compile the site SIMPL program for 4-Series using the listed library. The site SIMPL project and loaded program were unavailable for checksum verification in this checkout.
+
+**Full-room Sytrohs validation (2026-11-25).** The installer confirmed the full-room check of Lighting, Shades, and Sessions on the single EA-5 deployment.
+
+**Sytrohs Security hardware acceptance (2026-11-25).** The installer verified the Qolsys keypad actions Arm Stay, Arm Away, and Disarm, the automatically discovered zone names and live open/closed rows, and the Security summary following changes made on the physical keypad.
+
+The reconnect check also passed. After the EA-5 network connection was restored, Sytrohs recovered the zone roster and current state without a page reload, and live zone feedback resumed. The page uses an initial Director snapshot and WebSocket-triggered updates. The verified project used the IQPanel2 in Laundry Room, active partition 2251. No site-specific IDs need to be entered for this integration.
+
+Deploy the current Gateway CLZ in the RMC4 SIMPL program and the matching Sytrohs CH5 archive. Security uses the existing Panel Room Router joins. The Video Now Watching metadata prototype, Comfort, and Cameras are on hold.
+
 **TuneIn track readback and Sessions label (2026-11-21).** Station name and artwork were confirmed on the EA-5. TuneIn queue events now trigger a room media read, which merges the reported title only when the measured source and station match. The verified station image is the fallback when the room reports an unusable artwork reference. Renamed the Sytrohs whole-house Audio navigation label to Sessions. Gateway and UI builds and tests passed. Live track changes and album images still need hardware verification.
 
 **TuneIn hierarchical menus (2026-11-21).** Sytrohs opens the TuneIn Browse root. Navigator folders load one level at a time. Back and My Favorites use the same room catalog. Station selections use the current menu revision and Navigator session. Public rows carry display labels and numeric selection IDs. Release build, local menu regression and installed CLZ hash verification passed. Live EA-5 verification of the hierarchy is pending.

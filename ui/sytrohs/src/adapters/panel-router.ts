@@ -91,13 +91,13 @@ class ActiveRoom {
 
 type Doc = Record<string, unknown>;
 interface HouseCollectors {
-  rooms: FrameCollector<Doc>; scenes: FrameCollector<Doc>; audio_sessions: FrameCollector<Doc>; video_sessions: FrameCollector<Doc>; site: FrameCollector<Doc>;
+  rooms: FrameCollector<Doc>; scenes: FrameCollector<Doc>; audio_sessions: FrameCollector<Doc>; video_sessions: FrameCollector<Doc>; site: FrameCollector<Doc>; outdoor: FrameCollector<Doc>;
   house_devices: FrameCollector<Doc>;
 }
 
 const PAGE_OPS: Record<string, string> = {
   d: 'device_page', a: 'audio_page', v: 'video_page', m: 'media_page', n: 'playing_page',
-  rooms: 'rooms_page', scenes: 'scenes_page', audio_sessions: 'audio_sessions_page', video_sessions: 'video_sessions_page', site: 'site_page',
+  rooms: 'rooms_page', scenes: 'scenes_page', audio_sessions: 'audio_sessions_page', video_sessions: 'video_sessions_page', site: 'site_page', outdoor: 'outdoor_page',
   house_devices: 'house_devices_page'
 };
 
@@ -117,7 +117,7 @@ const ROUTER_DEBUG = typeof location !== 'undefined' && /[?&]debug=1/.test(loca
 /** Re-request a startup document (rooms, scenes, site) that has not arrived after this long. */
 const INITIAL_RETRY_MS = 15000;
 const INITIAL_RETRIES = 2;
-const INITIAL_DOCS = ['rooms', 'scenes', 'site'] as const;
+const INITIAL_DOCS = ['rooms', 'scenes', 'site', 'outdoor'] as const;
 
 /** Location and weather are re-read this often; weather drivers update on a similar cadence. */
 export const SITE_REFRESH_MS = 15 * 60 * 1000;
@@ -137,6 +137,7 @@ export class PanelRouterAdapter implements Adapter {
   private scenes: Scene[] = [];
   private sessions: AudioSessions | null = null;
   private sessionsOpen = false;
+  private climateFrames = new FrameCollector<Doc>(0, 'climate');
   private securityZones = new FrameCollector<Doc>(0, 'sec_zones');
   private keypadFrames = new FrameCollector<Doc>(0, 'sec_key');
   private keypadRequest?: { partition: number; action: string; pin: string };
@@ -219,9 +220,12 @@ export class PanelRouterAdapter implements Adapter {
   }
 
   dispose(): void {
+    clearInterval(this.climateRefreshTimer);
+    if (this.online && this.climateVisible(this.view)) this.request('climate_close');
+    clearTimeout(this.climateCommandTimer);
     clearTimeout(this.keypadTimer);
     this.keypadRequest = undefined;
-    if (this.online && this.view === "security") this.request("security_zones_close");
+    if (this.online && (this.view === "security" || this.view === "home")) this.request("security_zones_close");
     clearInterval(this.siteTimer);
     clearTimeout(this.houseTimer);
     clearTimeout(this.initialTimer);
@@ -237,8 +241,15 @@ export class PanelRouterAdapter implements Adapter {
   }
 
   setView(view: string): void {
-    if (this.online && this.view === "security" && view !== "security") this.request("security_zones_close");
+    if (this.online && (this.view === "security" || this.view === "home") && view !== this.view) this.request("security_zones_close");
+    if (this.online && this.climateVisible(this.view) && !this.climateVisible(view)) this.request('climate_close');
+    const previous = this.view;
     this.view = view;
+    if (this.online && previous !== view && (view === 'pool' || view === 'irrigation')) {
+      this.house.outdoor = new FrameCollector<Doc>(0, 'outdoor');
+      this.request('outdoor');
+    }
+    this.refreshClimateView();
     if (view !== 'security') {
       clearTimeout(this.keypadTimer);
       this.keypadRequest = undefined;
@@ -249,8 +260,47 @@ export class PanelRouterAdapter implements Adapter {
     else if (this.sessionsOpen) this.closeSessions();
   }
 
+  private climateRefreshTimer?: ReturnType<typeof setInterval>;
+  private irrigationCommandTimer?: ReturnType<typeof setTimeout>;
+  private climateCommandTimer?: ReturnType<typeof setTimeout>;
+
+  sendClimate(id: number, action: string, value?: string): void {
+    const store = this.store!;
+    if (!this.online || this.view !== 'comfort' || store.config.climateResult === 'pending') return;
+    this.climateFrames = new FrameCollector<Doc>(0, 'climate');
+    clearTimeout(this.climateCommandTimer);
+    store.setConfig({ ...store.config, climateResult: 'pending' });
+    this.climateCommandTimer = setTimeout(() => {
+      store.setConfig({ ...store.config, climateResult: 'failed' });
+    }, 15000);
+    this.request('climate_control', { id, action, value });
+  }
+
+  private climateVisible(view: string): boolean {
+    return view === 'home' || view === 'comfort';
+  }
+
+  private refreshClimateView(): void {
+    clearInterval(this.climateRefreshTimer);
+    if (!this.online || !this.climateVisible(this.view)) return;
+    this.requestClimate();
+    this.climateRefreshTimer = setInterval(() => this.request('climate'), 30000);
+  }
+
+  private requestClimate(): void {
+    this.climateFrames = new FrameCollector<Doc>(0, 'climate');
+    this.store!.setConfig({ ...this.store!.config, directorClimate: undefined });
+    this.request('climate');
+  }
+
   private refreshSecurity(): void {
-    if (!this.online || this.view !== 'security') return;
+    if (!this.online) return;
+    if (this.view === 'home') {
+      this.request('security_watch');
+      this.request('security');
+      return;
+    }
+    if (this.view !== 'security') return;
     this.securityZones = new FrameCollector<Doc>(0, 'sec_zones');
     this.securityZonePanel = undefined;
     this.securityZoneChanges.clear();
@@ -282,7 +332,7 @@ export class PanelRouterAdapter implements Adapter {
     this.initialTries = 0;
     if (!online) {
       this.sessionsOpen = false;
-      this.refreshSecurity();
+      clearInterval(this.climateRefreshTimer);
       clearInterval(this.siteTimer);
       this.siteTimer = undefined;
       clearTimeout(this.houseTimer);
@@ -293,6 +343,8 @@ export class PanelRouterAdapter implements Adapter {
       store.clearState('weather', HOUSE_WEATHER);
       store.setConfig({ ...store.config, rooms: store.config.rooms.map((room) => ({ ...room, relays: undefined, experienceButtons: undefined, fans: undefined, mediaPower: undefined })) });
       store.setConfig({ ...store.config, securityStatus: undefined, securityZones: undefined });
+      clearTimeout(this.climateCommandTimer);
+      store.setConfig(this.withServices({ ...store.config, outdoor: undefined, irrigationResult: undefined, directorClimate: undefined, climateResult: undefined }));
       store.setConnection('offline');
       return;
     }
@@ -300,6 +352,8 @@ export class PanelRouterAdapter implements Adapter {
     this.request('rooms');
     this.request('scenes');
     this.request('site');
+    this.request('outdoor');
+    this.refreshClimateView();
     this.refreshSecurity();
     this.houseTries = 0;
     // house_devices follows the room list (onRooms): it is the heaviest request and its level
@@ -329,6 +383,23 @@ export class PanelRouterAdapter implements Adapter {
         securityZones: store.config.securityZones.map((zone) => zone.id === id ? { ...zone, open } : zone) });
       return;
     }
+    if (typeof packet.irrigation_result === 'boolean') {
+      clearTimeout(this.irrigationCommandTimer);
+      const store = this.store!;
+      store.setConfig({ ...store.config, irrigationResult: packet.irrigation_result ? 'sent' : 'failed' });
+      return;
+    }
+    if (typeof packet.climate_result === 'boolean') {
+      clearTimeout(this.climateCommandTimer);
+      const store = this.store!;
+      store.setConfig({ ...store.config, climateResult: packet.climate_result ? 'sent' : 'failed' });
+      if (packet.climate_result) {
+        this.climateCommandTimer = setTimeout(() => {
+          store.setConfig({ ...store.config, climateResult: undefined });
+        }, 2500);
+      }
+      return;
+    }
     if (typeof packet.security_keypad === 'string') {
       if (this.view === 'security' && this.keypadRequest) {
         clearTimeout(this.keypadTimer);
@@ -350,6 +421,14 @@ export class PanelRouterAdapter implements Adapter {
     }
     if (packet.w === 1) {
       const frame = packet as unknown as WireFrame;
+      if (frame.r === 0 && frame.k === 'climate') {
+        const doc = this.collect(this.climateFrames, frame, 'climate_page', false);
+        if (!doc || !Array.isArray(doc.thermostats)) return;
+        const store = this.store!;
+        store.setConfig({ ...store.config, directorClimate: { available: doc.available === true,
+          thermostats: doc.thermostats.filter((row) => row && validId(row.id) && typeof row.name === 'string') } });
+        return;
+      }
       if (frame.r === 0 && frame.k === 'sec_key') {
         if (this.view !== 'security' || !this.keypadRequest) return;
         const key = this.collect(this.keypadFrames, frame, 'sec_key_page', false);
@@ -456,6 +535,14 @@ export class PanelRouterAdapter implements Adapter {
         sessions: Array.isArray(doc.sessions) ? doc.sessions : [],
         status: typeof doc.status === 'string' ? doc.status : undefined
       } });
+    }
+    else if (frame.k === 'outdoor') {
+      const store = this.store!;
+      const rows = (value: unknown) => Array.isArray(value)
+        ? value.filter((row) => row && validId(row.id) && typeof row.name === 'string') : [];
+      store.setConfig(this.withServices({ ...store.config, outdoor: {
+        pool: rows(doc.pool), irrigation: rows(doc.irrigation)
+      } }));
     }
     else if (frame.k === 'site') this.onSite(doc);
     else if (frame.k === 'house_devices') this.onHouseDevices(doc);
@@ -873,6 +960,8 @@ export class PanelRouterAdapter implements Adapter {
     if (config.rooms.length) services.push('media');
     if (config.rooms.length || config.audioZones.length) services.push('audio');
     if (config.scenes.length) services.push('scenes');
+    if (config.outdoor?.pool.length) services.push('pool');
+    if (config.outdoor?.irrigation.length) services.push('irrigation');
     return { ...config, services, videoSessionsEnabled: true };
   }
 
@@ -881,6 +970,20 @@ export class PanelRouterAdapter implements Adapter {
   send(c: Command): void {
     if (!this.online) return;
     switch (c.kind) {
+      case 'irrigation': {
+        const store = this.store!;
+        const device = store.config.outdoor?.irrigation.find((row) => row.id === c.id);
+        if (this.view !== 'irrigation' || store.config.irrigationResult === 'pending' ||
+            device?.['can_' + c.action] !== 1) return;
+        store.setConfig({ ...store.config, irrigationResult: 'pending' });
+        clearTimeout(this.irrigationCommandTimer);
+        this.irrigationCommandTimer = setTimeout(() => {
+          if (store.config.irrigationResult === 'pending')
+            store.setConfig({ ...store.config, irrigationResult: 'failed' });
+        }, 15000);
+        this.request('irrigation_control', { id: c.id, action: c.action, setting: c.setting, state: c.state });
+        return;
+      }
       case 'video-sessions':
       case 'video-session-watch': {
         const store = this.store!;
@@ -1188,6 +1291,7 @@ function houseCollectors(): HouseCollectors {
     audio_sessions: new FrameCollector<Doc>(0, 'audio_sessions'),
     video_sessions: new FrameCollector<Doc>(0, 'video_sessions'),
     site: new FrameCollector<Doc>(0, 'site'),
+    outdoor: new FrameCollector<Doc>(0, 'outdoor'),
     house_devices: new FrameCollector<Doc>(0, 'house_devices')
   };
 }
