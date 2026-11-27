@@ -1,6 +1,6 @@
 ## Sytrohs release checkpoint (2026-11-26)
 
-Hardware acceptance covered Irrigation Run, Stop, Pause, Resume, mode, watering days, and start time. Pool is a read-only page. The combined cold-start check for automatic Security, Comfort, Pool, and Irrigation discovery is pending. Cameras, video Now Watching, and Amazon Music browsing are deferred.
+Hardware acceptance covered Irrigation Run, Stop, Pause, Resume, mode, watering days, and start time. Pool is a read-only page. The installer confirmed that Security, Comfort, Pool, and Irrigation appeared automatically after a cold start of the RMC4 and touchpanel. Cameras, video Now Watching, and Amazon Music browsing are deferred.
 
 - Gateway library at SIMPLPlus/Control4Gateway.clz. SHA-256 BFC28C5AC2C8AB11737434C45BEB221D583EF68CFCFF902FE47710578083CEAD
 - Sytrohs archive at ui/sytrohs/archives/Sytrohs.ch5z. SHA-256 6C8081C66F61E37C8A35E85482944623C91400E7E1C93158C321B6F81608FE82
