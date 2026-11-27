@@ -1333,6 +1333,74 @@ namespace Control4Crestron
             });
         }
 
+        private sealed class IrrigationStateCapture
+        {
+            internal int Item;
+            internal int Generation;
+            internal readonly JArray Events = new JArray();
+        }
+
+        private IrrigationStateCapture _irrigationStateCapture;
+
+        private void CaptureIrrigationStateEvent(JToken message, int generation)
+        {
+            var packet = message as JObject;
+            int id;
+            if (packet == null || !TrySourceId(packet["iddevice"], out id)) return;
+            lock (_sync)
+            {
+                var capture = _irrigationStateCapture;
+                if (capture == null || capture.Generation != generation || capture.Item != id ||
+                    capture.Events.Count >= 16) return;
+                int budget = 256;
+                capture.Events.Add(new JObject
+                {
+                    ["event_type"] = MediaMetadataName(packet["evtName"]) ?? "unrecognized",
+                    ["data"] = NowPlayingShape(packet["data"], "", 0, ref budget)
+                });
+            }
+        }
+
+        private JObject InspectIrrigationStateWithEvents(string host, string token, string path, int id, int generation)
+        {
+            var capture = new IrrigationStateCapture { Item = id, Generation = generation };
+            lock (_sync) _irrigationStateCapture = capture;
+            JObject result;
+            try
+            {
+                result = InspectIrrigationState(host, token, path);
+                if ((bool?)result["empty_object"] == true && CurrentGeneration(generation))
+                    System.Threading.Thread.Sleep(2500);
+            }
+            finally
+            {
+                lock (_sync) _irrigationStateCapture = null;
+            }
+            result["websocket_events"] = capture.Events;
+            return result;
+        }
+
+        private JObject InspectIrrigationState(string host, string token, string path)
+        {
+            var body = new JObject { ["command"] = "GetState", ["tParams"] = new JObject() };
+            int status;
+            string reply = Request(host, token, "POST", path, body.ToString(Formatting.None), out status);
+            var result = new JObject { ["http_status"] = status, ["reply_length"] = reply.Length };
+            if (reply.Length > 262144) return result;
+            try
+            {
+                var parsed = JToken.Parse(reply);
+                int budget = 256;
+                result["empty_object"] = parsed is JObject && !parsed.HasValues;
+                result["shape"] = NowPlayingShape(parsed, "", 0, ref budget);
+            }
+            catch (JsonReaderException)
+            {
+                result["non_json"] = true;
+            }
+            return result;
+        }
+
         private JArray InspectOutdoorInventory(JArray items, string host, string token, int generation)
         {
             var results = new JArray();
@@ -1354,6 +1422,23 @@ namespace Control4Crestron
                         string response = Request(host, token, "GET", "/api/v1/items/" +
                             id.ToString(CultureInfo.InvariantCulture) + "/" + resource, null);
                         row[resource] = resource == "commands" ? BuildCommandMetadataReport(response, 200, id) : InspectNowPlayingVariables(response);
+                        if (resource == "commands" && ScalarText(item["type"]) == "7" &&
+                            String.Equals(name, "Irrigation Program", StringComparison.OrdinalIgnoreCase) &&
+                            CurrentGeneration(generation) &&
+                            System.Linq.Enumerable.Any((JArray)row["commands"]["commands"], entry =>
+                                ScalarText(entry["command_name"]) == "GetState"))
+                        {
+                            try
+                            {
+                                row["get_state"] = InspectIrrigationStateWithEvents(host, token,
+                                    "/api/v1/items/" + id.ToString(CultureInfo.InvariantCulture) + "/commands", id, generation);
+                            }
+                            catch (Exception ex)
+                            {
+                                InvalidateRejectedToken(ex);
+                                row["get_state"] = new JObject { ["error"] = FailureKind(ex) };
+                            }
+                        }
                     }
                     catch (Exception error)
                     {

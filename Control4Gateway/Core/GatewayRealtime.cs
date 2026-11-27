@@ -290,6 +290,7 @@ namespace Control4Crestron
             CaptureSecuritySocketEvent(message, gen);
             RouteSecurityZoneEvent(message, gen);
             RouteClimateEvent(message, gen);
+            CaptureIrrigationStateEvent(message, gen);
             RoutePlayingEvent(message, gen);
             CaptureLightProbeEvent(message, gen);
             CaptureTuneInBrowseResponse(message, gen);
